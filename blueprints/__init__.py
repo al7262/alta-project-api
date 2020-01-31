@@ -46,9 +46,9 @@ db_selected=os.getenv('DB_SELECTED')
 try:
     env = os.environ.get('FLASK_ENV', 'development')
     if env is not 'testing':
-       app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://alta5:01010010@localhost/project'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend'
     else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://alta5:01010010@localhost/project_testing'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend_test'
 except Exception as e:
     raise e
 #############################
