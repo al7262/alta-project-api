@@ -2,8 +2,8 @@ from blueprints import db
 from flask_restful import fields
 import datetime
 
-class Costumers(db.Model):
-    __tablename__ = "Costumer"
+class Custumers(db.Model):
+    __tablename__ = "custumers"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     fullname = db.Column(db.String(150), nullable = False, default = "")
     phone_number = db.Column(db.String(20), nullable = False, default = "")
@@ -32,4 +32,4 @@ class Costumers(db.Model):
         self.image = image
 
     def __repr__(self):
-        return '<Costumer %r>' %self.id
+        return '<Custumers %r>' %self.id
