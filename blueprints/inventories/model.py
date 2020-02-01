@@ -4,8 +4,8 @@ from flask_restful import fields
 from datetime import datetime
 
 # Create Model
-class Inventory(db.Model):
-    __tablename__ = 'inventory'
+class Inventories(db.Model):
+    __tablename__ = 'inventories'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     name = db.Column(db.String(150), nullable = False, default = '')
     total_stock = db.Column(db.Integer, nullable = False, default = 0)
@@ -41,4 +41,4 @@ class Inventory(db.Model):
         self.deleted = False
     
     def __repr__(self):
-        return '<Inventory %r>' %self.name
+        return '<Inventories %r>' %self.name
