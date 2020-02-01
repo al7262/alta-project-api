@@ -3,7 +3,7 @@ from flask_restful import fields
 import datetime
 
 class Users(db.Model):
-    __tablename__ = "User"
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     fullname = db.Column(db.String(150), nullable = False, default = "")
     email = db.Column(db.String(150), nullable = False, default = "")
@@ -40,4 +40,4 @@ class Users(db.Model):
         self.phone_number = phone_number
 
     def __repr__(self):
-        return '<User %r>' %self.id
+        return '<Users %r>' %self.id
