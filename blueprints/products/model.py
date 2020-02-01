@@ -3,7 +3,7 @@ from flask_restful import fields
 import datetime
 
 class Products (db.Model):
-    __tablename__ = "Product"
+    __tablename__ = "products"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     name = db.Column(db.String(150), nullable = False, default = "")
     category = db.Column(db.String(150), nullable = False, default = "")
@@ -40,4 +40,4 @@ class Products (db.Model):
         self.image = image
 
     def __repr__(self):
-        return '<Product %r>' %self.id
+        return '<Products %r>' %self.id
