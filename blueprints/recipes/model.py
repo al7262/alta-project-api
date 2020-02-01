@@ -2,8 +2,8 @@ from blueprints import db
 from flask_restful import fields
 import datetime
 
-class Users(db.Model):
-    __tablename__ = "User"
+class Recipe(db.Model):
+    __tablename__ = "recipe"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     id_inventory = db.Column(db.Integer, db.ForeignKey("inventories.id", ondelete = 'CASCADE'), nullable = False)
     id_product = db.Column(db.Integer, db.ForeignKey("products.id", ondelete = 'CASCADE'), nullable = False)
@@ -28,4 +28,4 @@ class Users(db.Model):
         self.amount = amount
 
     def __repr__(self):
-        return '<User %r>' %self.id
+        return '<Recipe %r>' %self.id
