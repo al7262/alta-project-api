@@ -79,21 +79,21 @@ def index():
 ##############################
 
 # Put blueprints here
-from blueprints.customers.model import bp_customers
+from blueprints.customers.resources import bp_customers
 app.register_blueprint(bp_customers, url_prefix='/customer')
-from blueprints.employees.model import bp_employees
+from blueprints.employees.resources import bp_employees
 app.register_blueprint(bp_employees, url_prefix='/employee')
-from blueprints.inventories.model import bp_inventories
+from blueprints.inventories.resources import bp_inventories
 app.register_blueprint(bp_inventories, url_prefix='/inventory')
-from blueprints.outlets.model import bp_outlets
+from blueprints.outlets.resources import bp_outlets
 app.register_blueprint(bp_outlets, url_prefix='/outlet')
-from blueprints.products.model import bp_products
+from blueprints.products.resources import bp_products
 app.register_blueprint(bp_products, url_prefix='/product')
-from blueprints.promo.model import bp_promo
+from blueprints.promo.resources import bp_promo
 app.register_blueprint(bp_promo, url_prefix='/promo')
-from blueprints.recipes.model import bp_recipe
+from blueprints.recipes.resources import bp_recipe
 app.register_blueprint(bp_recipe, url_prefix='/recipe')
-from blueprints.users.model import bp_users
+from blueprints.users.resources import bp_users
 app.register_blueprint(bp_users, url_prefix='/users')
 
 db.create_all()

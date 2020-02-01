@@ -2,7 +2,7 @@
 from blueprints import db
 from flask_restful import fields
 from datetime import datetime
-from blueprints.model.stcok_outlet import StockOutlet
+from blueprints.stock_outlet.model import StockOutlet
 
 # Create Model
 class Inventories(db.Model):
@@ -11,7 +11,7 @@ class Inventories(db.Model):
     name = db.Column(db.String(150), nullable = False, default = '')
     total_stock = db.Column(db.Integer, nullable = False, default = 0)
     unit = db.Column(db.String(20), nullable = False, default = '')
-    unit_price = db.Column(db.Integer, nullale = False, default = 0)
+    unit_price = db.Column(db.Integer, nullable = False, default = 0)
     created_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     updated_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     deleted = db.Column(db.Boolean, default = False)
@@ -55,7 +55,7 @@ class InventoryLog(db.Model):
 
     inventory_log_fields = {
         'id': fields.Integer,
-        'id_stock_outlet': field.Integer,
+        'id_stock_outlet': fields.Integer,
         'status': fields.String,
         'amount': fields.Integer,
         'last_stock': fields.Integer,

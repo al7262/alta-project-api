@@ -2,15 +2,15 @@
 from blueprints import db
 from flask_restful import fields
 from datetime import datetime
-from blueprints.employees.model import employees
-from blueprints.customers.model import customers
-from blueprints.products.model import products
+from blueprints.employees.model import Employees
+from blueprints.customers.model import Customers
+from blueprints.products.model import Products
 
 # Create Model
 class Carts(db.Model):
     __tablename__ = 'carts'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
-    id_employee = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable = False)
+    id_employee = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable = False)
     id_customers = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable = True)
     order_code = db.Column(db.String(50), unique = True, nullable = False)
     name = db.Column(db.String(150), nullable = False, default = '')
@@ -35,7 +35,7 @@ class Carts(db.Model):
         'total_discount': fields.Integer,
         'total_tax': fields.Integer,
         'paid_price': fields.Integer,
-        'status': fields.Boolean
+        'status': fields.Boolean,
         'created_at': fields.DateTime,
         'deleted': fields.Boolean
     }
