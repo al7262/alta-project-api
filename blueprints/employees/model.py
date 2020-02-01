@@ -5,8 +5,8 @@ from datetime import datetime
 from blueprints.outlets.model import Outlets
 
 # Create Model
-class Employee(db.Model):
-    __tablename__ = 'employee'
+class Employees(db.Model):
+    __tablename__ = 'employees'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     id_outlet = db.Column(db.Integer, db.ForeignKey('outlets.id'), nullable = False)
     username = db.Column(db.String(20), nullable = False, unique = True)
@@ -17,7 +17,7 @@ class Employee(db.Model):
     updated_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     deleted = db.Column(db.Boolean, default = False)
 
-    employee_fields = {
+    employees_fields = {
         'id': fields.Integer,
         'id_outlet': fields.Integer,
         'username': fields.String,
@@ -47,4 +47,4 @@ class Employee(db.Model):
         self.deleted = False
     
     def __repr__(self):
-        return '<Employee %r>' %self.username
+        return '<Employees %r>' %self.username
