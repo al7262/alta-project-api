@@ -15,7 +15,7 @@ class Inventories(db.Model):
     updated_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     deleted = db.Column(db.Boolean, default = False)
 
-    employee_fields = {
+    inventories_fields = {
         'id': fields.Integer,
         'name': fields.String,
         'total_stock': fields.Integer,
