@@ -45,10 +45,14 @@ db_selected=os.getenv('DB_SELECTED')
 ##############################
 try:
     env = os.environ.get('FLASK_ENV', 'development')
-    if env is not 'testing':
+    username_laptop = os.environ['HOME']
+    if username_laptop == '/home/alta8':
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@0.0.0.0:3306/final_project_backend'
+    elif username_laptop == '/home/alta10':
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend'
+    elif env is not 'testing':
        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://alta5:01010010@localhost/project'
-    else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://alta5:01010010@localhost/project_testing'
+
 except Exception as e:
     raise e
 #############################
