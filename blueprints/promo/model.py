@@ -2,7 +2,7 @@ from blueprints import db
 from flask_restful import fields
 import datetime
 
-class Promo (db.Model):
+class Promos (db.Model):
     __tablename__ = "promos"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     name = db.Column(db.String(150), nullable = False, default = "")
@@ -32,4 +32,4 @@ class Promo (db.Model):
         self.day = day
 
     def __repr__(self):
-        return '<Promo %r>' %self.id
+        return '<Promos %r>' %self.id
