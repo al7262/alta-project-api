@@ -2,8 +2,9 @@
 from blueprints import db
 from flask_restful import fields
 from datetime import datetime
-from blueprints.employee.model import employee
+from blueprints.employees.model import employees
 from blueprints.customers.model import customers
+from blueprints.products.model import products
 
 # Create Model
 class Carts(db.Model):
@@ -61,3 +62,37 @@ class Carts(db.Model):
     
     def __repr__(self):
         return '<Carts %r>' %self.id
+
+class CartDetail(db.Model):
+    __tablename__ = 'cart_detail'
+    id = db.Column(db.Integer, primary_key = True, autoincrement = True)
+    id_cart = db.Column(db.Integer, db.ForeignKey('carts.id'), nullable = False)
+    id_product = db.Column(db.Integer, db.ForeignKey('products.id'), nullable = False)
+    quantity = db.Column(db.Integer, nullable = False, default = 0)
+    total_price_product = db.Column(db.Integer, nullable = False, default = 0)
+    updated_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    cart_detail_fields = {
+        'id': fields.Integer,
+        'id_cart': fields.Integer,
+        'id_product': fields.Integer,
+        'quantity': fields.Integer,
+        'total_price_product': fields.Integer,
+        'updated_at': fields.DateTime,
+    }
+
+    jwt_claim_fields = {
+        'id': fields.Integer,
+        'id_cart': fields.Integer,
+        'id_product': fields.Integer
+    }
+
+    def __init__(self, id_cart, id_product, quantity, total_price_product):
+        self.id_cart = id_cart
+        self.id_product = id_product
+        self.quantity = quantity
+        self.total_price_product = total_price_product
+        self.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    def __repr__(self):
+        return '<CartDetail %r>' %self.id
