@@ -32,6 +32,7 @@ class Employee(db.Model):
     jwt_claim_fields = {
         'id': fields.Integer,
         'username': fields.String,
+        'position': fields.String,
         'deleted': fields.Boolean
     }
 
