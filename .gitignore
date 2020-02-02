@@ -170,4 +170,10 @@ dmypy.json
 # Ignore all local history of files
 .history
 
+### Others
+
 # End of https://www.gitignore.io/api/flask,python,visualstudiocode
+migrations/
+migrations/alembic.ini
+**/migrations/*
+migrations/*
