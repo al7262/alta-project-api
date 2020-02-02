@@ -81,5 +81,5 @@ class LoginDashboard(Resource):
         claims = get_jwt_claims()
         return {'claims' : claims}, 200
         
-api.add_resource(LoginApps,'/login-cashier')
-api.add_resource(LoginDashboard,'/login-admin')
+api.add_resource(LoginApps,'/login/apps')
+api.add_resource(LoginDashboard,'/login/dashboard')
