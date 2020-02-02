@@ -1,8 +1,8 @@
 from flask import Blueprint
 from flask_restful import Resource, Api, reqparse, marshal
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, get_jwt_claims
-from blueprints.user.model import Users
-from blueprints.seller.model import Sellers
+from blueprints.users.model import Users
+from blueprints.employees.model import Employees
 import json , hashlib
 
 bp_auth = Blueprint('auth',__name__)
@@ -21,18 +21,18 @@ class LoginApps(Resource):
         args = parser.parse_args()
         
         encrypted = hashlib.md5(args['password'].encode()).hexdigest()
-        qry_user = users.query.filter_by(username = args['username']).filter_by(password = encrypted)
-        qry_employee = employees.query.filter_by(username = args['username']).filter_by(password = encrypted)
+        qry_user = Users.query.filter_by(email = args['username']).filter_by(password = encrypted)
+        qry_employee = Employees.query.filter_by(username = args['username']).filter_by(password = encrypted)
         userData = qry_user.first()
         employeeData = qry_employee.first()
 
         if userData is not None:
-            userData = marshal(userData,users.jwt_claims_fields)
+            userData = marshal(userData,Users.jwt_claims_fields)
             token = create_access_token(identity = userData['username'], user_claims = userData)
             return {'token' : token}, 200
 
         if employeeData is not None:
-            employeeData = marshal(employeeData,employees.jwt_claims_fields)
+            employeeData = marshal(employeeData,Employees.jwt_claims_fields)
             if employeeData['deleted']==False:
                 token = create_access_token(identity = employeeData['username'], user_claims = employeeData)
             return {'token' : token}, 200
@@ -57,20 +57,20 @@ class LoginDashboard(Resource):
         args = parser.parse_args()
         
         encrypted = hashlib.md5(args['password'].encode()).hexdigest()
-        qry_user = users.query.filter_by(username = args['username']).filter_by(password = encrypted)
-        qry_employee = employees.query.filter_by(username = args['username']).filter_by(password = encrypted)
+        qry_user = Users.query.filter_by(email = args['username']).filter_by(password = encrypted)
+        qry_employee = Employees.query.filter_by(username = args['username']).filter_by(password = encrypted)
         userData = qry_user.first()
         employeeData = qry_employee.first()
 
         if userData is not None:
-            userData = marshal(userData,users.jwt_claims_fields)
+            userData = marshal(userData,Users.jwt_claims_fields)
             token = create_access_token(identity = userData['username'], user_claims = userData)
             return {'token' : token}, 200
 
         if employeeData is not None:
-            employeeData = marshal(employeeData,employees.jwt_claims_fields)
+            employeeData = marshal(employeeData,Employees.jwt_claims_fields)
             if employeeData['deleted']==False:
-                if employeeData['position']=='Admin'
+                if employeeData['position']=='Admin':
                     token = create_access_token(identity = employeeData['username'], user_claims = employeeData)
                     return {'token' : token}, 200
             
