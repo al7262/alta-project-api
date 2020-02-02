@@ -39,7 +39,7 @@ def admin_required(fn):
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt_claims()
-        if claims['position'] == "user":
+        if claims['position'] == "Admin":
             return fn(*args, **kwargs)
         else:
             return {'status': 'FORBIDDEN', 'message' : 'user doesn\'t get access!'}, 403
@@ -50,7 +50,7 @@ def kasir_required(fn):
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt_claims()
-        if claims['role'] == "agent":
+        if claims['position'] == "Kasir":
             return fn(*args, **kwargs)
         else:
             return {'status': 'FORBIDDEN', 'message' : 'agent doesn\'t get access!'}, 403
