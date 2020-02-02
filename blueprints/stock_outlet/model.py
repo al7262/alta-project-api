@@ -2,7 +2,6 @@
 from blueprints import db
 from flask_restful import fields
 import datetime
-from blueprints.inventories.model import Inventories
 from blueprints.outlets.model import Outlets
 
 # Create Model
