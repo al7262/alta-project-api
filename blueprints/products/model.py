@@ -1,25 +1,30 @@
+# Import
 from blueprints import db
 from flask_restful import fields
 import datetime
+from blueprints.users.model import Users
 
+# Create Model
 class Products (db.Model):
     __tablename__ = "products"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
+    id_users = db.Column(db.Integer, db.ForeignKey('users.id'), nullable = False)
     name = db.Column(db.String(150), nullable = False, default = "")
     category = db.Column(db.String(150), nullable = False, default = "")
-    selling_price = db.Column(db.Integer, nullable = False, default = 0)
+    price = db.Column(db.Integer, nullable = False, default = 0)
     show = db.Column(db.Boolean, nullable = False, default = True)
     stock = db.Column(db.Integer, nullable = False, default = 0)
-    image = db.Column(db.String(150), nullable = False, default = "")
+    image = db.Column(db.String(255), nullable = False, default = "")
     deleted = db.Column(db.Boolean, nullable = False, default = False)
     created_at = db.Column(db.DateTime, default = datetime.datetime.now())
     update_at = db.Column(db.DateTime, onupdate = datetime.datetime.now())
 
     response_fields = {
         'id' : fields.Integer,
+        'id_users': fields.Integer,
         'name' : fields.String,
         'category' : fields.String,
-        'selling_price' : fields.Integer,
+        'price' : fields.Integer,
         'show' : fields.Boolean,
         'stock' : fields.Integer,
         'image' : fields.String,
@@ -32,12 +37,13 @@ class Products (db.Model):
         'id' : fields.Integer
     }
 
-    def __init__(self, name, category, selling_price, show, image):
+    def __init__(self, id_users, name, category, price, show, image):
+        self.id_users = id_users
         self.name = name
         self.category = category
-        self.selling_price = selling_price
+        self.price = price
         self.show = show
         self.image = image
 
     def __repr__(self):
-        return '<Products %r>' %self.id
+        return '<Products %r>' %self.name

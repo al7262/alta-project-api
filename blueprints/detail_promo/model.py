@@ -1,7 +1,11 @@
+# Import
 from blueprints import db
 from flask_restful import fields
 import datetime
+from blueprints.products.model import Products
+from blueprints.promo.model import Promos
 
+# Create Model
 class DetailPromo(db.Model):
     __tablename__ = "detail_promo"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)

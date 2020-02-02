@@ -2,12 +2,14 @@
 from blueprints import db
 from flask_restful import fields
 from datetime import datetime
+from blueprints.users.model import Users
 from blueprints.stock_outlet.model import StockOutlet
 
 # Create Model
 class Inventories(db.Model):
     __tablename__ = 'inventories'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
+    id_users = db.Column(db.Integer, db.ForeignKey('users.id'), nullable = False)
     name = db.Column(db.String(150), nullable = False, default = '')
     total_stock = db.Column(db.Integer, nullable = False, default = 0)
     unit = db.Column(db.String(20), nullable = False, default = '')
@@ -18,6 +20,7 @@ class Inventories(db.Model):
 
     inventories_fields = {
         'id': fields.Integer,
+        'id_users': fields.Integer,
         'name': fields.String,
         'total_stock': fields.Integer,
         'unit': fields.String,
@@ -32,7 +35,8 @@ class Inventories(db.Model):
         'deleted': fields.Boolean
     }
 
-    def __init__(self, name, total_stock, unit, unit_price):
+    def __init__(self, id_users, name, total_stock, unit, unit_price):
+        self.id_users = id_users
         self.name = name
         self.total_stock = total_stock
         self.unit = unit

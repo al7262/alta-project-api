@@ -1,7 +1,11 @@
+# Import
 from blueprints import db
 from flask_restful import fields
 import datetime
+from blueprints.inventories.model import Inventories
+from blueprints.outlets.model import Outlets
 
+# Create Model
 class StockOutlet(db.Model):
     __tablename__ = "stock_outlet"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)

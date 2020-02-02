@@ -2,6 +2,7 @@
 from blueprints import db
 from flask_restful import fields
 from datetime import datetime
+from blueprints.users.model import Users
 from blueprints.employees.model import Employees
 from blueprints.customers.model import Customers
 from blueprints.products.model import Products
@@ -10,6 +11,7 @@ from blueprints.products.model import Products
 class Carts(db.Model):
     __tablename__ = 'carts'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
+    id_users = db.Column(db.Integer, db.ForeignKey('users.id'), nullable = False)
     id_employee = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable = False)
     id_customers = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable = True)
     order_code = db.Column(db.String(50), unique = True, nullable = False)
@@ -26,6 +28,7 @@ class Carts(db.Model):
 
     carts_fields = {
         'id': fields.Integer,
+        'id_users': fields.Integer,
         'id_employee': fields.Integer,
         'id_customers': fields.Integer,
         'name': fields.String,
@@ -46,7 +49,8 @@ class Carts(db.Model):
         'deleted': fields.Boolean
     }
 
-    def __init__(self, id_employee, id_customers, name, email, total_transaction, total_payment, total_discount, total_tax, paid_price):
+    def __init__(self, id_users, id_employee, id_customers, name, email, total_transaction, total_payment, total_discount, total_tax, paid_price):
+        self.id_users = id_users
         self.id_employee = id_employee
         self.id_customers = id_customers
         self.name = name

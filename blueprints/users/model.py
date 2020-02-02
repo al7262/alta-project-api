@@ -13,7 +13,6 @@ class Users(db.Model):
     image = db.Column(db.String(150), nullable = False, default = "")
     created_at = db.Column(db.DateTime, default = datetime.datetime.now())
     update_at = db.Column(db.DateTime, onupdate = datetime.datetime.now())
-
     
     response_fields = {
         'id' : fields.Integer,

@@ -1,7 +1,11 @@
+# Import
 from blueprints import db
 from flask_restful import fields
 import datetime
+from blueprints.inventories.model import Inventories
+from blueprints.products.model import Products
 
+# Create Model
 class Recipe(db.Model):
     __tablename__ = "recipe"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
