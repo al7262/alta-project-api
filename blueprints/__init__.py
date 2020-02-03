@@ -95,6 +95,8 @@ from blueprints.recipes.resources import bp_recipe
 app.register_blueprint(bp_recipe, url_prefix='/recipe')
 from blueprints.auth import bp_auth
 app.register_blueprint(bp_auth,url_prefix = '')
+from blueprints.users.resources import Bp_user
+app.register_blueprint(Bp_user,url_prefix = '')
 
 db.create_all()
 

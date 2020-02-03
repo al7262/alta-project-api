@@ -28,7 +28,7 @@ class LoginApps(Resource):
 
         if userData is not None:
             userData = marshal(userData,Users.jwt_claims_fields)
-            token = create_access_token(identity = userData['username'], user_claims = userData)
+            token = create_access_token(identity = userData['email'], user_claims = userData)
             return {'token' : token}, 200
 
         if employeeData is not None:
@@ -64,7 +64,7 @@ class LoginDashboard(Resource):
 
         if userData is not None:
             userData = marshal(userData,Users.jwt_claims_fields)
-            token = create_access_token(identity = userData['username'], user_claims = userData)
+            token = create_access_token(identity = userData['email'], user_claims = userData)
             return {'token' : token}, 200
 
         if employeeData is not None:

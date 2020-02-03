@@ -5,14 +5,15 @@ from sqlalchemy import desc
 from .model import Users
 from blueprints import db, app
 from datetime import datetime
-import json
+from password_strength import PasswordPolicy
+import json,hashlib
 
 # Import Authentication
 from flask_jwt_extended import jwt_required, get_jwt_claims
 
 # Creating blueprint
-bp_users = Blueprint('users', __name__)
-api = Api(bp_users)
+Bp_user = Blueprint('user',__name__)
+api = Api(Bp_user)
 
 class RegisterUserResource(Resource):
 
@@ -63,15 +64,11 @@ class UserResource(Resource):
         numbers = 1
     )
 
-    @jwt_required
-    @user_required
     # showing user profile (himself)
     def get(self):
         claims = get_jwt_claims()
         qry = Users.query.filter_by(id = claims['id']).first()
-        if qry.deleted == False:
-            return marshal(qry, Users.response_fields), 200
-        return {'message' : 'NOT_FOUND'}, 404
+        return marshal(qry, Users.response_fields), 200
 
     def put(self):
         claims = get_jwt_claims()
