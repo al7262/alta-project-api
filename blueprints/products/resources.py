@@ -4,6 +4,8 @@ from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
 from .model import Products
 from blueprints.carts.model import Carts, CartDetail
+from blueprints.inventories.model import Inventories, InventoryLog
+from blueprints.stock_outlet.model import StockOutlet
 from blueprints import db, app
 from datetime import datetime
 import json
@@ -81,7 +83,7 @@ class ProductResource(Resource):
         products = Products.query.filter_by(deleted = False)
         for product in products:
             product = marshal(product, Products.response_fields)
-            if product['id_users'] == args['id_users'] and product['name'] == args['name'] and product['category'] == args['category']:
+            if product['id_users'] == int(args['id_users']) and product['name'] == args['name'] and product['category'] == args['category']:
                 return {'Maaf, produk yang ingin kamu tambahkan sudah ada'}, 200
 
         # Store the new product into database
@@ -204,7 +206,26 @@ class ItemsPerCategory(Resource):
             result.append(product)
         return result, 200
 
+class CheckoutResource(Resource):
+    # Enable CORS
+    def options(self, id=None):
+        return {'status': 'ok'}, 200
+    
+    # Get all data needed to be shown in receipt
+    def get(self, id_cart):
+        # Searching for specified cart
+        specified_cart = Carts.query.filter_by(id = id_cart).filter_by(status = True).filter_by(deleted = False).first()
+
+        # Empty active cart
+        if specified_cart is None:
+            return {'message': 'Tidak ada transaksi aktif saat ini'}, 200
+        
+        # Show the result
+        specified_cart = marshal(specified_cart, Carts.carts_fields)
+        return specified_cart, 200
+
 api.add_resource(ProductResource, '')
 api.add_resource(SpecificProductResource, '/<id_product>')
 api.add_resource(CategoryResource, '/category')
 api.add_resource(ItemsPerCategory, '/category/items')
+api.add_resource(CheckoutResource, '/checkout/<id_cart>')
