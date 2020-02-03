@@ -31,12 +31,9 @@ class Users(db.Model):
         'email' : fields.String
     }
 
-    def __init__(self, fullname, username, password, email, phone_number):
-        self.fullname = fullname
-        self.username = username
-        self.password = password
+    def __init__(self, email, password):
         self.email = email
-        self.phone_number = phone_number
+        self.password = password
 
     def __repr__(self):
         return '<Users %r>' %self.id
