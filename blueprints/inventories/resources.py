@@ -113,7 +113,7 @@ class InventoryPerOutlet(Resource):
         # Take input from users
         parser = reqparse.RequestParser()
         parser.add_argument('name', location = 'json', required = True)
-        parser.add_argument('total_stock', location = 'json', required = True)
+        parser.add_argument('stock', location = 'json', required = True)
         parser.add_argument('unit', location = 'json', required = True)
         parser.add_argument('unit_price', location = 'json', required = True)
         parser.add_argument('reminder', location = 'json', required = True)
@@ -124,9 +124,51 @@ class InventoryPerOutlet(Resource):
         id_user = claims['id']        
 
         # Check for duplicate
-        inventories = Inventories.query.filter_by(deleted = False)
+        stock_outlet_list = StockOutlet.query.filter_by(id_outlet = id_outlet)
+        for stock_outlet in stock_outlet_list:
+            id_inventory = stock_outlet.id_inventory
+            inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
+            if inventory.name == args['name']:
+                return {"message": "Bahan baku yang ingin kamu tambahkan sudah ada"}
 
-        # Store to the database
+        # Validate unit if the item has already added in other outlet
+        inventories = Inventories.query.filter_by(id_users = id_user)
+        for inventory in inventories:
+            # Unit is different
+            if inventory.name == args['name'] and inventory.unit != args['unit']:
+                return {"message": "Unit untuk bahan baku " + inventory.name + " tidak tepat"}
+            
+            # The unit is correct
+            elif inventory.name == args['name']:
+                id_inventory = inventory.id
+                
+                # Add new stock outlet instance
+                new_stock_outlet = StockOutlet(id_outlet = id_outlet, id_inventory = id_inventory, reminder = args['reminder'], stock = args['stock'])
+                db.session.add(new_stock_outlet)
+                db.session.commit()
+
+                # Edit related inventory instance
+                inventory.update_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                inventory.total_stock = inventory.total_stock + int(args['stock'])
+                inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int(args['stock']))/(inventory.times_edited + 1))
+                inventory.times_edited = inventory.times_edited + 1
+                db.session.commit()
+
+                return {'message': 'Sukses menambahkan bahan baku'}, 200
+            
+        # Create new one
+        # Add new inventory instance
+        new_inventory = Inventories(id_users = id_user, name = args['name'], total_stock = args['stock'], unit = args['unit'], unit_price = args['unit_price'], times_edited = 1)
+        db.session.add(new_inventory)
+        db.session.commit()
+        id_inventory = new_inventory.id
+
+        # Add new stock outlet instance
+        new_stock_outlet = StockOutlet(id_outlet = id_outlet, id_inventory = id_inventory, reminder = args['reminder'], stock = args['stock'])
+        db.session.add(new_stock_outlet)
+        db.session.commit()
+            
+        return {'message': 'Sukses menambahkan bahan baku'}, 200
 
 class InventoryLogResource(Resource):
     # Enable CORS

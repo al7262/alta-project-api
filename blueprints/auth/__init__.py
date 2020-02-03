@@ -39,6 +39,7 @@ class LoginApps(Resource):
             qry_employee = qry_employee.first()
             outlet = Outlets.query.filter_by(deleted = False).filter_by(id = qry_employee.id_outlet).first()
             id_user = outlet.id_user
+            employeeData['id_employee'] = employeeData['id']
             employeeData['id'] = id_user
 
             if employeeData['deleted']==False:

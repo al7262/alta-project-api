@@ -14,6 +14,7 @@ class Inventories(db.Model):
     total_stock = db.Column(db.Integer, nullable = False, default = 0)
     unit = db.Column(db.String(20), nullable = False, default = '')
     unit_price = db.Column(db.Integer, nullable = False, default = 0)
+    times_edited = db.Column(db.Integer, nullable = False, default = 0)
     created_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     updated_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     deleted = db.Column(db.Boolean, default = False)
@@ -25,6 +26,7 @@ class Inventories(db.Model):
         'total_stock': fields.Integer,
         'unit': fields.String,
         'unit_price': fields.Integer,
+        'times_edited': fields.Integer,
         'created_at': fields.DateTime,
         'updated_at': fields.DateTime,
         'deleted': fields.Boolean
@@ -35,12 +37,13 @@ class Inventories(db.Model):
         'deleted': fields.Boolean
     }
 
-    def __init__(self, id_users, name, total_stock, unit, unit_price):
+    def __init__(self, id_users, name, total_stock, unit, unit_price, times_edited):
         self.id_users = id_users
         self.name = name
         self.total_stock = total_stock
         self.unit = unit
         self.unit_price = unit_price
+        self.times_edited = 0
         self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.deleted = False
