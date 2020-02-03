@@ -114,6 +114,12 @@ class CreateOutletResource(Resource):
         return {'message' : "add outlet success !!!"},200,{'Content-Type': 'application/json'}
 
 class SearchOutlet(Resource):
+
+    def options(self,id=None):
+        return{'status':'ok'} , 200
+
+    @jwt_required
+    @user_required
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('p', type = int, location = 'args', default = 1)
@@ -133,6 +139,24 @@ class SearchOutlet(Resource):
                 rows.append(marshal(row, Outlets.response_fields))
         return rows, 200
 
+class OutletGetByOne(Resource):
+    def options(self,id=None):
+        return{'status':'ok'} , 200
+
+    @jwt_required
+    @user_required
+    # showing product
+    def get(self,id=None):
+        claims = get_jwt_claims()
+        qry = Outlets.query.get(id)
+        marshal_qry = (marshal(qry, Outlets.response_fields))
+
+        if qry is not None:
+            if not qry.deleted:
+                return marshal_qry, 200
+        return {'message' : 'NOT_FOUND'}, 404
+
 api.add_resource(OutletResource,'/outlet','/outlet/<int:id>')
 api.add_resource(SearchOutlet,'/outlet/search')
 api.add_resource(CreateOutletResource,'/outlet/create')
+api.add_resource(OutletGetByOne,'/outlet/get/<int:id>')
