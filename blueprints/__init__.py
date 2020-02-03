@@ -98,7 +98,7 @@ from blueprints.customers.resources import bp_customers
 app.register_blueprint(bp_customers, url_prefix='/customer')
 
 from blueprints.employees.resources import bp_employees
-app.register_blueprint(bp_employees, url_prefix='/employee')
+app.register_blueprint(bp_employees, url_prefix='')
 
 from blueprints.inventories.resources import bp_inventories
 app.register_blueprint(bp_inventories, url_prefix='/inventory')
