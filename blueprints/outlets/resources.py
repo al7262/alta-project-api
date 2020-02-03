@@ -3,7 +3,7 @@ from flask import Blueprint
 from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
 from .model import Outlets
-from blueprints import db, app
+from blueprints import db, app, user_required
 from datetime import datetime
 import json
 
@@ -15,8 +15,124 @@ bp_outlets = Blueprint('outlets', __name__)
 api = Api(bp_outlets)
 
 class OutletResource(Resource):
-    # Enable CORS
-    def options(self, id=None):
-        return {'status': 'ok'}, 200
 
-api.add_resource(OutletResource, '')
+    @jwt_required
+    @user_required
+    # show outlet
+    def get(self):
+        claims = get_jwt_claims()
+        parser = reqparse.RequestParser()
+        parser.add_argument('p', type = int, location = 'args', default = 1)
+        parser.add_argument('rp', type = int, location = 'args', default = 25)
+        parser.add_argument('name', location = 'args')
+
+        args = parser.parse_args()
+
+        offset = (args['p'] * args['rp']) - args['rp']
+
+        qry = Outlets.query.filter_by(id_user = claims['id'])
+
+        if args['name'] is not None:
+            qry = qry.filter_by(name= args['name'])
+        
+            
+        rows = []
+        for row in qry.limit(args['rp']).offset(offset).all():
+            if not row.deleted:
+                rows.append(marshal(row, Outlets.response_fields))
+        return rows, 200
+
+    @jwt_required
+    @user_required
+    # delete outlet
+    def delete(self,id=None):
+        claims = get_jwt_claims()
+        qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(id = id).first()
+        if qry.deleted:
+            return {'message':'NOT_FOUND'}, 404
+
+        qry.deleted = True
+        db.session.commit()
+        return {"message": "Deleted"},200
+
+    @jwt_required
+    @user_required
+    # edit outlet
+    def put(self,id=None):
+        claims = get_jwt_claims()
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', location = 'json')
+        parser.add_argument('phone_number', location = 'json')
+        parser.add_argument('address', location = 'json')
+        parser.add_argument('city', location = 'json')
+        parser.add_argument('tax', location = 'json')
+        args = parser.parse_args()
+
+        qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(id = id).first()
+
+        if qry.deleted:
+            return{'message' : 'NOT_FOUND'}, 404
+        if args['name'] is not None:
+            qry.name = args['name']
+        if args['phone_number'] is not None:
+            qry.phone_number = args['phone_number']
+        if args['address'] is not None:
+            qry.address = args['address']
+        if args['city'] is not None:
+            qry.city = args['city']
+        if args['tax'] is not None:
+            qry.tax = args['tax']
+
+        db.session.commit()
+        return marshal(qry, Outlets.response_fields), 200
+
+#CRUD outlet POST (accessed by owner)
+class CreateOutletResource(Resource):
+
+    def options(self,id=None):
+        return{'status':'ok'} , 200
+
+    # create product
+    @jwt_required
+    @user_required
+    def post(self):
+        claims = get_jwt_claims()
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', location = 'json', required = True)
+        parser.add_argument('phone_number', location = 'json', required = True)
+        parser.add_argument('address', location = 'json', required = True)
+        parser.add_argument('city', location = 'json', required = True)
+        parser.add_argument('tax', location = 'json', required = True)
+        
+        args = parser.parse_args()
+        
+        outlet = Outlets(claims['id'], args['name'], args['phone_number'], args['address'], args['city'], args['tax'])
+        db.session.add(outlet)
+        db.session.commit()
+        app.logger.debug('DEBUG : %s', outlet)
+        
+        return {'message' : "add outlet success !!!"},200,{'Content-Type': 'application/json'}
+
+class SearchOutlet(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('p', type = int, location = 'args', default = 1)
+        parser.add_argument('rp', type = int, location = 'args', default = 25)
+        parser.add_argument('keyword', location = 'args')
+
+        args = parser.parse_args()
+
+        offset = (args['p'] * args['rp']) - args['rp']
+
+        qry = Outlets.query.filter(Outlets.name.like("%"+args["keyword"]+"%") | Outlets.city.like("%"+args["keyword"]+"%"))
+        
+            
+        rows = []
+        for row in qry.limit(args['rp']).offset(offset).all():
+            if not row.deleted:
+                rows.append(marshal(row, Outlets.response_fields))
+        return rows, 200
+
+api.add_resource(OutletResource,'/outlet','/outlet/<int:id>')
+api.add_resource(SearchOutlet,'/outlet/search')
+api.add_resource(CreateOutletResource,'/outlet/create')

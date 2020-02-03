@@ -104,7 +104,7 @@ from blueprints.inventories.resources import bp_inventories
 app.register_blueprint(bp_inventories, url_prefix='/inventory')
 
 from blueprints.outlets.resources import bp_outlets
-app.register_blueprint(bp_outlets, url_prefix='/outlet')
+app.register_blueprint(bp_outlets, url_prefix='')
 
 from blueprints.products.resources import bp_products
 app.register_blueprint(bp_products, url_prefix='/product')
