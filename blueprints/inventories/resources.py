@@ -20,6 +20,8 @@ class InventoryResource(Resource):
     def options(self, id=None):
         return {'status': 'ok'}, 200
 
+    # Get all inventories for specified owner
+
 class InventoryLogResource(Resource):
     # Enable CORS
     def options(self, id=None):
