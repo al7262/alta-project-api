@@ -16,7 +16,7 @@ api = Api(bp_users)
 
 class RegisterUserResource(Resource):
 
-    #
+    #enalble CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
 
@@ -30,12 +30,8 @@ class RegisterUserResource(Resource):
     # create user account
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('username', location = 'json', required = True)
-        parser.add_argument('password', location = 'json', required = True)
-        parser.add_argument('fullname', location = 'json', required = True)
         parser.add_argument('email', location = 'json', required = True)
-        parser.add_argument('address', location = 'json', required = True)
-        parser.add_argument('number_phone', location = 'json', required = True)
+        parser.add_argument('password', location = 'json', required = True)
         args = parser.parse_args()
         
         validation = self.policy.test(args['password'])
@@ -48,10 +44,8 @@ class RegisterUserResource(Resource):
             message = "Please check your password: " + ', '.join(x for x in errorList)
             return {'message': message}, 422, {'Content-Type': 'application/json'}
         encrypted = hashlib.md5(args['password'].encode()).hexdigest()
-
-        role = "user"
         
-        user = Users(args['username'], encrypted, args['fullname'], args['email'], args['address'], args['number_phone'], "user")
+        user = Users(args['email'], encrypted)
         db.session.add(user)
         db.session.commit()
         app.logger.debug('DEBUG : %s', user)
@@ -80,51 +74,41 @@ class UserResource(Resource):
         return {'message' : 'NOT_FOUND'}, 404
 
     def put(self):
-            claims =api.add_resource(LoginCashier, '/login-cashier') get_jwt_claims()
-            qry = Users.query.filter_by(id = claims['id']).first()
-            parser = reqparse.RequestParser()
-            parser.add_argument('username', location = 'json')
-            parser.add_argument('password', location = 'json')
-            parser.add_argument('fullname', location = 'json')
-            parser.add_argument('number_phone', location = 'json')
-            parser.add_argument('address', location = 'json')
-            parser.add_argument('email', location = 'json')
-            parser.add_argument('gender', location = 'json', help = "Invalid input", choices=('Male', 'Female'))
-            parser.add_argument('city', location = 'json')
-            parser.add_argument('image', location = 'json')
+        claims = get_jwt_claims()
+        qry = Users.query.filter_by(id = claims['id']).first()
+        parser = reqparse.RequestParser()
 
-            args = parser.parse_args()
+        parser.add_argument('fullname', location = 'json')
+        parser.add_argument('password', location = 'json')
+        parser.add_argument('phone_number', location = 'json')
+        parser.add_argument('business_name', location = 'json')
+        parser.add_argument('image', location = 'json')
 
-            if qry.deleted:
-                return{'message' : 'NOT_FOUND'}, 404
-            if args ['username'] is not None:
-                qry.username = args['username']
-            if args['password'] is not None:
-                validation = self.policy.test(args['password'])
-                if validation:
-                    errorList = []
-                    for item in validation:
-                        split = str(item).split('(')
-                        error, num = split[0], split[1][0]
-                        errorList.append("{err}(minimum {num})".format(err=error, num=num))
-                    message = "Please check your password: " + ', '.join(x for x in errorList)
-                    return {'message': message}, 422, {'Content-Type': 'application/json'}
-                encrypted = hashlib.md5(args['password'].encode()).hexdigest()
-                qry.password = encrypted
-            if args['fullname'] is not None:
-                qry.fullname = args['fullname']
-            if args['number_phone'] is not None:
-                qry.number_phone = args['number_phone']
-            if args['address'] is not None:
-                qry.address = args['address']
-            if args['email'] is not None:
-                qry.email = args['email']
-            if args['gender'] is not None:
-                qry.gender = args['gender']
-            if args['city'] is not None:
-                qry.city = args['city']
-            if args['image'] is not None:
-                qry.image = args['image']
+        args = parser.parse_args()
 
-            db.session.commit()
-            return marshal(qry, Users.response_fields), 200
+        if args['password'] is not None:
+            validation = self.policy.test(args['password'])
+            if validation:
+                errorList = []
+                for item in validation:
+                    split = str(item).split('(')
+                    error, num = split[0], split[1][0]
+                    errorList.append("{err}(minimum {num})".format(err=error, num=num))
+                message = "Please check your password: " + ', '.join(x for x in errorList)
+                return {'message': message}, 422, {'Content-Type': 'application/json'}
+            encrypted = hashlib.md5(args['password'].encode()).hexdigest()
+            qry.password = encrypted
+        if args['fullname'] is not None:
+            qry.fullname = args['fullname']
+        if args['phone_number'] is not None:
+            qry.number_phone = args['phone_number']
+        if args['business_name'] is not None:
+            qry.address = args['business_name']
+        if args['image'] is not None:
+            qry.image = args['image']
+
+        db.session.commit()
+        return marshal(qry, Users.response_fields), 200
+
+api.add_resource(RegisterUserResource,'/user/register')
+api.add_resource(UserResource,'/user/profile')
