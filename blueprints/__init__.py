@@ -93,8 +93,8 @@ from blueprints.promo.resources import bp_promo
 app.register_blueprint(bp_promo, url_prefix='/promo')
 from blueprints.recipes.resources import bp_recipe
 app.register_blueprint(bp_recipe, url_prefix='/recipe')
-from blueprints.users.resources import bp_users
-app.register_blueprint(bp_users, url_prefix='/users')
+from blueprints.auth import bp_auth
+app.register_blueprint(bp_auth,url_prefix = '')
 
 db.create_all()
 
