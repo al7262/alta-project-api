@@ -161,6 +161,12 @@ class EmployeeResource(Resource):
         return {"message": "Deleted"},200
 
 class EmployeeSearch(Resource):
+
+    def options(self,id=None):
+        return{'status':'ok'} , 200
+
+    @jwt_required
+    @user_required
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('p', type = int, location = 'args', default = 1)
@@ -179,7 +185,24 @@ class EmployeeSearch(Resource):
             if not row.deleted:
                 rows.append(marshal(row, Employees.response_fields))
         return rows, 200
+class EmployeeGetByOne(Resource):
+
+    def options(self,id=None):
+        return{'status':'ok'} , 200
+
+    @jwt_required
+    @user_required
+    def get(self,id=None):
+        claims = get_jwt_claims()
+        qry = Employees.query.get(id)
+        marshal_qry = (marshal(qry, Employees.response_fields))
+
+        if qry is not None:
+            if not qry.deleted:
+                return marshal_qry, 200
+        return {'message' : 'NOT_FOUND'}, 404
 
 api.add_resource(CreateEmployeeResource,'/employee/create')
 api.add_resource(EmployeeResource,'/employee','/employee/<int:id>')
 api.add_resource(EmployeeSearch,'/employee/search')
+api.add_resource(EmployeeGetByOne,'/employee/get/<int:id>')
