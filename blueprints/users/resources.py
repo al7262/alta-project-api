@@ -3,7 +3,7 @@ from flask import Blueprint
 from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
 from .model import Users
-from blueprints import db, app
+from blueprints import db, app, user_required
 from datetime import datetime
 from password_strength import PasswordPolicy
 import json,hashlib
@@ -42,7 +42,7 @@ class RegisterUserResource(Resource):
                 split = str(item).split('(')
                 error, num = split[0], split[1][0]
                 errorList.append("{err}(minimum {num})".format(err=error, num=num))
-            message = "Please check your password: " + ', '.join(x for x in errorList)
+            message = "Please check your passw@jwt_requiredord: " + ', '.join(x for x in errorList)
             return {'message': message}, 422, {'Content-Type': 'application/json'}
         encrypted = hashlib.md5(args['password'].encode()).hexdigest()
         
@@ -65,11 +65,15 @@ class UserResource(Resource):
     )
 
     # showing user profile (himself)
+    @jwt_required
+    @user_required
     def get(self):
         claims = get_jwt_claims()
         qry = Users.query.filter_by(id = claims['id']).first()
         return marshal(qry, Users.response_fields), 200
 
+    @jwt_required
+    @user_required
     def put(self):
         claims = get_jwt_claims()
         qry = Users.query.filter_by(id = claims['id']).first()
@@ -98,9 +102,9 @@ class UserResource(Resource):
         if args['fullname'] is not None:
             qry.fullname = args['fullname']
         if args['phone_number'] is not None:
-            qry.number_phone = args['phone_number']
+            qry.phone_number = args['phone_number']
         if args['business_name'] is not None:
-            qry.address = args['business_name']
+            qry.business_name = args['business_name']
         if args['image'] is not None:
             qry.image = args['image']
 

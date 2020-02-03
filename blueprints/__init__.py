@@ -21,14 +21,37 @@ app.config['JWT_SECRET_KEY'] = 'c2n!$st0pDo1ngt#!s$tuff'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 jwt = JWTManager(app)
 
-def admin_required(fn):
+def user_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt_claims()
-        if not claims['admin']:
+        if claims['email'] is not None:
+            return fn(*args, **kwargs)
+        else:
             return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
-        return fn(*args, **kwargs)
+    return wrapper
+
+def dashboard_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        claims = get_jwt_claims()
+        if claims['position'] == "Admin" or claims['email'] is not None:
+            return fn(*args, **kwargs)
+        else:
+            return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+    return wrapper
+
+def apps_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        claims = get_jwt_claims()
+        if claims['position'] == "Kasir" or claims['position'] == "Admin" or claims['email'] is not None:
+            return fn(*args, **kwargs)
+        else:
+            return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
     return wrapper
 
 ##############################
@@ -53,7 +76,7 @@ try:
     elif username_laptop == '/home/alta8':
         app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@0.0.0.0:3306/final_project_backend_testing'
     elif username_laptop == '/home/alta10':
-       app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://alta5:01010010@localhost/project'
+       app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend_test'
 
 except Exception as e:
     raise e
@@ -67,34 +90,34 @@ manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
 ##############################
-# ROUTE
-##############################
-
-@app.route('/')
-def index():
-    return {'message': 'Hello! This is the main route'}, 200, {'Content-Type': 'application/json'}
-
-##############################
 # MIDDLEWARES
 ##############################
 
 # Put blueprints here
 from blueprints.customers.resources import bp_customers
 app.register_blueprint(bp_customers, url_prefix='/customer')
+
 from blueprints.employees.resources import bp_employees
 app.register_blueprint(bp_employees, url_prefix='/employee')
+
 from blueprints.inventories.resources import bp_inventories
 app.register_blueprint(bp_inventories, url_prefix='/inventory')
+
 from blueprints.outlets.resources import bp_outlets
 app.register_blueprint(bp_outlets, url_prefix='/outlet')
+
 from blueprints.products.resources import bp_products
 app.register_blueprint(bp_products, url_prefix='/product')
+
 from blueprints.promo.resources import bp_promo
 app.register_blueprint(bp_promo, url_prefix='/promo')
+
 from blueprints.recipes.resources import bp_recipe
 app.register_blueprint(bp_recipe, url_prefix='/recipe')
+
 from blueprints.auth import bp_auth
 app.register_blueprint(bp_auth,url_prefix = '')
+
 from blueprints.users.resources import Bp_user
 app.register_blueprint(Bp_user,url_prefix = '')
 
