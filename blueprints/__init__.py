@@ -107,7 +107,7 @@ manager.add_command('db', MigrateCommand)
 
 # Put blueprints here
 from blueprints.customers.resources import bp_customers
-app.register_blueprint(bp_customers, url_prefix='/customer')
+app.register_blueprint(bp_customers, url_prefix='')
 
 from blueprints.employees.resources import bp_employees
 app.register_blueprint(bp_employees, url_prefix='')

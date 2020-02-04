@@ -3,7 +3,7 @@ from flask import Blueprint
 from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
 from .model import Customers
-from blueprints import db, app, dashboard_required
+from blueprints import db, app, dashboard_required, apps_required
 from datetime import datetime
 import json
 
@@ -20,7 +20,7 @@ class CustomerResource(Resource):
         return{'status':'ok'} , 200
 
     @jwt_required
-    @user_required
+    @dashboard_required
     # show outlet
     def get(self):
         claims = get_jwt_claims()
@@ -32,97 +32,71 @@ class CustomerResource(Resource):
 
         offset = (args['p'] * args['rp']) - args['rp']
 
-        qry #belum selesai..........
-        qry = Customers.query.filter_by(id_user = claims['id'])
-
-        if args['name'] is not None:
-            qry = qry.filter_by(name= args['name'])
-        
+        qry = Customers.query.filter_by(id_users = claims['id'])      
             
         rows = []
         for row in qry.limit(args['rp']).offset(offset).all():
-            if not row.deleted:
-                rows.append(marshal(row, Outlets.response_fields))
+            rows.append(marshal(row, Customers.response_fields))
         return rows, 200
 
     @jwt_required
-    @user_required
-    # delete outlet
-    def delete(self,id=None):
-        claims = get_jwt_claims()
-        qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(id = id).first()
-        if qry.deleted:
-            return {'message':'NOT_FOUND'}, 404
-
-        qry.deleted = True
-        db.session.commit()
-        return {"message": "Deleted"},200
-
-    @jwt_required
-    @user_required
+    @apps_required
     # edit outlet
     def put(self,id=None):
         claims = get_jwt_claims()
         parser = reqparse.RequestParser()
-        parser.add_argument('name', location = 'json')
-        parser.add_argument('phone_number', location = 'json')
-        parser.add_argument('address', location = 'json')
-        parser.add_argument('city', location = 'json')
-        parser.add_argument('tax', location = 'json')
+        parser.add_argument('fullname', location = 'json', required = True)
+        parser.add_argument('phone_number', location = 'json', required = True)
+        parser.add_argument('email', location = 'json', required = True)
+
         args = parser.parse_args()
 
-        qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(id = id).first()
+        qry = Customers.query.filter_by(id_users = claims['id']).filter_by(id = id).first()
 
-        if qry.deleted:
-            return{'message' : 'NOT_FOUND'}, 404
-        if args['name'] is not None:
-            qry.name = args['name']
+        if qry is None:
+            return {'message' : "Not Found !!!"},404
+        if args['fullname'] is not None:
+            qry.fullname = args['fullname']
         if args['phone_number'] is not None:
             qry.phone_number = args['phone_number']
-        if args['address'] is not None:
-            qry.address = args['address']
-        if args['city'] is not None:
-            qry.city = args['city']
-        if args['tax'] is not None:
-            qry.tax = args['tax']
-
+        if args['email'] is not None:
+            qry.email = args['email']
+            
         db.session.commit()
-        return marshal(qry, Outlets.response_fields), 200
+        return marshal(qry, Customers.response_fields), 200
 
 #CRUD outlet POST (accessed by owner)
-class CreateOutletResource(Resource):
+class CreateCustomerResource(Resource):
 
     def options(self,id=None):
         return{'status':'ok'} , 200
 
     # create product
     @jwt_required
-    @user_required
+    @apps_required
     def post(self):
         claims = get_jwt_claims()
         parser = reqparse.RequestParser()
-        parser.add_argument('name', location = 'json', required = True)
+        parser.add_argument('fullname', location = 'json', required = True)
         parser.add_argument('phone_number', location = 'json', required = True)
-        parser.add_argument('address', location = 'json', required = True)
-        parser.add_argument('city', location = 'json', required = True)
-        parser.add_argument('tax', location = 'json', required = True)
+        parser.add_argument('email', location = 'json', required = True)
         
         args = parser.parse_args()
         
-        outlet = Outlets(claims['id'], args['name'], args['phone_number'], args['address'], args['city'], args['tax'])
-        db.session.add(outlet)
+        customer = Customers(claims['id'], args['fullname'], args['phone_number'], args['email'])
+        db.session.add(customer)
         db.session.commit()
-        app.logger.debug('DEBUG : %s', outlet)
+        app.logger.debug('DEBUG : %s', customer)
         
-        return {'message' : "add outlet success !!!"},200,{'Content-Type': 'application/json'}
+        return {'message' : "add customer success !!!"},200,{'Content-Type': 'application/json'}
 
-class SearchOutlet(Resource):
+class SearchCustomer(Resource):
 
     def options(self,id=None):
         return{'status':'ok'} , 200
 
     @jwt_required
-    @user_required
+    @apps_required
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('p', type = int, location = 'args', default = 1)
@@ -133,33 +107,31 @@ class SearchOutlet(Resource):
 
         offset = (args['p'] * args['rp']) - args['rp']
 
-        qry = Outlets.query.filter(Outlets.name.like("%"+args["keyword"]+"%") | Outlets.city.like("%"+args["keyword"]+"%"))
+        qry = Customers.query.filter(Customers.fullname.like("%"+args["keyword"]+"%") | Customers.phone_number.like("%"+args["keyword"]+"%") | Customers.email.like("%"+args["keyword"]+"%"))
         
-            
         rows = []
         for row in qry.limit(args['rp']).offset(offset).all():
-            if not row.deleted:
-                rows.append(marshal(row, Outlets.response_fields))
+            rows.append(marshal(row, Customers.response_fields))
         return rows, 200
 
-class OutletGetByOne(Resource):
+class CustomerGetByOne(Resource):
+    
     def options(self,id=None):
         return{'status':'ok'} , 200
 
     @jwt_required
-    @user_required
+    @apps_required
     # showing product
     def get(self,id=None):
         claims = get_jwt_claims()
-        qry = Outlets.query.get(id)
-        marshal_qry = (marshal(qry, Outlets.response_fields))
+        qry = Customers.query.get(id)
+        marshal_qry = (marshal(qry, Customers.response_fields))
 
         if qry is not None:
-            if not qry.deleted:
-                return marshal_qry, 200
+            return marshal_qry, 200
         return {'message' : 'NOT_FOUND'}, 404
 
-api.add_resource(OutletResource,'/outlet','/outlet/<int:id>')
-api.add_resource(SearchOutlet,'/outlet/search')
-api.add_resource(CreateOutletResource,'/outlet/create')
-api.add_resource(OutletGetByOne,'/outlet/get/<int:id>')
+api.add_resource(CustomerResource,'/customer','/customer/<int:id>')
+api.add_resource(SearchCustomer,'/customer/search')
+api.add_resource(CreateCustomerResource,'/customer/create')
+api.add_resource(CustomerGetByOne,'/customer/get/<int:id>')
