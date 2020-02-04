@@ -249,6 +249,8 @@ class AddStock(Resource):
         return {'status': 'ok'}, 200
 
     # Add stock to an inventory
+    @jwt_required
+    @dashboard_required
     def put(self, id_stock_outlet):
         # Take input from users
         parser = reqparse.RequestParser()
@@ -283,6 +285,8 @@ class InventoryLogOutlet(Resource):
         return {'status': 'ok'}, 200
     
     # Get all logs related to specified inventory in an outlet
+    @jwt_required
+    @dashboard_required
     def get(self, id_stock_outlet):
         # Get all inventory log of that inventory
         logs = InventoryLog.query.filter_by(id_stock_outlet = id_stock_outlet)
@@ -333,6 +337,8 @@ class InventoryLogAll(Resource):
         return {'status': 'ok'}, 200
     
     # Get logs of an inventory in all outlets
+    @jwt_required
+    @dashboard_required
     def get(self, id_inventory):
         # Get all inventory log of that inventory
         stock_outlet_list = StockOutlet.query.filter_by(id_inventory = id_inventory)
@@ -379,6 +385,8 @@ class InventoryReminder(Resource):
         return {'status': 'ok'}, 200
     
     # Get all inventories which almost run-out-of stock in an outlet
+    @jwt_required
+    @dashboard_required
     def get(self, id_outlet):
         # Get all stock outlet and filter those which stock less than or equal to reminder
         stock_outlet_list = StockOutlet.query.filter_by(id_outlet = id_outlet)
@@ -415,6 +423,53 @@ class InventoryReminderAll(Resource):
     # Enable CORS
     def options(self, id=None):
         return {'status': 'ok'}, 200
+    
+    # Get all inventories which stock almost run-out of stock in all outlets
+    @jwt_required
+    @dashboard_required
+    def get(self):
+        # Get ID users
+        claims = get_jwt_claims()
+        id_user = claims['id']
+
+        # Get all stock outlet which belong to that user
+        inventories = Inventories.query.filter_by(id_users = id_user).filter_by(deleted = False)
+        stock_outlet_list = []
+        for inventory in inventories:
+            inventory_id = inventory.id
+            related_stock_outlet = StockOutlet.query.filter_by(id_inventory = inventory_id)
+            for stock_outlet in related_stock_outlet:
+                stock_outlet_list.append(stock_outlet)
+
+        # Get all stock outlet and filter those which stock less than or equal to reminder
+        stock_outlet_filtered = filter(lambda stock_outlet: stock_outlet.stock <= stock_outlet.reminder, stock_outlet_list)
+
+        # Prepare the result
+        inventories_data = []
+        for stock_outlet in stock_outlet_filtered:
+            stock_outlet = marshal(stock_outlet, StockOutlet.response_fields)
+            
+            # Search for inventory name
+            id_inventory = stock_outlet['id_inventory']
+            inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
+            inventory_name = inventory.name
+
+            # Get outlet name
+            outlet = Outlets.query.filter_by(deleted = False).filter_by(id = stock_outlet['id_outlet']).first()
+            outlet_name = outlet.name
+
+            # Prepare the data
+            data = {
+                'name': inventory_name,
+                'stock': stock_outlet['stock'],
+                'outlet': outlet_name
+            }
+            inventories_data.append(data)
+        result = {
+            'below_reminder': len(inventories_data),
+            'reminder': inventories_data
+        }
+        return result, 200
 
 api.add_resource(InventoryResource, '')
 api.add_resource(InventoryPerOutlet, '/<id_outlet>')
