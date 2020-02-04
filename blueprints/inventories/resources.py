@@ -4,6 +4,7 @@ from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
 from .model import Inventories, InventoryLog
 from blueprints.stock_outlet.model import StockOutlet
+from blueprints.outlets.model import Outlets
 from blueprints import db, app
 from datetime import datetime
 import json
@@ -276,13 +277,52 @@ class AddStock(Resource):
 
         return {'message': 'Sukses menambahkan stok bahan baku'}, 200
 
-class InventoryLogResource(Resource):
+class InventoryLogAll(Resource):
     # Enable CORS
     def options(self, id=None):
         return {'status': 'ok'}, 200
+    
+    # Get all logs related to specified inventory in an outlet
+    def get(self, id_stock_outlet):
+        # Get all inventory log of that inventory
+        logs = InventoryLog.query.filter_by(id_stock_outlet = id_stock_outlet)
+
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('type', location = 'json', required = False)
+        parser.add_argument('date', location = 'json', required = True)
+        args = parser.parse_args()
+
+        # Filter by type
+        if args['type'] != '' or args['type'] == 'Semua':
+            logs = logs.filter_by(status = args['type'])
+
+        # Filter by date
+        filtered_logs = []
+        for log in logs:
+            created_at = log.created_at
+            if created_at.strftime("%Y-%m-%d") == args['date']:
+                filtered_logs.append(log)
+        
+        # Get outlet name
+        stock_outlet = StockOutlet.query.filter_by(id = id_stock_outlet).first()
+        id_outlet = stock_outlet.id_outlet
+        outlet = Outlets.query.filter_by(deleted = False).filter_by(id = id_outlet).first()
+        outlet_name = outlet.name
+
+        # Show the result
+        logs_list = []
+        for log in filtered_logs:
+            log = marshal(log, InventoryLog.inventory_log_fields)
+            logs_list.append(log)
+        result = {
+            'outlet_name': outlet_name,
+            'logs': logs_list
+        }
+        return result, 200
 
 api.add_resource(InventoryResource, '')
 api.add_resource(InventoryPerOutlet, '/<id_outlet>')
 api.add_resource(InventoryDetail, '/detail/<id_stock_outlet>')
 api.add_resource(AddStock, '/add-stock/<id_stock_outlet>')
-api.add_resource(InventoryLogResource, '/log')
+api.add_resource(InventoryLogAll, '/log/<id_stock_outlet>')
