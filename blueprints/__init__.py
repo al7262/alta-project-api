@@ -37,10 +37,16 @@ def dashboard_required(fn):
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt_claims()
-        if claims['position'] == "Admin" or claims['email'] is not None:
-            return fn(*args, **kwargs)
+        if 'position' in claims:
+            if claims['position'] == "Admin":
+                return fn(*args, **kwargs)
+            else:
+                return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
         else:
-            return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+            if claims['email'] is not None:
+                return fn(*args, **kwargs)
+            else:
+                return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
     return wrapper
 
 def apps_required(fn):
@@ -48,10 +54,16 @@ def apps_required(fn):
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt_claims()
-        if claims['position'] == "Kasir" or claims['position'] == "Admin" or claims['email'] is not None:
-            return fn(*args, **kwargs)
+        if 'position' in claims:
+            if claims['position'] == "Kasir":
+                return fn(*args, **kwargs)
+            else:
+                return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
         else:
-            return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+            if claims['email'] is not None:
+                return fn(*args, **kwargs)
+            else:
+                return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
     return wrapper
 
 ##############################
@@ -104,7 +116,7 @@ from blueprints.inventories.resources import bp_inventories
 app.register_blueprint(bp_inventories, url_prefix='/inventory')
 
 from blueprints.outlets.resources import bp_outlets
-app.register_blueprint(bp_outlets, url_prefix='/outlet')
+app.register_blueprint(bp_outlets, url_prefix='')
 
 from blueprints.products.resources import bp_products
 app.register_blueprint(bp_products, url_prefix='/product')
