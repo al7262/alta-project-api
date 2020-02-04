@@ -154,6 +154,11 @@ class InventoryPerOutlet(Resource):
                 inventory.times_edited = inventory.times_edited + 1
                 db.session.commit()
 
+                # Add inventory log instance
+                new_inventory_log = InventoryLog(id_stock_outlet = new_stock_outlet.id, status = "Masuk", amount = args['stock'], last_stock = new_stock_outlet.stock)
+                db.session.add(new_inventory_log)
+                db.session.commit()
+
                 return {'message': 'Sukses menambahkan bahan baku'}, 200
             
         # Create new one
@@ -167,7 +172,12 @@ class InventoryPerOutlet(Resource):
         new_stock_outlet = StockOutlet(id_outlet = id_outlet, id_inventory = id_inventory, reminder = args['reminder'], stock = args['stock'])
         db.session.add(new_stock_outlet)
         db.session.commit()
-            
+
+        # Add inventory log instance
+        new_inventory_log = InventoryLog(id_stock_outlet = new_stock_outlet.id, status = "Masuk", amount = args['stock'], last_stock = new_stock_outlet.stock)
+        db.session.add(new_inventory_log)
+        db.session.commit()
+
         return {'message': 'Sukses menambahkan bahan baku'}, 200
 
 class InventoryDetail(Resource):
@@ -191,6 +201,81 @@ class InventoryDetail(Resource):
 
         return result, 200
 
+    # Edit existing stock outlet
+    @jwt_required
+    @dashboard_required
+    def put(self, id_stock_outlet):
+        # Find targeted stock outlet
+        target_stock_outlet = StockOutlet.query.filter_by(id = id_stock_outlet).first()
+        inventory = Inventories.query.filter_by(deleted = False).filter_by(id = target_stock_outlet.id_inventory).first()
+
+        # Find related stock outlet in other outlet
+        id_inventory = inventory.id
+        related_stock_outlet_list = StockOutlet.query.filter_by(id_inventory = id_inventory)
+
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', location = 'json', required = True)
+        parser.add_argument('stock', location = 'json', required = True)
+        parser.add_argument('unit', location = 'json', required = True)
+        parser.add_argument('reminder', location = 'json', required = True)
+        args = parser.parse_args()
+
+        # Validate emptyness
+        if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['reminder'] == '':
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+
+        # Edit stock outlet
+        target_stock_outlet.reminder = args['reminder']
+        target_stock_outlet.stock = args['stock']
+        db.session.commit()
+
+        # Edit inventory
+        total_stock = 0
+        for stock_outlet in related_stock_outlet_list:
+            total_stock = total_stock + stock_outlet.stock
+        inventory.name = args['name']
+        inventory.unit = args['unit']
+        inventory.total_stock = total_stock
+        inventory.update_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        db.session.commit()
+
+        return {'message': 'Sukses mengubah bahan baku'}
+
+class AddStock(Resource):
+    # Enable CORS
+    def options(self, id=None):
+        return {'status': 'ok'}, 200
+
+    # Add stock to an inventory
+    def put(self, id_stock_outlet):
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('stock', location = 'json', required = True)
+        parser.add_argument('price', location = 'json', required = True)
+        args = parser.parse_args()
+
+        # Search for specified stock outlet and inventory related
+        stock_outlet = StockOutlet.query.filter_by(id = id_stock_outlet).first()
+        id_inventory = stock_outlet.id_inventory
+        inventory = Inventories.query.filter_by(id = id_inventory).filter_by(deleted = False).first()
+
+        # Edit stock outlet
+        stock_outlet.stock = stock_outlet.stock + int(args['stock'])
+
+        # Edit inventory
+        inventory.total_stock = inventory.total_stock + int(args['stock'])
+        inventory.update_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int(args['price']))/(inventory.times_edited + 1))
+        inventory.times_edited = inventory.times_edited + 1
+
+        # Add inventory log instance
+        new_inventory_log = InventoryLog(id_stock_outlet = id_stock_outlet, status = "Masuk", amount = args['stock'], last_stock = stock_outlet.stock)
+        db.session.add(new_inventory_log)
+        db.session.commit()
+
+        return {'message': 'Sukses menambahkan stok bahan baku'}, 200
+
 class InventoryLogResource(Resource):
     # Enable CORS
     def options(self, id=None):
@@ -198,5 +283,6 @@ class InventoryLogResource(Resource):
 
 api.add_resource(InventoryResource, '')
 api.add_resource(InventoryPerOutlet, '/<id_outlet>')
-api.add_resource(InventoryDetail, '/detail/<id_outlet>')
+api.add_resource(InventoryDetail, '/detail/<id_stock_outlet>')
+api.add_resource(AddStock, '/add-stock/<id_stock_outlet>')
 api.add_resource(InventoryLogResource, '/log')
