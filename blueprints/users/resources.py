@@ -35,23 +35,26 @@ class RegisterUserResource(Resource):
         parser.add_argument('password', location = 'json', required = True)
         args = parser.parse_args()
         
-        validation = self.policy.test(args['password'])
-        if validation:
-            errorList = []
-            for item in validation:
-                split = str(item).split('(')
-                error, num = split[0], split[1][0]
-                errorList.append("{err}(minimum {num})".format(err=error, num=num))
-            message = "Please check your passw@jwt_requiredord: " + ', '.join(x for x in errorList)
-            return {'message': message}, 422, {'Content-Type': 'application/json'}
-        encrypted = hashlib.md5(args['password'].encode()).hexdigest()
-        
-        user = Users(args['email'], encrypted)
-        db.session.add(user)
-        db.session.commit()
-        app.logger.debug('DEBUG : %s', user)
-        
-        return {'message' : "registration success !!!"},200,{'Content-Type': 'application/json'}
+        qry = Users.query.filter_by(email = args['email']).filter_by(password = args['password'])
+        if qry is None:
+            validation = self.policy.test(args['password'])
+            if validation:
+                errorList = []
+                for item in validation:
+                    split = str(item).split('(')
+                    error, num = split[0], split[1][0]
+                    errorList.append("{err}(minimum {num})".format(err=error, num=num))
+                message = "Please check your passw@jwt_requiredord: " + ', '.join(x for x in errorList)
+                return {'message': message}, 422, {'Content-Type': 'application/json'}
+            encrypted = hashlib.md5(args['password'].encode()).hexdigest()
+            
+            user = Users(args['email'], encrypted)
+            db.session.add(user)
+            db.session.commit()
+            app.logger.debug('DEBUG : %s', user)
+            
+            return {'message' : "registration success !!!"},200,{'Content-Type': 'application/json'}
+        return {'message' : "registration Failed !!!"},200
 
 class UserResource(Resource):
     

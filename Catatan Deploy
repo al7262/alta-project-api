@@ -1,0 +1,38 @@
+SETTING DOCKER
+- ssh -i nama.pem admin@publicIP
+- sudo apt-get install nginx
+- sudo apt get install wget curl telnet mlocate git
+- sudo apt-get install docker
+- sudo apt purge docker && curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+- sudo apt-get install software-properties-common
+- sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian stretch stable" && sudo apt-get update
+- sudo apt-get install docker-ce
+- sudo systemctl enable docker
+- sudo usermod -a -G docker admin
+- CEK STATUS DOCKER : sudo systemctl status docker
+- USE OF SUDO NOT REQUIRED : restart docker nya (logout dulu, terus login lagi)
+
+SETTING RDS (password : agungajin19)
+- sudo apt-get install telnet
+- CHECK RDS : telnet endpoint 3306
+- sudo apt install mariadb-server
+- ENTER DATABASE : mysql -h endpoint -u user -p identifier
+
+DOCKER
+- docker build -t agungajin19/pos_api:backend
+- LOGIN : docker login
+- docker push agungajin19/pos_api:backend
+- docker run -d -p 5001:5000 agungajin19/posapi:backend
+
+CONNECT CLOUDFLARE
+- Buka tab SSL
+- Pilih full
+- Buka origin server
+- Buat certificate
+- Copas, masukkin ke dua file (ekstensinya crt dan key)
+- Upload di server (caranya pake sftp, sama kayak ssh, tapi ganti sftp, command : put)
+- SSH ke server
+- sudo nano /etc/nginx/sites-available/easy.my.id
+- Copy isi gitsfile1 ke file yang dibuatnya sebelumnya
+- Sesuaiin dengan nama server, termasuk lokasi crt dan key nya
+- sudo service nginx restart
