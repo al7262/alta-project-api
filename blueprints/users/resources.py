@@ -35,7 +35,7 @@ class RegisterUserResource(Resource):
         parser.add_argument('password', location = 'json', required = True)
         args = parser.parse_args()
         
-        qry = Users.query.filter_by(email = args['email']).filter_by(password = args['password'])
+        qry = Users.query.filter_by(email = args['email']).first()
         if qry is None:
             validation = self.policy.test(args['password'])
             if validation:
@@ -54,7 +54,7 @@ class RegisterUserResource(Resource):
             app.logger.debug('DEBUG : %s', user)
             
             return {'message' : "registration success !!!"},200,{'Content-Type': 'application/json'}
-        return {'message' : "registration Failed !!!"},200
+        return {'message' : "registration Failed !!!"},401
 
 class UserResource(Resource):
     

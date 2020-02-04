@@ -14,7 +14,7 @@ class LoginApps(Resource):
     def options(self,id=None):
         return{'status':'ok'} , 200
 
-    def get(self):
+    def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('username', location = 'json', required = True)
         parser.add_argument('password', location = 'json', required = True)
@@ -49,7 +49,7 @@ class LoginApps(Resource):
         return{'status' : 'UNATUTHORIZED' , 'message' : 'invalid username or password'}, 401
     
     @jwt_required
-    def post(self):
+    def get(self):
         claims = get_jwt_claims()
         return {'claims' : claims}, 200
 
@@ -58,7 +58,7 @@ class LoginDashboard(Resource):
     def options(self,id=None):
         return{'status':'ok'} , 200
 
-    def get(self):
+    def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('username', location = 'json', required = True)
         parser.add_argument('password', location = 'json', required = True)
@@ -93,7 +93,7 @@ class LoginDashboard(Resource):
         return{'status' : 'UNATUTHORIZED' , 'message' : 'invalid username or password'}, 401
     
     @jwt_required
-    def post(self):
+    def get(self):
         claims = get_jwt_claims()
         return {'claims' : claims}, 200
         

@@ -51,7 +51,7 @@ class CustomerResource(Resource):
 
         args = parser.parse_args()
 
-        qry = Customers.query.filter_by(id_users = claims['id']).filter_by(id = id).first()
+        qry = Customers.query.get(id)
 
         if qry is None:
             return {'message' : "Not Found !!!"},404
@@ -82,13 +82,15 @@ class CreateCustomerResource(Resource):
         parser.add_argument('email', location = 'json', required = True)
         
         args = parser.parse_args()
-        
-        customer = Customers(claims['id'], args['fullname'], args['phone_number'], args['email'])
-        db.session.add(customer)
-        db.session.commit()
-        app.logger.debug('DEBUG : %s', customer)
-        
-        return {'message' : "add customer success !!!"},200,{'Content-Type': 'application/json'}
+        qry = Customers.query.filter_by(id_users = claims['id']).filter_by(email = args['email']).filter_by(phone_number = args['phone_number']).first()
+        if qry is None:
+            customer = Customers(claims['id'], args['fullname'], args['phone_number'], args['email'])
+            db.session.add(customer)
+            db.session.commit()
+            app.logger.debug('DEBUG : %s', customer)
+            
+            return {'message' : "add customer success !!!"},200,{'Content-Type': 'application/json'}
+        return {'message' : "add customer failed !!!"}, 404
 
 class SearchCustomer(Resource):
 
@@ -98,6 +100,7 @@ class SearchCustomer(Resource):
     @jwt_required
     @apps_required
     def get(self):
+        claims = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument('p', type = int, location = 'args', default = 1)
         parser.add_argument('rp', type = int, location = 'args', default = 25)
@@ -107,7 +110,7 @@ class SearchCustomer(Resource):
 
         offset = (args['p'] * args['rp']) - args['rp']
 
-        qry = Customers.query.filter(Customers.fullname.like("%"+args["keyword"]+"%") | Customers.phone_number.like("%"+args["keyword"]+"%") | Customers.email.like("%"+args["keyword"]+"%"))
+        qry = Customers.query.filter_by(id_users = claims['id']).filter(Customers.fullname.like("%"+args["keyword"]+"%") | Customers.phone_number.like("%"+args["keyword"]+"%") | Customers.email.like("%"+args["keyword"]+"%"))
         
         rows = []
         for row in qry.limit(args['rp']).offset(offset).all():
