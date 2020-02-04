@@ -12,6 +12,7 @@ import json
 
 # Import Authentication
 from flask_jwt_extended import jwt_required, get_jwt_claims
+from blueprints import user_required, dashboard_required, apps_required
 
 # Creating blueprint
 bp_products = Blueprint('products', __name__)
@@ -23,17 +24,18 @@ class ProductResource(Resource):
         return {'status': 'ok'}, 200
     
     # Get all products from specified owner (can be filtered by: category, show / not, product name)
+    @jwt_required
     def get(self):
         # Take input from users
+        claims = get_jwt_claims()
         parser = reqparse.RequestParser()
-        parser.add_argument('id_users', location = 'json', required = True)
         parser.add_argument('category', location = 'json', required = False)
         parser.add_argument('show', location = 'json', required = False)
         parser.add_argument('name', location = 'json', required = False)
         args = parser.parse_args()
 
         # Get id user
-        id_user = args['id_users']
+        id_user = claims['id']
 
         # Get all products of the specified user
         products = Products.query.filter_by(id_users = id_user).filter_by(deleted = False)
@@ -62,10 +64,15 @@ class ProductResource(Resource):
         return result, 200
     
     # Add new product to database
+    @jwt_required
+    @dashboard_required
     def post(self):
+        # Get claims
+        claims = get_jwt_claims()
+        id_users = claims['id']
+
         # Take input from users
         parser = reqparse.RequestParser()
-        parser.add_argument('id_users', location = 'json', required = True)
         parser.add_argument('name', location = 'json', required = True)
         parser.add_argument('category', location = 'json', required = True)
         parser.add_argument('price', location = 'json', required = True)
@@ -83,17 +90,18 @@ class ProductResource(Resource):
         products = Products.query.filter_by(deleted = False)
         for product in products:
             product = marshal(product, Products.response_fields)
-            if product['id_users'] == int(args['id_users']) and product['name'] == args['name'] and product['category'] == args['category']:
-                return {'Maaf, produk yang ingin kamu tambahkan sudah ada'}, 200
+            if product['id_users'] == id_users and product['name'] == args['name'] and product['category'] == args['category']:
+                return {'message': 'Maaf, produk yang ingin kamu tambahkan sudah ada'}, 200
 
         # Store the new product into database
         new_product = Products(
-            id_users = args['id_users'],
+            id_users = id_users,
             name = args['name'],
             category = args['category'],
             price = args['price'],
             show = show,
-            image = args['image']
+            image = args['image'],
+            update_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
         db.session.add(new_product)
         db.session.commit()
@@ -105,6 +113,7 @@ class SpecificProductResource(Resource):
         return {'status': 'ok'}, 200
 
     # Get product specified by its ID
+    @jwt_required
     def get(self, id_product):
         # Get the product and show the result
         product = Products.query.filter_by(id = id_product).filter_by(deleted = False).first()
@@ -114,6 +123,8 @@ class SpecificProductResource(Resource):
         return product, 200
     
     # Edit specified product
+    @jwt_required
+    @dashboard_required
     def put(self, id_product):
         # Take input from users
         parser = reqparse.RequestParser()
@@ -144,6 +155,8 @@ class SpecificProductResource(Resource):
         return {'message': 'Sukses mengubah produk'}, 200
 
     # Soft delete specified product
+    @jwt_required
+    @dashboard_required
     def delete(self, id_product):
         # Soft delete the product
         product = Products.query.filter_by(id = id_product).filter_by(deleted = False).first()
@@ -160,14 +173,11 @@ class CategoryResource(Resource):
         return {'status': 'ok'}, 200
 
     # Get all categories from specified owner
+    @jwt_required
     def get(self):
-        # Take input from users
-        parser = reqparse.RequestParser()
-        parser.add_argument('id_users', location = 'json', required = True)
-        args = parser.parse_args()
-
         # Get id user
-        id_user = args['id_users']
+        claims = get_jwt_claims()
+        id_user = claims['id']
 
         # Get all products of the specified user
         products = Products.query.filter_by(id_users = id_user).filter_by(deleted = False)
@@ -184,16 +194,17 @@ class ItemsPerCategory(Resource):
     def options(self, id=None):
         return {'status': 'ok'}, 200
 
-    # Get all categories from specified owner
+    # Get all items in a category from specified owner
+    @jwt_required
     def get(self):
         # Take input from users
+        claims = get_jwt_claims()
         parser = reqparse.RequestParser()
-        parser.add_argument('id_users', location = 'json', required = True)
         parser.add_argument('category', location = 'json', required = True)
         args = parser.parse_args()
 
         # Get id user and category
-        id_user = args['id_users']
+        id_user = claims['id']
         category = args['category']
 
         # Get all products of the specified user and filter by category
