@@ -2,6 +2,7 @@ from flask import Blueprint
 from flask_restful import Resource, Api, reqparse, marshal
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, get_jwt_claims
 from blueprints.users.model import Users
+from blueprints.outlets.model import Outlets
 from blueprints.employees.model import Employees
 import json , hashlib
 
@@ -15,8 +16,8 @@ class LoginApps(Resource):
 
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('username', location = 'args', required = True)
-        parser.add_argument('password', location = 'args', required = True)
+        parser.add_argument('username', location = 'json', required = True)
+        parser.add_argument('password', location = 'json', required = True)
 
         args = parser.parse_args()
         
@@ -33,6 +34,14 @@ class LoginApps(Resource):
 
         if employeeData is not None:
             employeeData = marshal(employeeData,Employees.jwt_claims_fields)
+            
+            # Get ID users
+            qry_employee = qry_employee.first()
+            outlet = Outlets.query.filter_by(deleted = False).filter_by(id = qry_employee.id_outlet).first()
+            id_user = outlet.id_user
+            employeeData['id_employee'] = employeeData['id']
+            employeeData['id'] = id_user
+
             if employeeData['deleted']==False:
                 token = create_access_token(identity = employeeData['username'], user_claims = employeeData)
             return {'token' : token}, 200
@@ -51,8 +60,8 @@ class LoginDashboard(Resource):
 
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('username', location = 'args', required = True)
-        parser.add_argument('password', location = 'args', required = True)
+        parser.add_argument('username', location = 'json', required = True)
+        parser.add_argument('password', location = 'json', required = True)
 
         args = parser.parse_args()
         
