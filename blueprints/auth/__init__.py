@@ -77,16 +77,16 @@ class LoginDashboard(Resource):
             return {'token' : token}, 200
 
         if employeeData is not None:
-            employeeData = marshal(employeeData,Employees.jwt_claims_fields)
+            employeeData = marshal(employeeData,Employees.jwt_claim_fields)
             
-            qry_employee = qry_employee.first()
-            outlet = Outlets.query.filter_by(deleted = False).filter_by(id = qry_employee.id_outlet).first()
-            id_user = outlet.id_user
-            employeeData['id_employee'] = employeeData['id']
-            employeeData['id'] = id_user
-
             if employeeData['deleted']==False:
                 if employeeData['position']=='Admin':
+                    qry_employee = qry_employee.first()
+                    outlet = Outlets.query.filter_by(deleted = False).filter_by(id = qry_employee.id_outlet).first()
+                    id_user = outlet.id_user
+                    employeeData['id_employee'] = employeeData['id']
+                    employeeData['id'] = id_user
+
                     token = create_access_token(identity = employeeData['username'], user_claims = employeeData)
                     return {'token' : token}, 200
             
