@@ -16,6 +16,9 @@ api = Api(bp_outlets)
 
 class OutletResource(Resource):
 
+    def options(self,id=None):
+        return{'status':'ok'} , 200
+
     @jwt_required
     @user_required
     # show outlet
@@ -140,6 +143,7 @@ class SearchOutlet(Resource):
         return rows, 200
 
 class OutletGetByOne(Resource):
+    
     def options(self,id=None):
         return{'status':'ok'} , 200
 
