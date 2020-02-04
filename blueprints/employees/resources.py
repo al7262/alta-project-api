@@ -2,7 +2,8 @@
 from flask import Blueprint
 from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
-from .model import Employees, Outlets
+from .model import Employees
+from blueprints.outlets.model import Outlets
 from blueprints import db, app, user_required
 from datetime import datetime
 from password_strength import PasswordPolicy
@@ -143,7 +144,7 @@ class EmployeeResource(Resource):
             qry.username = args['username']
         if args['position'] is not None:
             qry.position = args['position']
-
+        qry.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
         return marshal(qry, Employees.response_fields), 200
 
@@ -177,14 +178,18 @@ class EmployeeSearch(Resource):
 
         offset = (args['p'] * args['rp']) - args['rp']
 
-        qry = Employees.query.filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%"))
-        
+        qry = Outlets.query.filter_by(id_user = claims['id']).all()
+
+        for outlet in qry:
+            if not outlet.deleted:
+                qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%"))
             
         rows = []
         for row in qry.limit(args['rp']).offset(offset).all():
             if not row.deleted:
                 rows.append(marshal(row, Employees.response_fields))
         return rows, 200
+
 class EmployeeGetByOne(Resource):
 
     def options(self,id=None):

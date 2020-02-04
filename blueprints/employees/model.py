@@ -43,8 +43,6 @@ class Employees(db.Model):
         self.username = username
         self.password = password
         self.position = position
-        self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     def __repr__(self):
         return '<Employees %r>' %self.username
