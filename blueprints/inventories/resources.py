@@ -150,7 +150,7 @@ class InventoryPerOutlet(Resource):
                 # Edit related inventory instance
                 inventory.update_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 inventory.total_stock = inventory.total_stock + int(args['stock'])
-                inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int(args['stock']))/(inventory.times_edited + 1))
+                inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int(args['unit_price']))/(inventory.times_edited + 1))
                 inventory.times_edited = inventory.times_edited + 1
                 db.session.commit()
 
@@ -170,6 +170,27 @@ class InventoryPerOutlet(Resource):
             
         return {'message': 'Sukses menambahkan bahan baku'}, 200
 
+class InventoryDetail(Resource):
+    # Enable CORS
+    def options(self, id=None):
+        return {'status': 'ok'}, 200
+
+    # Get inventory information from specified stock outlet id
+    def get(self, id_stock_outlet):
+        # Find targeted stock outlet
+        stock_outlet = StockOutlet.query.filter_by(id = id_stock_outlet).first()
+        inventory = Inventories.query.filter_by(deleted = False).filter_by(id = stock_outlet.id_inventory).first()
+
+        # Prepare the result
+        result = {
+            'name': inventory.name,
+            'stock': stock_outlet.stock,
+            'unit': inventory.unit,
+            'reminder': stock_outlet.reminder
+        }
+
+        return result, 200
+
 class InventoryLogResource(Resource):
     # Enable CORS
     def options(self, id=None):
@@ -177,4 +198,5 @@ class InventoryLogResource(Resource):
 
 api.add_resource(InventoryResource, '')
 api.add_resource(InventoryPerOutlet, '/<id_outlet>')
+api.add_resource(InventoryDetail, '/detail/<id_outlet>')
 api.add_resource(InventoryLogResource, '/log')

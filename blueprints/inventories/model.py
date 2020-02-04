@@ -43,7 +43,7 @@ class Inventories(db.Model):
         self.total_stock = total_stock
         self.unit = unit
         self.unit_price = unit_price
-        self.times_edited = 0
+        self.times_edited = 1
         self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.deleted = False
