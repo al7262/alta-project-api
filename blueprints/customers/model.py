@@ -12,7 +12,7 @@ class Customers(db.Model):
     fullname = db.Column(db.String(150), nullable = False, default = "")
     phone_number = db.Column(db.String(20), nullable = False, default = "")
     email = db.Column(db.String(150), nullable = False, default = "")
-    total_transaction = db.Column(db.Integer, nullable = False, default = "")
+    total_transaction = db.Column(db.Integer, nullable = False, default = 0)
     created_at = db.Column(db.DateTime, default = datetime.datetime.now())
 
     response_fields = {
