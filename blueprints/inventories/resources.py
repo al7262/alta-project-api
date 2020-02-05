@@ -9,6 +9,7 @@ from blueprints.recipes.model import Recipe
 from blueprints import db, app
 from datetime import datetime
 import json
+import re
 
 # Import Authentication
 from flask_jwt_extended import jwt_required, get_jwt_claims
@@ -102,7 +103,7 @@ class InventoryPerOutlet(Resource):
             inventory = marshal(inventory, Inventories.inventories_fields)
 
             # Filter by name
-            if args['name'] != '' and inventory['name'] != args['name']:
+            if args['name'] != '' and not re.search(args['name'].lower(), inventory['name'].lower()):
                 continue
 
             # Prepare the data to be shown
