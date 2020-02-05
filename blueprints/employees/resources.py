@@ -57,8 +57,8 @@ class CreateEmployeeResource(Resource):
             db.session.commit()
             app.logger.debug('DEBUG : %s', employee)
             
-            return {'message' : "registration success !!!"},200,{'Content-Type': 'application/json'}
-        return {'message' : "registration failed !!!"},401
+            return {'message' : "Input Pegawai Berhasil"},200,{'Content-Type': 'application/json'}
+        return {'message' : "Input Pegawai Gagal"},401
 
 class EmployeeResource(Resource):
     
@@ -81,13 +81,13 @@ class EmployeeResource(Resource):
         parser.add_argument('position', location = 'args')
         args = parser.parse_args()
 
-        if args['name_outlet'] is None:
+        if args['name_outlet'] is None or args['name_outlet'] == "":
             qry = Outlets.query.filter_by(id_user = claims['id']).all()
 
             rows = []
             for outlet in qry:
                 if not outlet.deleted:
-                    if args['position'] is None:
+                    if args['position'] is None or args['position'] == "":
                         qry_employee = Employees.query.filter_by(id_outlet = outlet.id).all()
                     elif args['position'] is not None:
                         qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter_by(position = args['position']).all()
@@ -99,7 +99,7 @@ class EmployeeResource(Resource):
         rows = []
         qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
         if not qry.deleted:
-            if args['position'] is None:
+            if args['position'] is None or args['position'] == "":
                 qry_employee = Employees.query.filter_by(id_outlet = qry.id).all()
             elif args['position'] is not None:
                 qry_employee = Employees.query.filter_by(id_outlet = qry.id).filter_by(position = args['position']).all()
@@ -107,7 +107,7 @@ class EmployeeResource(Resource):
                 if not employee.deleted:
                     rows.append(marshal(employee, Employees.response_fields))
             return rows, 200
-        return {'message' : "not found"},401
+        return {'message' : "Data Tidak Ditemukan"},404
     
     @jwt_required
     @user_required
@@ -155,11 +155,11 @@ class EmployeeResource(Resource):
         claims = get_jwt_claims()
         qry = Employees.query.get(id)
         if qry.deleted:
-            return {'message':'NOT_FOUND'}, 404
+            return {'message':'Data Tidak Ditemukan'}, 404
 
         qry.deleted = True
         db.session.commit()
-        return {"message": "Deleted"},200
+        return {"message": "Data Telah Dihapus"},200
 
 class EmployeeSearch(Resource):
 
@@ -205,7 +205,7 @@ class EmployeeGetByOne(Resource):
         if qry is not None:
             if not qry.deleted:
                 return marshal_qry, 200
-        return {'message' : 'NOT_FOUND'}, 404
+        return {'message' : 'Data Tidak Ditemukan'}, 404
 
 api.add_resource(CreateEmployeeResource,'/employee/create')
 api.add_resource(EmployeeResource,'/employee','/employee/<int:id>')

@@ -52,11 +52,11 @@ class OutletResource(Resource):
         claims = get_jwt_claims()
         qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(id = id).first()
         if qry.deleted:
-            return {'message':'NOT_FOUND'}, 404
+            return {'message':'Data Tidak Ditemukan'}, 404
 
         qry.deleted = True
         db.session.commit()
-        return {"message": "Deleted"},200
+        return {"message": "Data Telah Dihapus"},200
 
     @jwt_required
     @user_required
@@ -108,13 +108,17 @@ class CreateOutletResource(Resource):
         parser.add_argument('tax', location = 'json', required = True)
         
         args = parser.parse_args()
-        
-        outlet = Outlets(claims['id'], args['name'], args['phone_number'], args['address'], args['city'], args['tax'])
-        db.session.add(outlet)
-        db.session.commit()
-        app.logger.debug('DEBUG : %s', outlet)
-        
-        return {'message' : "add outlet success !!!"},200,{'Content-Type': 'application/json'}
+
+        qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name']).first()
+        if qry is None:
+            outlet = Outlets(claims['id'], args['name'], args['phone_number'], args['address'], args['city'], args['tax'])
+            db.session.add(outlet)
+            db.session.commit()
+            app.logger.debug('DEBUG : %s', outlet)
+    
+            return {'message' : "Masukkan Outlet Berhasil"},200,{'Content-Type': 'application/json'}
+        return {'message' : "Outlet Sudah Ada"},401,
+
 
 class SearchOutlet(Resource):
 
@@ -158,7 +162,7 @@ class OutletGetByOne(Resource):
         if qry is not None:
             if not qry.deleted:
                 return marshal_qry, 200
-        return {'message' : 'NOT_FOUND'}, 404
+        return {'message' : 'Data Tidak Ditemukan'}, 404
 
 api.add_resource(OutletResource,'/outlet','/outlet/<int:id>')
 api.add_resource(SearchOutlet,'/outlet/search')
