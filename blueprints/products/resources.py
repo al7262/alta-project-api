@@ -4,8 +4,11 @@ from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
 from .model import Products
 from blueprints.carts.model import Carts, CartDetail
+from blueprints.employees.model import Employees
 from blueprints.inventories.model import Inventories, InventoryLog
 from blueprints.stock_outlet.model import StockOutlet
+from blueprints.users.model import Users
+from blueprints.outlets.model import Outlets
 from blueprints import db, app
 from datetime import datetime
 import json
@@ -223,17 +226,69 @@ class CheckoutResource(Resource):
         return {'status': 'ok'}, 200
     
     # Get all data needed to be shown in receipt
+    @jwt_required
+    @apps_required
     def get(self, id_cart):
+        # Get user id
+        claims = get_jwt_claims()
+        id_users = claims['id']
+        
         # Searching for specified cart
-        specified_cart = Carts.query.filter_by(id = id_cart).filter_by(status = True).filter_by(deleted = False).first()
+        specified_cart = Carts.query.filter_by(id = id_cart).filter_by(deleted = False).first()
 
         # Empty active cart
         if specified_cart is None:
             return {'message': 'Tidak ada transaksi aktif saat ini'}, 200
         
-        # Show the result
-        specified_cart = marshal(specified_cart, Carts.carts_fields)
-        return specified_cart, 200
+        # ---------- Prepare the receipt ----------
+        # Get business logo
+        owner = Users.query.filter_by(id = id_users).first()
+        logo = owner.image
+
+        # Get outlet information
+        employee = Employees.query.filter_by(deleted = False).filter_by(id = id_employee).first()
+        cashier_name = employee.full_name
+        id_outlet = employee.id_outlet
+        outlet = Outlets.query.filter_by(deleted = False).filter_by(id = id_outlet).first()
+        
+        # Serach for all items in cart
+        cart_detail = CartDetail.query.filter_by(id_cart = specified_cart.id)
+        items_list = []
+        transaction_total_price = 0
+        for detail in cart_detail:
+            # Get related product information
+            product = Products.query.filter_by(deleted = False).filter_by(id = detail.id_product).first()
+            product_name = product.name
+            item_data = {
+                'product_name': product_name,
+                'quantity': detail.quantity,
+                'unit_price': detail.total_price_product / detail.quantity,
+                'total_price': detail.total_price_product
+            }
+            transaction_total_price = transaction_total_price + detail.total_price_product
+            items_list.append(item_data)
+
+        # Create receipt
+        receipt = {
+            'logo': logo,
+            'outlet_name': outlet.name,
+            'address': outlet.address,
+            'city': outlet.city,
+            'phone_number': outlet.phone_number,
+            'order': specified_cart.order_code,
+            'customer_name': specified_cart.name,
+            'time': specified_cart.created_at,
+            'cashier_name': employee.full_name,
+            'items_list': items_list,
+            'transaction_total_price': transaction_total_price,
+            'discount': specified_cart.total_discount,
+            'tax': specified_cart.total_tax,
+            'to_paid': transaction_total_price - specified_cart.total_discount + specified_cart.total_tax,
+            'paid': specified_cart.paid_price,
+            'payment_method': '',
+            'return': specified_cart.paid_price - (transaction_total_price - specified_cart.total_discount + specified_cart.total_tax)
+        }
+        return receipt, 200
 
 api.add_resource(ProductResource, '')
 api.add_resource(SpecificProductResource, '/<id_product>')
