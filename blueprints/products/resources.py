@@ -29,9 +29,9 @@ class ProductResource(Resource):
         # Take input from users
         claims = get_jwt_claims()
         parser = reqparse.RequestParser()
-        parser.add_argument('category', location = 'json', required = False)
-        parser.add_argument('show', location = 'json', required = False)
-        parser.add_argument('name', location = 'json', required = False)
+        parser.add_argument('category', location = 'args', required = False)
+        parser.add_argument('show', location = 'args', required = False)
+        parser.add_argument('name', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get id user
@@ -200,7 +200,7 @@ class ItemsPerCategory(Resource):
         # Take input from users
         claims = get_jwt_claims()
         parser = reqparse.RequestParser()
-        parser.add_argument('category', location = 'json', required = True)
+        parser.add_argument('category', location = 'args', required = True)
         args = parser.parse_args()
 
         # Get id user and category

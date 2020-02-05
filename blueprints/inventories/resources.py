@@ -29,7 +29,7 @@ class InventoryResource(Resource):
         claims = get_jwt_claims()
         id_user = claims['id']
         parser = reqparse.RequestParser()
-        parser.add_argument('name', location = 'json', required = False)
+        parser.add_argument('name', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all inventories
@@ -68,7 +68,7 @@ class InventoryPerOutlet(Resource):
     def get(self, id_outlet):
         # Take input from users
         parser = reqparse.RequestParser()
-        parser.add_argument('name', location = 'json', required = False)
+        parser.add_argument('name', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all inventories in specified outlet
@@ -331,8 +331,8 @@ class InventoryLogOutlet(Resource):
 
         # Take input from users
         parser = reqparse.RequestParser()
-        parser.add_argument('type', location = 'json', required = False)
-        parser.add_argument('date', location = 'json', required = True)
+        parser.add_argument('type', location = 'args', required = False)
+        parser.add_argument('date', location = 'args', required = True)
         args = parser.parse_args()
 
         # Filter by type
@@ -389,8 +389,8 @@ class InventoryLogAll(Resource):
 
         # Take input from users
         parser = reqparse.RequestParser()
-        parser.add_argument('type', location = 'json', required = False)
-        parser.add_argument('date', location = 'json', required = True)
+        parser.add_argument('type', location = 'args', required = False)
+        parser.add_argument('date', location = 'args', required = True)
         args = parser.parse_args()
 
         # Filter by type
