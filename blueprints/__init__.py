@@ -135,6 +135,9 @@ app.register_blueprint(bp_auth,url_prefix = '')
 from blueprints.users.resources import Bp_user
 app.register_blueprint(Bp_user,url_prefix = '')
 
+from blueprints.dashboard import bp_dashboard
+app.register_blueprint(bp_dashboard,url_prefix = '')
+
 db.create_all()
 
 @app.after_request

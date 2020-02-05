@@ -53,8 +53,8 @@ class RegisterUserResource(Resource):
             db.session.commit()
             app.logger.debug('DEBUG : %s', user)
             
-            return {'message' : "registration success !!!"},200,{'Content-Type': 'application/json'}
-        return {'message' : "registration Failed !!!"},401
+            return {'message' : "Registrasi Berhasil"},200,{'Content-Type': 'application/json'}
+        return {'message' : "Registrasi Gagal"},401
 
 class UserResource(Resource):
     

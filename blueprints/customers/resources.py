@@ -22,17 +22,26 @@ class CustomerResource(Resource):
     @jwt_required
     @dashboard_required
     # show outlet
-    def get(self):
+    def get(self, id=None):
         claims = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument('p', type = int, location = 'args', default = 1)
         parser.add_argument('rp', type = int, location = 'args', default = 25)
+        parser.add_argument('keyword', location = 'args')
 
         args = parser.parse_args()
 
         offset = (args['p'] * args['rp']) - args['rp']
 
-        qry = Customers.query.filter_by(id_users = claims['id'])      
+        if args['keyword'] is not None:
+            qry = Customers.query.filter_by(id_users = claims['id']).filter(Customers.fullname.like("%"+args["keyword"]+"%") | Customers.phone_number.like("%"+args["keyword"]+"%") | Customers.email.like("%"+args["keyword"]+"%"))
+            rows = []
+            for row in qry.limit(args['rp']).offset(offset).all():
+                rows.append(marshal(row, Customers.response_fields))
+            return rows, 200
+            
+        qry = Customers.query.filter_by(id_users = claims['id'])  
+    
             
         rows = []
         for row in qry.limit(args['rp']).offset(offset).all():
@@ -89,8 +98,8 @@ class CreateCustomerResource(Resource):
             db.session.commit()
             app.logger.debug('DEBUG : %s', customer)
             
-            return {'message' : "add customer success !!!"},200,{'Content-Type': 'application/json'}
-        return {'message' : "add customer failed !!!"}, 404
+            return {'message' : "Masukkan Pelanggan Berhasil"},200,{'Content-Type': 'application/json'}
+        return {'message' : "Masukkan Pelanggan Gagal"}, 404
 
 class SearchCustomer(Resource):
 
@@ -132,9 +141,8 @@ class CustomerGetByOne(Resource):
 
         if qry is not None:
             return marshal_qry, 200
-        return {'message' : 'NOT_FOUND'}, 404
+        return {'message' : 'Data Tidak Ditemukan'}, 404
 
 api.add_resource(CustomerResource,'/customer','/customer/<int:id>')
-api.add_resource(SearchCustomer,'/customer/search')
 api.add_resource(CreateCustomerResource,'/customer/create')
 api.add_resource(CustomerGetByOne,'/customer/get/<int:id>')

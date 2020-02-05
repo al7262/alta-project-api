@@ -46,7 +46,7 @@ class LoginApps(Resource):
                 token = create_access_token(identity = employeeData['username'], user_claims = employeeData)
                 return {'token' : token}, 200
             
-        return{'status' : 'UNATUTHORIZED' , 'message' : 'invalid username or password'}, 401
+        return{'status' : 'UNATUTHORIZED' , 'message' : 'Username atau Password Tidak Valid'}, 401
     
     @jwt_required
     def get(self):
@@ -90,7 +90,7 @@ class LoginDashboard(Resource):
                     token = create_access_token(identity = employeeData['username'], user_claims = employeeData)
                     return {'token' : token}, 200
             
-        return{'status' : 'UNATUTHORIZED' , 'message' : 'invalid username or password'}, 401
+        return{'status' : 'UNATUTHORIZED' , 'message' : 'Username atau Password Tidak Valid'}, 401
     
     @jwt_required
     def get(self):
