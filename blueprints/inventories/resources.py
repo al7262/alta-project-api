@@ -155,6 +155,18 @@ class InventoryPerOutlet(Resource):
         claims = get_jwt_claims()
         id_user = claims['id']        
 
+        # Check for emptyness
+        if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['unit_price'] == '' or args['reminder'] == '':
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+
+        # Positivity
+        if int(args['stock']) < 0:
+            return {'message': 'Stok harus bernilai positif'}, 200
+        if int(args['unit_price']) < 0:
+            return {'message': 'Harga harus bernilai positif'}, 200
+        if int(args['reminder']) < 0:
+            return {'message': 'Pengingat stok harus bernilai positif'}, 200
+
         # Check for duplicate
         stock_outlet_list = StockOutlet.query.filter_by(id_outlet = id_outlet)
         for stock_outlet in stock_outlet_list:
@@ -253,6 +265,16 @@ class InventoryDetail(Resource):
         parser.add_argument('reminder', location = 'json', required = True)
         args = parser.parse_args()
 
+        # Check for emptyness
+        if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['reminder'] == '':
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+
+        # Positivity
+        if int(args['stock']) < 0:
+            return {'message': 'Stok harus bernilai positif'}, 200
+        if int(args['reminder']) < 0:
+            return {'message': 'Pengingat stok harus bernilai positif'}, 200
+
         # Validate emptyness
         if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['reminder'] == '':
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
@@ -330,6 +352,16 @@ class AddStock(Resource):
         parser.add_argument('stock', location = 'json', required = True)
         parser.add_argument('price', location = 'json', required = True)
         args = parser.parse_args()
+
+        # Check for emptyness
+        if or args['stock'] == '' or args['price'] == '':
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+
+        # Positivity
+        if int(args['stock']) < 0:
+            return {'message': 'Stok harus bernilai positif'}, 200
+        if int(args['price']) < 0:
+            return {'message': 'Harga harus bernilai positif'}, 200
 
         # Search for specified stock outlet and inventory related
         stock_outlet = StockOutlet.query.filter_by(id = id_stock_outlet).first()
