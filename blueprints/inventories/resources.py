@@ -5,6 +5,7 @@ from sqlalchemy import desc
 from .model import Inventories, InventoryLog
 from blueprints.stock_outlet.model import StockOutlet
 from blueprints.outlets.model import Outlets
+from blueprints.recipes.model import Recipe
 from blueprints import db, app
 from datetime import datetime
 import json
@@ -30,6 +31,7 @@ class InventoryResource(Resource):
         id_user = claims['id']
         parser = reqparse.RequestParser()
         parser.add_argument('name', location = 'args', required = False)
+        parser.add_argument('status', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all inventories
@@ -38,13 +40,15 @@ class InventoryResource(Resource):
         # Filter by inventory name
         if args['name'] != '':
             inventories = inventories.filter(Inventories.name.like("%" + args['name'] + "%"))
-        
+
         # Show the result
         result = []
+        available = []
+        warning = []
         for inventory in inventories:
             inventory = marshal(inventory, Inventories.inventories_fields)
             inventory['stock'] = inventory['total_stock']
-            inventory['status'] = "Available"
+            inventory['status'] = "Tersedia"
 
             # Get the stock outlet
             id_inventory = inventory['id']
@@ -52,9 +56,20 @@ class InventoryResource(Resource):
             for stock_outlet in stock_outlet_list:
                 stock_outlet = marshal(stock_outlet, StockOutlet.response_fields)
                 if stock_outlet['stock'] <= stock_outlet['reminder']:
-                    inventory['status'] = "Warning"
+                    inventory['status'] = "Hampir Habis"
+
+            if inventory['status'] == "Hampir Habis":
+                warning.append(inventory)
+            elif inventory['status'] == "Tersedia":
+                available.append(inventory)
 
             result.append(inventory)
+
+        # Show result based on status
+        if args['status'] == 'Tersedia':
+            return available, 200
+        elif args['status'] == 'Hampir Habis':
+            return warning, 200
         return result, 200
 
 class InventoryPerOutlet(Resource):
@@ -69,11 +84,14 @@ class InventoryPerOutlet(Resource):
         # Take input from users
         parser = reqparse.RequestParser()
         parser.add_argument('name', location = 'args', required = False)
+        parser.add_argument('status', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all inventories in specified outlet
         stock_outlet_list = StockOutlet.query.filter_by(id_outlet = id_outlet)
         data_list = []
+        available = []
+        warning = []
         below_reminder = 0
         for stock_outlet in stock_outlet_list:
             stock_outlet = marshal(stock_outlet, StockOutlet.response_fields)
@@ -82,13 +100,10 @@ class InventoryPerOutlet(Resource):
             # Get related row in inventories table
             inventory = Inventories.query.filter_by(id = id_inventory).filter_by(deleted = False).first()
             inventory = marshal(inventory, Inventories.inventories_fields)
-            
-            # Check reminder status
-            if int(stock_outlet['stock']) <= int(stock_outlet['reminder']):
-                reminder = 'Warning'
-                below_reminder = below_reminder + 1
-            else:
-                reminder = 'Available' 
+
+            # Filter by name
+            if args['name'] != '' and inventory['name'] != args['name']:
+                continue
 
             # Prepare the data to be shown
             data = {
@@ -96,15 +111,30 @@ class InventoryPerOutlet(Resource):
                 'unit': inventory['unit'],
                 'unit_price': inventory['unit_price'],
                 'stock': stock_outlet['stock'],
-                'status': reminder
+                'status': ''
             }
+
+            # Check reminder status
+            if int(stock_outlet['stock']) <= int(stock_outlet['reminder']):
+                data['status'] = 'Hampir Habis'
+                below_reminder = below_reminder + 1
+                warning.append(data)
+            else:
+                data['status'] = 'Tersedia'
+                available.append(data) 
+
             data_list.append(data)
         
         # Prepare the result
         result = {
-            'below_reminder': below_reminder,
-            'inventories': data_list
+            'below_reminder': below_reminder
         }
+        if args['status'] == 'Tersedia':
+            result['inventories'] = available
+        elif args['status'] == 'Hampir Habis':
+            result['inventories'] = warning
+        else:
+            result['inventories'] = data_list
         return result, 200
     
     # Add new inventory to specified outlet
@@ -273,9 +303,13 @@ class InventoryDetail(Resource):
         # Delete the inventory if there is nothing left in other outlet
         if len(related_stock_outlet) == 0:
             # Delete related recipe first
+            inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
+            recipes = Recipe.query.filter_by(id_inventory = inventory.id).all()
+            for recipe in recipes:
+                db.session.delete(recipe)
+                db.session.commit()
 
             # Delete the inventory
-            inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
             db.session.delete(inventory)
             db.session.commit()
         
