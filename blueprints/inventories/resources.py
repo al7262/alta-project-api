@@ -5,9 +5,11 @@ from sqlalchemy import desc
 from .model import Inventories, InventoryLog
 from blueprints.stock_outlet.model import StockOutlet
 from blueprints.outlets.model import Outlets
+from blueprints.recipes.model import Recipe
 from blueprints import db, app
 from datetime import datetime
 import json
+import re
 
 # Import Authentication
 from flask_jwt_extended import jwt_required, get_jwt_claims
@@ -29,7 +31,8 @@ class InventoryResource(Resource):
         claims = get_jwt_claims()
         id_user = claims['id']
         parser = reqparse.RequestParser()
-        parser.add_argument('name', location = 'json', required = False)
+        parser.add_argument('name', location = 'args', required = False)
+        parser.add_argument('status', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all inventories
@@ -38,13 +41,15 @@ class InventoryResource(Resource):
         # Filter by inventory name
         if args['name'] != '':
             inventories = inventories.filter(Inventories.name.like("%" + args['name'] + "%"))
-        
+
         # Show the result
         result = []
+        available = []
+        warning = []
         for inventory in inventories:
             inventory = marshal(inventory, Inventories.inventories_fields)
             inventory['stock'] = inventory['total_stock']
-            inventory['status'] = "Available"
+            inventory['status'] = "Tersedia"
 
             # Get the stock outlet
             id_inventory = inventory['id']
@@ -52,9 +57,20 @@ class InventoryResource(Resource):
             for stock_outlet in stock_outlet_list:
                 stock_outlet = marshal(stock_outlet, StockOutlet.response_fields)
                 if stock_outlet['stock'] <= stock_outlet['reminder']:
-                    inventory['status'] = "Warning"
+                    inventory['status'] = "Hampir Habis"
+
+            if inventory['status'] == "Hampir Habis":
+                warning.append(inventory)
+            elif inventory['status'] == "Tersedia":
+                available.append(inventory)
 
             result.append(inventory)
+
+        # Show result based on status
+        if args['status'] == 'Tersedia':
+            return available, 200
+        elif args['status'] == 'Hampir Habis':
+            return warning, 200
         return result, 200
 
 class InventoryPerOutlet(Resource):
@@ -68,12 +84,15 @@ class InventoryPerOutlet(Resource):
     def get(self, id_outlet):
         # Take input from users
         parser = reqparse.RequestParser()
-        parser.add_argument('name', location = 'json', required = False)
+        parser.add_argument('name', location = 'args', required = False)
+        parser.add_argument('status', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all inventories in specified outlet
         stock_outlet_list = StockOutlet.query.filter_by(id_outlet = id_outlet)
         data_list = []
+        available = []
+        warning = []
         below_reminder = 0
         for stock_outlet in stock_outlet_list:
             stock_outlet = marshal(stock_outlet, StockOutlet.response_fields)
@@ -82,13 +101,10 @@ class InventoryPerOutlet(Resource):
             # Get related row in inventories table
             inventory = Inventories.query.filter_by(id = id_inventory).filter_by(deleted = False).first()
             inventory = marshal(inventory, Inventories.inventories_fields)
-            
-            # Check reminder status
-            if int(stock_outlet['stock']) <= int(stock_outlet['reminder']):
-                reminder = 'Warning'
-                below_reminder = below_reminder + 1
-            else:
-                reminder = 'Available' 
+
+            # Filter by name
+            if args['name'] != '' and not re.search(args['name'].lower(), inventory['name'].lower()):
+                continue
 
             # Prepare the data to be shown
             data = {
@@ -96,15 +112,30 @@ class InventoryPerOutlet(Resource):
                 'unit': inventory['unit'],
                 'unit_price': inventory['unit_price'],
                 'stock': stock_outlet['stock'],
-                'status': reminder
+                'status': ''
             }
+
+            # Check reminder status
+            if int(stock_outlet['stock']) <= int(stock_outlet['reminder']):
+                data['status'] = 'Hampir Habis'
+                below_reminder = below_reminder + 1
+                warning.append(data)
+            else:
+                data['status'] = 'Tersedia'
+                available.append(data) 
+
             data_list.append(data)
         
         # Prepare the result
         result = {
-            'below_reminder': below_reminder,
-            'inventories': data_list
+            'below_reminder': below_reminder
         }
+        if args['status'] == 'Tersedia':
+            result['inventories'] = available
+        elif args['status'] == 'Hampir Habis':
+            result['inventories'] = warning
+        else:
+            result['inventories'] = data_list
         return result, 200
     
     # Add new inventory to specified outlet
@@ -123,6 +154,18 @@ class InventoryPerOutlet(Resource):
         # Get ID users
         claims = get_jwt_claims()
         id_user = claims['id']        
+
+        # Check for emptyness
+        if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['unit_price'] == '' or args['reminder'] == '':
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+
+        # Positivity
+        if int(args['stock']) < 0:
+            return {'message': 'Stok harus bernilai positif'}, 200
+        if int(args['unit_price']) < 0:
+            return {'message': 'Harga harus bernilai positif'}, 200
+        if int(args['reminder']) < 0:
+            return {'message': 'Pengingat stok harus bernilai positif'}, 200
 
         # Check for duplicate
         stock_outlet_list = StockOutlet.query.filter_by(id_outlet = id_outlet)
@@ -149,7 +192,7 @@ class InventoryPerOutlet(Resource):
                 db.session.commit()
 
                 # Edit related inventory instance
-                inventory.update_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 inventory.total_stock = inventory.total_stock + int(args['stock'])
                 inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int(args['unit_price']))/(inventory.times_edited + 1))
                 inventory.times_edited = inventory.times_edited + 1
@@ -222,6 +265,16 @@ class InventoryDetail(Resource):
         parser.add_argument('reminder', location = 'json', required = True)
         args = parser.parse_args()
 
+        # Check for emptyness
+        if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['reminder'] == '':
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+
+        # Positivity
+        if int(args['stock']) < 0:
+            return {'message': 'Stok harus bernilai positif'}, 200
+        if int(args['reminder']) < 0:
+            return {'message': 'Pengingat stok harus bernilai positif'}, 200
+
         # Validate emptyness
         if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['reminder'] == '':
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
@@ -238,10 +291,52 @@ class InventoryDetail(Resource):
         inventory.name = args['name']
         inventory.unit = args['unit']
         inventory.total_stock = total_stock
-        inventory.update_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
 
         return {'message': 'Sukses mengubah bahan baku'}
+
+    # Delete existing stock outlet
+    @jwt_required
+    @dashboard_required
+    def delete(self, id_stock_outlet):
+        # Searching for specified stock outlet and inventory
+        stock_outlet = StockOutlet.query.filter_by(id = id_stock_outlet).first()
+        id_inventory = stock_outlet.id_inventory
+        inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
+
+        # Edit the inventory
+        inventory.total_stock = inventory.total_stock - stock_outlet.stock
+        inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        db.session.commit()
+
+        # Delete inventory log related to this stock outlet
+        logs = InventoryLog.query.filter_by(id_stock_outlet = id_stock_outlet)
+        for log in logs:
+            db.session.delete(log)
+            db.session.commit()
+
+        # Delete the stock outlet
+        db.session.delete(stock_outlet)
+        db.session.commit()
+
+        # Get other related stock outlet
+        related_stock_outlet = StockOutlet.query.filter_by(id_inventory = id_inventory).all()
+
+        # Delete the inventory if there is nothing left in other outlet
+        if len(related_stock_outlet) == 0:
+            # Delete related recipe first
+            inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
+            recipes = Recipe.query.filter_by(id_inventory = inventory.id).all()
+            for recipe in recipes:
+                db.session.delete(recipe)
+                db.session.commit()
+
+            # Delete the inventory
+            db.session.delete(inventory)
+            db.session.commit()
+        
+        return {'message': 'Sukses menghapus bahan baku'}, 200
 
 class AddStock(Resource):
     # Enable CORS
@@ -258,6 +353,16 @@ class AddStock(Resource):
         parser.add_argument('price', location = 'json', required = True)
         args = parser.parse_args()
 
+        # Check for emptyness
+        if args['stock'] == '' or args['price'] == '':
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+
+        # Positivity
+        if int(args['stock']) < 0:
+            return {'message': 'Stok harus bernilai positif'}, 200
+        if int(args['price']) < 0:
+            return {'message': 'Harga harus bernilai positif'}, 200
+
         # Search for specified stock outlet and inventory related
         stock_outlet = StockOutlet.query.filter_by(id = id_stock_outlet).first()
         id_inventory = stock_outlet.id_inventory
@@ -268,7 +373,7 @@ class AddStock(Resource):
 
         # Edit inventory
         inventory.total_stock = inventory.total_stock + int(args['stock'])
-        inventory.update_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int(args['price']))/(inventory.times_edited + 1))
         inventory.times_edited = inventory.times_edited + 1
 
@@ -293,8 +398,8 @@ class InventoryLogOutlet(Resource):
 
         # Take input from users
         parser = reqparse.RequestParser()
-        parser.add_argument('type', location = 'json', required = False)
-        parser.add_argument('date', location = 'json', required = True)
+        parser.add_argument('type', location = 'args', required = False)
+        parser.add_argument('date', location = 'args', required = True)
         args = parser.parse_args()
 
         # Filter by type
@@ -351,8 +456,8 @@ class InventoryLogAll(Resource):
 
         # Take input from users
         parser = reqparse.RequestParser()
-        parser.add_argument('type', location = 'json', required = False)
-        parser.add_argument('date', location = 'json', required = True)
+        parser.add_argument('type', location = 'args', required = False)
+        parser.add_argument('date', location = 'args', required = True)
         args = parser.parse_args()
 
         # Filter by type

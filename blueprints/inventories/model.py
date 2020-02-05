@@ -9,7 +9,7 @@ from blueprints.stock_outlet.model import StockOutlet
 class Inventories(db.Model):
     __tablename__ = 'inventories'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
-    id_users = db.Column(db.Integer, db.ForeignKey('users.id'), nullable = False)
+    id_users = db.Column(db.Integer, db.ForeignKey('users.id', ondelete = 'CASCADE'), nullable = False)
     name = db.Column(db.String(150), nullable = False, default = '')
     total_stock = db.Column(db.Integer, nullable = False, default = 0)
     unit = db.Column(db.String(20), nullable = False, default = '')
@@ -54,7 +54,7 @@ class Inventories(db.Model):
 class InventoryLog(db.Model):
     __tablename__ = 'inventory_log'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
-    id_stock_outlet = db.Column(db.Integer, db.ForeignKey('stock_outlet.id'), nullable = False)
+    id_stock_outlet = db.Column(db.Integer, db.ForeignKey('stock_outlet.id', ondelete = 'CASCADE'), nullable = False)
     status = db.Column(db.String(10), nullable = False, default ='')
     amount = db.Column(db.Integer, nullable = False, default = 0)
     last_stock = db.Column(db.Integer, nullable = False, default = 0)
