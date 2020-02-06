@@ -303,25 +303,23 @@ class CheckoutResource(Resource):
 
 class SendOrder(Resource):
     # Enable CORS
-    def options(self, id_cart=None):
+    def options(self, id=None):
         return {'status': 'ok'}, 200
     
     # Get all data needed to be shown in receipt
     @jwt_required
     @apps_required
-    def post(self, id_cart):
-        # Get owner ID and name
+    def post(self):
+        # Get owner ID
         claims = get_jwt_claims()
         id_users = claims['id']
         owner = Users.query.filter_by(id = id_users).first()
-        name = owner.fullname
 
         # Check who is login (owner or cashier) and get related information
         id_employee = None
         if 'id_employee' in claims:
             id_employee = claims['id_employee']
             employee = Employees.query.filter_by(deleted = False).filter_by(id = id_employee).first()
-            name = employee.full_name
         
         # Take input from users
         parser = reqparse.RequestParser()
@@ -353,13 +351,17 @@ class SendOrder(Resource):
         # Validate some input
         if int(args['paid_price']) < total_payment:
             return {'message': 'Ada kesalahan input'}, 200
+        id_customers = args['id_customers']
+        if args['id_customers'] == '':
+            id_customers = None
 
         # Generate order code
         all_carts = Carts.query.filter_by(deleted = True).filter_by(id_users = id_users)
         unique_code = True
         while unique_code:
             # Generate code
-            code_symbol = 'abcdefghijklmnopqrstuvwxyz0123456789'
+            unique_code = False
+            code_symbol = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890123456789'
             order_code = ''
             for index in range(6):
                 random_number = random.randint(0, 36)
@@ -368,16 +370,17 @@ class SendOrder(Resource):
             # Uniqueness check
             for cart in all_carts:
                 if cart.order_code == unique_code:
-                    unique_code = False
+                    unique_code = True
 
         # Create the instance
         new_cart = Carts(
             id_users = id_users,
             id_outlet = args['id_outlet'],
             id_employee = id_employee,
-            id_customers = args['id_customers'],
+            id_customers = id_customers,
             order_code = order_code,
-            name = name,
+            name = args['name'],
+            payment_method = args['payment_method'],
             total_item = total_item,
             total_payment = total_payment,
             total_discount = 0,
@@ -392,7 +395,7 @@ class SendOrder(Resource):
 
         # Looping through items and create the instances
         for item in args['item_list']:
-            new_cart_detail = Carts(
+            new_cart_detail = CartDetail(
                 id_cart = cart_id,
                 id_product = item['id'],
                 quantity = item['unit'],
@@ -412,14 +415,37 @@ class SendOrder(Resource):
                 stock_outlet.stock = stock_outlet.stock - (recipe.amount * int(item['unit']))
                 inventory.total_stock = inventory.total_stock - (recipe.amount * int(item['unit']))
                 inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                new_log = StockOutlet(
+                new_log = InventoryLog(
                     id_stock_outlet = stock_outlet.id,
                     amount = recipe.amount * int(item['unit']),
                     status = 'Keluar',
-                    last_stock = stock_outlet.stock - recipe.amount * int(item['unit'])
+                    last_stock = stock_outlet.stock
                 )
                 db.session.add(new_log)
                 db.session.commit()
+        
+        return {'message': 'Transaksi berhasil'}
+
+class DeleteProduct(Resource):
+    # Enable CORS
+    def options(self, id_product=None):
+        return {'status': 'ok'}, 200
+
+    # Hard delete specified product
+    @jwt_required
+    @dashboard_required
+    def delete(self, id_product):
+        # Get the product
+        product = Products.query.filter_by(id = id_product).filter_by(deleted = False).first()
+        id_product = product.id
+
+        # Delete related recipe first
+        recipes = Recipe.query.filter_by(id_product = id_product).all()
+        for recipe in recipes:
+            db.session.delete(recipe)
+            db.session.commit()
+
+        return {'message': 'Sukses menghapus produk'}, 200
 
 api.add_resource(ProductResource, '')
 api.add_resource(SpecificProductResource, '/<id_product>')
@@ -427,3 +453,4 @@ api.add_resource(CategoryResource, '/category')
 api.add_resource(ItemsPerCategory, '/category/items')
 api.add_resource(SendOrder, '/checkout')
 api.add_resource(CheckoutResource, '/checkout/<id_cart>')
+api.add_resource(DeleteProduct, '/delete/<id_product>')
