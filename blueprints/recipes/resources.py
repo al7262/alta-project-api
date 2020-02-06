@@ -20,7 +20,7 @@ api = Api(bp_recipe)
 
 class RecipeResource(Resource):
     # Enable CORS
-    def options(self, id=None):
+    def options(self, id_product=None):
         return {'status': 'ok'}, 200
     
     # Get recipe of a product
@@ -104,7 +104,7 @@ class RecipeResource(Resource):
     
 class EditRecipe(Resource):
     # Enable CORS
-    def options(self, id=None):
+    def options(self, id_recipe=None):
         return {'status': 'ok'}, 200
 
     # Edit recipe of a product
@@ -154,7 +154,7 @@ class EditRecipe(Resource):
 
 class DeleteRecipe(Resource):
     # Enable CORS
-    def options(self, id=None):
+    def options(self, id_recipe=None):
         return {'status': 'ok'}, 200
 
     # Edit recipe of a product
@@ -170,7 +170,7 @@ class DeleteRecipe(Resource):
 
 class DetailRecipe(Resource):
     # Enable CORS
-    def options(self, id=None):
+    def options(self, id_recipe=None):
         return {'status': 'ok'}, 200
 
     # Get the detail of recipe item

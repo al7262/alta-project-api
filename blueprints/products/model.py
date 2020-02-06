@@ -17,7 +17,7 @@ class Products (db.Model):
     image = db.Column(db.String(255), nullable = False, default = "")
     deleted = db.Column(db.Boolean, nullable = False, default = False)
     created_at = db.Column(db.DateTime, default = datetime.datetime.now())
-    update_at = db.Column(db.DateTime, onupdate = datetime.datetime.now())
+    updated_at = db.Column(db.DateTime, onupdate = datetime.datetime.now())
 
     response_fields = {
         'id' : fields.Integer,

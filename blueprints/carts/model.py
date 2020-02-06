@@ -6,18 +6,20 @@ from blueprints.users.model import Users
 from blueprints.employees.model import Employees
 from blueprints.customers.model import Customers
 from blueprints.products.model import Products
+from blueprints.outlets.model import Outlets
 
 # Create Model
 class Carts(db.Model):
     __tablename__ = 'carts'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     id_users = db.Column(db.Integer, db.ForeignKey('users.id'), nullable = False)
-    id_employee = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable = False)
-    id_customers = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable = True)
-    id_outlet = db.Column(db.Integer, db.ForeignKey('outlets.id'), nullable = True)
+    id_outlet = db.Column(db.Integer, db.ForeignKey('outlets.id'), nullable = False, default = None)
+    id_employee = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable = True, default = None)
+    id_customers = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable = True, default = None)
     order_code = db.Column(db.String(50), unique = True, nullable = False)
     name = db.Column(db.String(150), nullable = False, default = '')
     total_item = db.Column(db.Integer, nullable = False, default = 0)
+    payment_method = db.Column(db.String(150), nullable = False, default = '')
     total_payment = db.Column(db.Integer, nullable = False, default = 0)
     total_discount = db.Column(db.Integer, nullable = False, default = 0)
     total_tax = db.Column(db.Integer, nullable = False, default = 0)
@@ -28,11 +30,13 @@ class Carts(db.Model):
     carts_fields = {
         'id': fields.Integer,
         'id_users': fields.Integer,
+        'id_outlet': fields.Integer,
         'id_employee': fields.Integer,
         'id_customers': fields.Integer,
-        'id_outlet': fields.Integer,
+        'order_code': fields.Integer,
         'name': fields.String,
         'total_item': fields.Integer,
+        'payment_method': fields.String,
         'total_payment': fields.Integer,
         'total_discount': fields.Integer,
         'total_tax': fields.Integer,
@@ -41,18 +45,21 @@ class Carts(db.Model):
         'deleted': fields.Boolean
     }
 
-    def __init__(self, id_users, id_employee, id_customers, name, total_item, total_payment, total_discount, total_tax, paid_price):
+    def __init__(self, id_users, id_outlet, order_code, name, total_item, payment_method, total_payment, total_discount, total_tax, paid_price, id_employee = None, id_customers = None):
         self.id_users = id_users
+        self.id_outlet = id_outlet
         self.id_employee = id_employee
         self.id_customers = id_customers
+        self.order_code = order_code
         self.name = name
         self.total_item = total_item
+        self.payment_method = payment_method
         self.total_payment = total_payment
         self.total_discount = total_discount
         self.total_tax = total_tax
         self.paid_price = paid_price
         self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.deleted = False
+        self.deleted = True
     
     def __repr__(self):
         return '<Carts %r>' %self.id
