@@ -31,11 +31,33 @@ class ActivityResource(Resource):
         # Get all carts in an outlet
         carts = Carts.query.filter_by(id_outlet = id_outlet)
         
-        # Get all cart detail
-        item_list = []
+        # Loop through all carts
+        result = []
         for cart in carts:
-            item_detail = {
-
+            # Prepare transaction data
+            transaction_data = {
+                'order_code': cart.order_code,
+                'name': cart.name,
+                'time': cart.created_at.strftime('%H:%M'),
+                'total_payment': cart.total_payment,
+                'total_item': cart.total_item,
+                'total_discount': cart.total_discount,
+                'total_tax': cart.total_tax,
+                'item_detail': []
             }
+
+            # Get detail of the cart
+            cart_detail = CartDetail.query.filter_by(id_cart = cart.id)
+            for detail in cart_detail:
+                product = Products.query.filter_by(id = detail.id_product).filter_by(deleted = False).first()
+                item_detail = {
+                    'name': product.name,
+                    'quantity': detail.quantity,
+                    'total_price': detail.total_price_product
+                }
+                transaction_data['item_detail'].append(item_detail)
+            result.append(transaction_data)
+        
+        return result, 200
 
 api.add_resource(ActivityResource, '/<id_outlet>')
