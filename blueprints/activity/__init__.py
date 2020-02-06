@@ -9,7 +9,7 @@ from blueprints.outlets.model import Outlets
 from blueprints.stock_outlet.model import StockOutlet
 from blueprints.carts.model import CartDetail, Carts
 from blueprints.products.model import Products
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 # Import Authentication
@@ -28,11 +28,29 @@ class ActivityResource(Resource):
     # Get transactions history in an outlet
     @jwt_required
     def get(self, id_outlet):
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('order_code', location = 'args', required = False)
+        parser.add_argument('date', location = 'args', required = True)
+        args = parser.parse_args()
+        
         # Get all carts in an outlet
         carts = Carts.query.filter_by(id_outlet = id_outlet)
         
+        # Filter by order code
+        if args['order_code'] != '':
+            carts = carts.filter_by(order_code = args['order_code'])
+
+        # Filter by date
+        if args['date'] == 'Hari Ini':
+            carts = carts.filter(Carts.created_at >= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+        elif args['date'] == 'Kemarin':
+            carts = carts.filter(Carts.created_at >= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0) - timedelta(days = 1)).filter(Carts.created_at <= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0))
+
         # Loop through all carts
-        result = []
+        transaction_detail = []
+        total_sales = 0
+        total_transactions = 0
         for cart in carts:
             # Prepare transaction data
             transaction_data = {
@@ -56,8 +74,18 @@ class ActivityResource(Resource):
                     'total_price': detail.total_price_product
                 }
                 transaction_data['item_detail'].append(item_detail)
-            result.append(transaction_data)
-        
+            transaction_detail.append(transaction_data)
+
+            # Calculate some values
+            total_transactions = total_transactions + 1
+            total_sales = total_sales + cart.total_payment
+
+        # Show the result
+        result = {
+            'total_transactions': total_transactions,
+            'total_sales': total_sales,
+            'transaction_detail': transaction_detail
+        }
         return result, 200
 
 api.add_resource(ActivityResource, '/<id_outlet>')
