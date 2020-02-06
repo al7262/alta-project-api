@@ -36,3 +36,7 @@ CONNECT CLOUDFLARE
 - Copy isi gitsfile1 ke file yang dibuatnya sebelumnya
 - Sesuaiin dengan nama server, termasuk lokasi crt dan key nya
 - sudo service nginx restart
+
+DUMP SQL
+mysqldump -u username -p dbname > dbexport.sql (EXPORT)
+mysql -u username -p dbname < dbexport.sql (IMPORT)

@@ -82,7 +82,7 @@ try:
     env = os.environ.get('FLASK_ENV', 'development')
     username_laptop = os.environ['HOME']
     if username_laptop == '/home/alta8' and env is not 'testing':
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@0.0.0.0:3306/final_project_backend'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:agungajin19@portofolio.ce1fym8eoinv.ap-southeast-1.rds.amazonaws.com:3306/pos_api'
     elif username_laptop == '/home/alta10' and env is not 'testing':
         app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend'
     elif username_laptop == '/home/alta8':
@@ -90,7 +90,7 @@ try:
     elif username_laptop == '/home/alta10':
         app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend_test'
     else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:agungajin19@portofolio.ce1fym8eoinv.ap-southeast-1.rds.amazonaws.com:3306/final_project_backend'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:agungajin19@portofolio.ce1fym8eoinv.ap-southeast-1.rds.amazonaws.com:3306/pos_api'
 
 except Exception as e:
     raise e
