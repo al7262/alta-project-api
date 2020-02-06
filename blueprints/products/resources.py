@@ -444,6 +444,10 @@ class DeleteProduct(Resource):
         for recipe in recipes:
             db.session.delete(recipe)
             db.session.commit()
+        
+        # Hard delete the product
+        db.session.delete(product)
+        db.session.commit()
 
         return {'message': 'Sukses menghapus produk'}, 200
 

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+docker rmi garryarielcussoy/serbabuku:be # Remove the image
+docker run -d --name serbabukube -p 5000:5000 garryarielcussoy/serbabuku:be # Run the docker
