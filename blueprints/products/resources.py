@@ -7,6 +7,7 @@ from blueprints.carts.model import Carts, CartDetail
 from blueprints.employees.model import Employees
 from blueprints.inventories.model import Inventories, InventoryLog
 from blueprints.stock_outlet.model import StockOutlet
+from blueprints.recipes.model import Recipe
 from blueprints.users.model import Users
 from blueprints.outlets.model import Outlets
 from blueprints import db, app
@@ -108,11 +109,11 @@ class ProductResource(Resource):
         )
         db.session.add(new_product)
         db.session.commit()
-        return {"message": "Sukses menambahkan produk"}, 200
+        return {"message": "Sukses menambahkan produk", "id_product": new_product.id}, 200
 
 class SpecificProductResource(Resource):
     # Enable CORS
-    def options(self, id=None):
+    def options(self, id_product=None):
         return {'status': 'ok'}, 200
 
     # Get product specified by its ID
@@ -165,9 +166,14 @@ class SpecificProductResource(Resource):
         product = Products.query.filter_by(id = id_product).filter_by(deleted = False).first()
         product.deleted = True
         product.update_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        # Commit and show the result
         db.session.commit()
+
+        # Delete related recipe
+        recipes = Recipe.query.filter_by(id_product = id_product).all()
+        for recipe in recipes:
+            db.session.delete(recipe)
+            db.session.commit()
+
         return {'message': 'Sukses menghapus produk'}, 200
 
 class CategoryResource(Resource):
@@ -222,7 +228,7 @@ class ItemsPerCategory(Resource):
 
 class CheckoutResource(Resource):
     # Enable CORS
-    def options(self, id=None):
+    def options(self, id_cart=None):
         return {'status': 'ok'}, 200
     
     # Get all data needed to be shown in receipt
@@ -234,7 +240,7 @@ class CheckoutResource(Resource):
         id_users = claims['id']
         
         # Searching for specified cart
-        specified_cart = Carts.query.filter_by(id = id_cart).filter_by(deleted = False).first()
+        specified_cart = Carts.query.filter_by(id = id_cart).filter_by(deleted = True).first()
 
         # Empty active cart
         if specified_cart is None:
@@ -245,11 +251,16 @@ class CheckoutResource(Resource):
         owner = Users.query.filter_by(id = id_users).first()
         logo = owner.image
 
+        # Get cashier name
+        if specified_cart.id_employee == None:
+            # Get owner name
+            cashier_name = owner.name
+        else:
+            employee = Employees.query.filter_by(deleted = False).filter_by(id = specified_cart.id_employee).first()
+            cashier_name = employee.full_name
+        
         # Get outlet information
-        employee = Employees.query.filter_by(deleted = False).filter_by(id = id_employee).first()
-        cashier_name = employee.full_name
-        id_outlet = employee.id_outlet
-        outlet = Outlets.query.filter_by(deleted = False).filter_by(id = id_outlet).first()
+        outlet = Outlets.query.filter_by(deleted = False).filter_by(id = specified_cart.id_outlet).first()
         
         # Serach for all items in cart
         cart_detail = CartDetail.query.filter_by(id_cart = specified_cart.id)
@@ -277,21 +288,57 @@ class CheckoutResource(Resource):
             'phone_number': outlet.phone_number,
             'order': specified_cart.order_code,
             'customer_name': specified_cart.name,
-            'time': specified_cart.created_at,
-            'cashier_name': employee.full_name,
+            'time': specified_cart.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            'cashier_name': cashier_name,
             'items_list': items_list,
             'transaction_total_price': transaction_total_price,
             'discount': specified_cart.total_discount,
             'tax': specified_cart.total_tax,
             'to_paid': transaction_total_price - specified_cart.total_discount + specified_cart.total_tax,
             'paid': specified_cart.paid_price,
-            'payment_method': '',
+            'payment_method': specified_cart.payment_method,
             'return': specified_cart.paid_price - (transaction_total_price - specified_cart.total_discount + specified_cart.total_tax)
         }
         return receipt, 200
+
+class SendOrder(Resource):
+    # Enable CORS
+    def options(self, id_cart=None):
+        return {'status': 'ok'}, 200
+    
+    # Get all data needed to be shown in receipt
+    @jwt_required
+    @apps_required
+    def post(self, id_cart):
+        # Check who is login (owner or cashier) and get credential data
+        claims = get_jwt_claims()
+        id_users = claims['id']
+        id_employee = None
+        if 'id_employee' in claims:
+            id_employee = claims['id_employee']
+        
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('id_outlet', location = 'json', required = True)
+        parser.add_argument('id_customer', location = 'json', required = False)
+        parser.add_argument('item_list', location = 'json', required = True, type = list)
+        parser.add_argument('promo', location = 'json', required = False)
+        parser.add_argument('payment_method', location = 'json', required = True)
+        parser.add_argument('paid_price', location = 'json', required = True)
+        parser.add_argument('name', location = 'json', required = False)
+        parser.add_argument('phone', location = 'json', required = False)
+        parser.add_argument('email', location = 'json', required = False)
+        args = parser.parse_args()
+
+        # Create cart instance
+        new_cart = Carts(
+            id_users = id_users,
+            id_employee = id_employee
+        )
 
 api.add_resource(ProductResource, '')
 api.add_resource(SpecificProductResource, '/<id_product>')
 api.add_resource(CategoryResource, '/category')
 api.add_resource(ItemsPerCategory, '/category/items')
+api.add_resource(SendOrder, '/checkout')
 api.add_resource(CheckoutResource, '/checkout/<id_cart>')

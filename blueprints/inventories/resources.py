@@ -75,7 +75,7 @@ class InventoryResource(Resource):
 
 class InventoryPerOutlet(Resource):
     # Enable CORS
-    def options(self, id=None):
+    def options(self, id_outlet=None):
         return {'status': 'ok'}, 200
 
     # Get all inventories in an outlet
@@ -226,7 +226,7 @@ class InventoryPerOutlet(Resource):
 
 class InventoryDetail(Resource):
     # Enable CORS
-    def options(self, id=None):
+    def options(self, id_stock_outlet=None):
         return {'status': 'ok'}, 200
 
     # Get inventory information from specified stock outlet id
@@ -340,7 +340,7 @@ class InventoryDetail(Resource):
 
 class AddStock(Resource):
     # Enable CORS
-    def options(self, id=None):
+    def options(self, id_stock_outlet=None):
         return {'status': 'ok'}, 200
 
     # Add stock to an inventory
@@ -386,7 +386,7 @@ class AddStock(Resource):
 
 class InventoryLogOutlet(Resource):
     # Enable CORS
-    def options(self, id=None):
+    def options(self, id_stock_outlet=None):
         return {'status': 'ok'}, 200
     
     # Get all logs related to specified inventory in an outlet
@@ -438,7 +438,7 @@ class InventoryLogOutlet(Resource):
 
 class InventoryLogAll(Resource):
     # Enable CORS
-    def options(self, id=None):
+    def options(self, id_inventory=None):
         return {'status': 'ok'}, 200
     
     # Get logs of an inventory in all outlets
@@ -486,7 +486,7 @@ class InventoryLogAll(Resource):
 
 class InventoryReminder(Resource):
     # Enable CORS
-    def options(self, id=None):
+    def options(self, id_outlet=None):
         return {'status': 'ok'}, 200
     
     # Get all inventories which almost run-out-of stock in an outlet
