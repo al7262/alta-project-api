@@ -33,6 +33,7 @@ class Carts(db.Model):
         'id_outlet': fields.Integer,
         'id_employee': fields.Integer,
         'id_customers': fields.Integer,
+        'order_code': fields.Integer,
         'name': fields.String,
         'total_item': fields.Integer,
         'payment_method': fields.String,
@@ -44,11 +45,12 @@ class Carts(db.Model):
         'deleted': fields.Boolean
     }
 
-    def __init__(self, id_users, id_outlet, name, total_item, payment_method, total_payment, total_discount, total_tax, paid_price, id_employee = None, id_customers = None):
+    def __init__(self, id_users, id_outlet, order_code, name, total_item, payment_method, total_payment, total_discount, total_tax, paid_price, id_employee = None, id_customers = None):
         self.id_users = id_users
         self.id_outlet = id_outlet
         self.id_employee = id_employee
         self.id_customers = id_customers
+        self.order_code = order_code
         self.name = name
         self.total_item = total_item
         self.payment_method = payment_method

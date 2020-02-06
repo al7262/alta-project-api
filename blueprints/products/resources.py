@@ -13,6 +13,7 @@ from blueprints.outlets.model import Outlets
 from blueprints import db, app
 from datetime import datetime
 import json
+import random
 
 # Import Authentication
 from flask_jwt_extended import jwt_required, get_jwt_claims
@@ -344,17 +345,38 @@ class SendOrder(Resource):
         total_payment = 0
         total_tax = 0
         for item in args['item_list']:
-            total_item = total_item + item['unit']
-            total_item_price = item['unit'] * item['price']
+            total_item = total_item + int(item['unit'])
+            total_item_price = int(item['unit']) * int(item['price'])
             total_payment = total_payment + total_item_price
             item_tax = (outlet.tax * total_item_price) // 100
             
+        # Validate some input
+        if int(args['paid_price']) < total_payment:
+            return {'message': 'Ada kesalahan input'}, 200
+
+        # Generate order code
+        all_carts = Carts.query.filter_by(deleted = True).filter_by(id_users = id_users)
+        unique_code = True
+        while unique_code:
+            # Generate code
+            code_symbol = 'abcdefghijklmnopqrstuvwxyz0123456789'
+            order_code = ''
+            for index in range(6):
+                random_number = random.randint(0, 36)
+                order_code = order_code + code_symbol[random_number]
+
+            # Uniqueness check
+            for cart in all_carts:
+                if cart.order_code == unique_code:
+                    unique_code = False
+
         # Create the instance
         new_cart = Carts(
             id_users = id_users,
             id_outlet = args['id_outlet'],
             id_employee = id_employee,
             id_customers = args['id_customers'],
+            order_code = order_code,
             name = name,
             total_item = total_item,
             total_payment = total_payment,
@@ -364,6 +386,40 @@ class SendOrder(Resource):
         )
         db.session.add(new_cart)
         db.session.commit()
+
+        # ---------- Create cart detail instance ----------
+        cart_id = new_cart.id
+
+        # Looping through items and create the instances
+        for item in args['item_list']:
+            new_cart_detail = Carts(
+                id_cart = cart_id,
+                id_product = item['id'],
+                quantity = item['unit'],
+                total_price_product = int(item['unit']) * int(item['price'])
+            )
+            db.session.add(new_cart_detail)
+            db.session.commit()
+        
+        # ---------- Edit inventory and stock outlet, and add inventory log ----------
+        for item in args['item_list']:
+            # Get inventory and stock outlet
+            recipes = Recipe.query.filter_by(id_product = item['id'])
+            for recipe in recipes:
+                id_inventory = recipe.id_inventory
+                inventory = Inventories.query.filter_by(id = id_inventory).filter_by(deleted = False).first()
+                stock_outlet = StockOutlet.query.filter_by(id_outlet = args['id_outlet']).filter_by(id_inventory = id_inventory).first()
+                stock_outlet.stock = stock_outlet.stock - (recipe.amount * int(item['unit']))
+                inventory.total_stock = inventory.total_stock - (recipe.amount * int(item['unit']))
+                inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                new_log = StockOutlet(
+                    id_stock_outlet = stock_outlet.id,
+                    amount = recipe.amount * int(item['unit']),
+                    status = 'Keluar',
+                    last_stock = stock_outlet.stock - recipe.amount * int(item['unit'])
+                )
+                db.session.add(new_log)
+                db.session.commit()
 
 api.add_resource(ProductResource, '')
 api.add_resource(SpecificProductResource, '/<id_product>')
