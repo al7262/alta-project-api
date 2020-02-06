@@ -14,6 +14,7 @@ class Carts(db.Model):
     id_users = db.Column(db.Integer, db.ForeignKey('users.id'), nullable = False)
     id_employee = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable = False)
     id_customers = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable = True)
+    id_outlet = db.Column(db.Integer, db.ForeignKey('outlets.id'), nullable = True)
     order_code = db.Column(db.String(50), unique = True, nullable = False)
     name = db.Column(db.String(150), nullable = False, default = '')
     total_item = db.Column(db.Integer, nullable = False, default = 0)
@@ -29,6 +30,7 @@ class Carts(db.Model):
         'id_users': fields.Integer,
         'id_employee': fields.Integer,
         'id_customers': fields.Integer,
+        'id_outlet': fields.Integer,
         'name': fields.String,
         'total_item': fields.Integer,
         'total_payment': fields.Integer,
