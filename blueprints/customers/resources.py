@@ -22,7 +22,7 @@ class CustomerResource(Resource):
     @jwt_required
     @dashboard_required
     # show outlet
-    def get(self, id=None):
+    def get(self):
         claims = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument('p', type = int, location = 'args', default = 1)
@@ -46,6 +46,31 @@ class CustomerResource(Resource):
         rows = []
         for row in qry.limit(args['rp']).offset(offset).all():
             rows.append(marshal(row, Customers.response_fields))
+
+        min = 0
+        new_customer = 0
+        total_costumer = 0
+        time = datetime.now().strftime("%Y-%m-%d")
+        today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
+        start = today + relativedelta(days = -(int(time[8::]))+1)
+        end = today + relativedelta(days = +1)
+        for costumer in qry:
+            total_costumer = total_costumer + 1
+            if costumer.total_transaction > min:
+                min = costumer.total_transaction
+                custumer_id = costumer.id
+        for costumer in qry:
+            create_at = costumer.created_at
+            if start <= create_at and create_at <= end:
+                new_customer = new_customer + 1
+        qry_costumer_loyal = Customers.query.get(custumer_id)
+        custumer_loyal = marshal(qry_costumer_loyal, Customers.response_fields)
+        result = {
+            "list_all_customer" : rows,
+            "total_costumer" : total_costumer,
+            "costumer_loyal" : custumer_loyal,
+            "new_customer" : new_customer
+        }
         return rows, 200
 
     @jwt_required
@@ -101,32 +126,24 @@ class CreateCustomerResource(Resource):
             return {'message' : "Masukkan Pelanggan Berhasil"},200,{'Content-Type': 'application/json'}
         return {'message' : "Masukkan Pelanggan Gagal"}, 404
 
-class SearchCustomer(Resource):
-
+class CustomerGetByOne(Resource):
+    
     def options(self,id=None):
         return{'status':'ok'} , 200
 
     @jwt_required
     @apps_required
-    def get(self):
+    # showing product
+    def get(self,id=None):
         claims = get_jwt_claims()
-        parser = reqparse.RequestParser()
-        parser.add_argument('p', type = int, location = 'args', default = 1)
-        parser.add_argument('rp', type = int, location = 'args', default = 25)
-        parser.add_argument('keyword', location = 'args')
+        qry = Customers.query.get(id)
+        marshal_qry = (marshal(qry, Customers.response_fields))
 
-        args = parser.parse_args()
+        if qry is not None:
+            return marshal_qry, 200
+        return {'message' : 'Data Tidak Ditemukan'}, 404
 
-        offset = (args['p'] * args['rp']) - args['rp']
-
-        qry = Customers.query.filter_by(id_users = claims['id']).filter(Customers.fullname.like("%"+args["keyword"]+"%") | Customers.phone_number.like("%"+args["keyword"]+"%") | Customers.email.like("%"+args["keyword"]+"%"))
-        
-        rows = []
-        for row in qry.limit(args['rp']).offset(offset).all():
-            rows.append(marshal(row, Customers.response_fields))
-        return rows, 200
-
-class CustomerGetByOne(Resource):
+class CustomerInfo(Resource):
     
     def options(self,id=None):
         return{'status':'ok'} , 200
@@ -146,3 +163,4 @@ class CustomerGetByOne(Resource):
 api.add_resource(CustomerResource,'/customer','/customer/<int:id>')
 api.add_resource(CreateCustomerResource,'/customer/create')
 api.add_resource(CustomerGetByOne,'/customer/get/<int:id>')
+api.add_resource(CustomerInfo,'/customer/info')
