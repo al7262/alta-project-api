@@ -57,7 +57,7 @@ class Carts(db.Model):
         self.total_tax = total_tax
         self.paid_price = paid_price
         self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.deleted = False
+        self.deleted = True
     
     def __repr__(self):
         return '<Carts %r>' %self.id

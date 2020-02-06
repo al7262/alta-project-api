@@ -359,8 +359,11 @@ class SendOrder(Resource):
             total_item = total_item,
             total_payment = total_payment,
             total_discount = 0,
-            total_tax = total_tax
-        )   
+            total_tax = total_tax,
+            paid_price = args['paid_price']
+        )
+        db.session.add(new_cart)
+        db.session.commit()
 
 api.add_resource(ProductResource, '')
 api.add_resource(SpecificProductResource, '/<id_product>')
