@@ -88,7 +88,7 @@ class RecipeResource(Resource):
                 return {'message': 'Maaf, unit untuk bahan baku ' + inventory.name + ' tidak tepat'}, 200
 
         # Check whether the recipe exist or not
-        recipe = Recipe.query.filter_by(id_inventory = id_inventory).first()
+        recipe = Recipe.query.filter_by(id_inventory = id_inventory).filter_by(id_product = id_product).first()
         if recipe is None:
             # Add the new recipe
             new_recipe = Recipe(id_inventory = id_inventory, id_product = id_product, amount = args['amount'])
@@ -97,7 +97,6 @@ class RecipeResource(Resource):
         else:
             # Edit existing recipe
             recipe.amount = args['amount']
-            db.session.add(recipe)
             db.session.commit()
 
         return {'message': 'Sukses menambahkan resep'}, 200
