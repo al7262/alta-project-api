@@ -70,7 +70,6 @@ class RecipeResource(Resource):
 
         # Check whether this inventory has already added or not
         inventory = Inventories.query.filter_by(name = args['name']).filter_by(deleted = False).first()
-        id_inventory = inventory.id
         if inventory is None:
             # Create new inventory and stock outlet in all outlets
             new_inventory = Inventories(id_users = id_users, name = args['name'], total_stock = 0, unit = args['unit'], unit_price = 0, times_edited = 0)
@@ -86,9 +85,10 @@ class RecipeResource(Resource):
             # Checking whether the unit is correct or not
             if inventory.unit != args['unit']:
                 return {'message': 'Maaf, unit untuk bahan baku ' + inventory.name + ' tidak tepat'}, 200
+            id_inventory = inventory.id
 
         # Check whether the recipe exist or not
-        recipe = Recipe.query.filter_by(id_inventory = id_inventory).first()
+        recipe = Recipe.query.filter_by(id_inventory = id_inventory).filter_by(id_product = id_product).first()
         if recipe is None:
             # Add the new recipe
             new_recipe = Recipe(id_inventory = id_inventory, id_product = id_product, amount = args['amount'])
@@ -97,7 +97,6 @@ class RecipeResource(Resource):
         else:
             # Edit existing recipe
             recipe.amount = args['amount']
-            db.session.add(recipe)
             db.session.commit()
 
         return {'message': 'Sukses menambahkan resep'}, 200

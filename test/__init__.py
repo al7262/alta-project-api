@@ -2,10 +2,14 @@ import pytest, logging, hashlib
 from app import app, cache
 from blueprints import db
 from flask import Flask, request, json
+from datetime import datetime
 
+# Creating dummy DB for testing purpose
 def reset_db():
     db.drop_all()
     db.create_all()
+
+    # ---------- Create Users ----------
     newUser = Users('al7262', 'azzahra@lamuri.com', 'Alt3rr4')
     db.session.add(newUser)
     db.session.commit()
