@@ -13,7 +13,7 @@ class Carts(db.Model):
     __tablename__ = 'carts'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     id_users = db.Column(db.Integer, db.ForeignKey('users.id'), nullable = False)
-    id_outlet = db.Column(db.Integer, db.ForeignKey('outlets.id'), nullable = False, default = 0)
+    id_outlet = db.Column(db.Integer, db.ForeignKey('outlets.id'), nullable = False, default = None)
     id_employee = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable = True, default = None)
     id_customers = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable = True, default = None)
     order_code = db.Column(db.String(50), unique = True, nullable = False)
@@ -30,6 +30,7 @@ class Carts(db.Model):
     carts_fields = {
         'id': fields.Integer,
         'id_users': fields.Integer,
+        'id_outlet': fields.Integer,
         'id_employee': fields.Integer,
         'id_customers': fields.Integer,
         'name': fields.String,
@@ -43,8 +44,9 @@ class Carts(db.Model):
         'deleted': fields.Boolean
     }
 
-    def __init__(self, id_users, id_employee, id_customers, name, total_item, payment_method, total_payment, total_discount, total_tax, paid_price):
+    def __init__(self, id_users, id_outlet, name, total_item, payment_method, total_payment, total_discount, total_tax, paid_price, id_employee = None, id_customers = None):
         self.id_users = id_users
+        self.id_outlet = id_outlet
         self.id_employee = id_employee
         self.id_customers = id_customers
         self.name = name

@@ -105,7 +105,6 @@ class ProductResource(Resource):
             price = args['price'],
             show = show,
             image = args['image'],
-            update_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
         db.session.add(new_product)
         db.session.commit()
@@ -152,7 +151,7 @@ class SpecificProductResource(Resource):
         product.price = args['price']
         product.show = show
         product.image = args['image']
-        product.update_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        product.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # Commit and show the result
         db.session.commit()
@@ -165,7 +164,7 @@ class SpecificProductResource(Resource):
         # Soft delete the product
         product = Products.query.filter_by(id = id_product).filter_by(deleted = False).first()
         product.deleted = True
-        product.update_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        product.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
 
         # Delete related recipe
@@ -310,17 +309,23 @@ class SendOrder(Resource):
     @jwt_required
     @apps_required
     def post(self, id_cart):
-        # Check who is login (owner or cashier) and get credential data
+        # Get owner ID and name
         claims = get_jwt_claims()
         id_users = claims['id']
+        owner = Users.query.filter_by(id = id_users).first()
+        name = owner.fullname
+
+        # Check who is login (owner or cashier) and get related information
         id_employee = None
         if 'id_employee' in claims:
             id_employee = claims['id_employee']
+            employee = Employees.query.filter_by(deleted = False).filter_by(id = id_employee).first()
+            name = employee.full_name
         
         # Take input from users
         parser = reqparse.RequestParser()
         parser.add_argument('id_outlet', location = 'json', required = True)
-        parser.add_argument('id_customer', location = 'json', required = False)
+        parser.add_argument('id_customers', location = 'json', required = False)
         parser.add_argument('item_list', location = 'json', required = True, type = list)
         parser.add_argument('promo', location = 'json', required = False)
         parser.add_argument('payment_method', location = 'json', required = True)
@@ -330,11 +335,32 @@ class SendOrder(Resource):
         parser.add_argument('email', location = 'json', required = False)
         args = parser.parse_args()
 
-        # Create cart instance
+        # ---------- Create cart instance ----------
+        # Seraching the outlet
+        outlet = Outlets.query.filter_by(deleted = False).filter_by(id = args['id_outlet']).first()
+        
+        # Calculate some values
+        total_item = 0
+        total_payment = 0
+        total_tax = 0
+        for item in args['item_list']:
+            total_item = total_item + item['unit']
+            total_item_price = item['unit'] * item['price']
+            total_payment = total_payment + total_item_price
+            item_tax = (outlet.tax * total_item_price) // 100
+            
+        # Create the instance
         new_cart = Carts(
             id_users = id_users,
-            id_employee = id_employee
-        )
+            id_outlet = args['id_outlet'],
+            id_employee = id_employee,
+            id_customers = args['id_customers'],
+            name = name,
+            total_item = total_item,
+            total_payment = total_payment,
+            total_discount = 0,
+            total_tax = total_tax
+        )   
 
 api.add_resource(ProductResource, '')
 api.add_resource(SpecificProductResource, '/<id_product>')
