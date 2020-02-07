@@ -135,7 +135,7 @@ class ProductResource(Resource):
                 id_inventory = inventory.id
             
             # Add the new recipe
-            new_recipe = Recipe(id_inventory = id_inventory, id_product = new_product.id, amount = recipe['amount'])
+            new_recipe = Recipe(id_inventory = id_inventory, id_product = new_product.id, amount = recipe['quantity'])
             db.session.add(new_recipe)
             db.session.commit()
 
@@ -251,7 +251,7 @@ class SpecificProductResource(Resource):
                     db.session.commit()
                 
                 # Add new recipe
-                new_recipe = Recipe(id_inventory = new_inventory.id, id_product = id_product, amount = come_in_recipe['amount'])
+                new_recipe = Recipe(id_inventory = new_inventory.id, id_product = id_product, amount = come_in_recipe['quantity'])
                 db.session.add(new_recipe)
                 db.session.commit()
 
@@ -259,13 +259,13 @@ class SpecificProductResource(Resource):
                 existing_recipe = Recipe.query.filter_by(id_inventory = inventory.id).filter_by(id_product = id_product).first()
                 # Add new recipe
                 if existing_recipe is None:
-                    new_recipe = Recipe(id_inventory = inventory.id, id_product = id_product, amount = come_in_recipe['amount'])
+                    new_recipe = Recipe(id_inventory = inventory.id, id_product = id_product, amount = come_in_recipe['quantity'])
                     db.session.add(new_recipe)
                     db.session.commit()
 
                 # Edit existing recipe    
                 else:
-                    existing_recipe.amount = come_in_recipe['amount']
+                    existing_recipe.amount = come_in_recipe['quantity']
                     db.session.commit()
 
         return {'message': 'Sukses mengubah produk'}, 200
