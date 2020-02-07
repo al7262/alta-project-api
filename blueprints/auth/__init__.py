@@ -20,7 +20,7 @@ class LoginApps(Resource):
         parser.add_argument('password', location = 'json', required = True)
 
         args = parser.parse_args()
-        
+
         encrypted = hashlib.md5(args['password'].encode()).hexdigest()
         qry_user = Users.query.filter_by(email = args['username']).filter_by(password = encrypted)
         qry_employee = Employees.query.filter_by(username = args['username']).filter_by(password = encrypted)
