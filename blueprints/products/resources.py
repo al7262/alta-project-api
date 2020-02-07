@@ -88,7 +88,7 @@ class ProductResource(Resource):
 
         # Check emptyness
         if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '':
-            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Turn the show field into boolean
         if args['show'] == 'Ya':
@@ -101,7 +101,7 @@ class ProductResource(Resource):
         for product in products:
             product = marshal(product, Products.response_fields)
             if product['id_users'] == id_users and product['name'] == args['name'] and product['category'] == args['category']:
-                return {'message': 'Maaf, produk yang ingin kamu tambahkan sudah ada'}, 200
+                return {'message': 'Maaf, produk yang ingin kamu tambahkan sudah ada'}, 409
 
         # Store the new product into database
         new_product = Products(
@@ -356,7 +356,7 @@ class CheckoutResource(Resource):
 
         # Empty active cart
         if specified_cart is None:
-            return {'message': 'Tidak ada transaksi aktif saat ini'}, 200
+            return {'message': 'Tidak ada transaksi aktif saat ini'}, 400
         
         # ---------- Prepare the receipt ----------
         # Get business logo
@@ -445,6 +445,10 @@ class SendOrder(Resource):
         parser.add_argument('phone', location = 'json', required = False)
         parser.add_argument('email', location = 'json', required = False)
         args = parser.parse_args()
+
+        # Check emptyness
+        if args['id_outlet'] == '' or args['payment_method'] == '':
+            return {'message': 'Tidak boleh ada field yang dikosongkan'}, 400
 
         # ---------- Create cart instance ----------
         # Seraching the outlet
@@ -536,7 +540,7 @@ class SendOrder(Resource):
                 db.session.add(new_log)
                 db.session.commit()
         
-        return {'message': 'Transaksi berhasil'}
+        return {'message': 'Transaksi berhasil'}, 200
 
 class DeleteProduct(Resource):
     # Enable CORS

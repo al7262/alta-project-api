@@ -38,6 +38,10 @@ class InventoryResource(Resource):
         # Get all inventories
         inventories = Inventories.query.filter_by(id_users = id_user).filter_by(deleted = 0)
 
+        # Empty inventories
+        if inventories is None:
+            return [], 200
+
         # Filter by inventory name
         if args['name'] != '':
             inventories = inventories.filter(Inventories.name.like("%" + args['name'] + "%"))
@@ -157,15 +161,15 @@ class InventoryPerOutlet(Resource):
 
         # Check for emptyness
         if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['unit_price'] == '' or args['reminder'] == '':
-            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Positivity
         if int(args['stock']) < 0:
-            return {'message': 'Stok harus bernilai positif'}, 200
+            return {'message': 'Stok harus bernilai positif'}, 400
         if int(args['unit_price']) < 0:
-            return {'message': 'Harga harus bernilai positif'}, 200
+            return {'message': 'Harga harus bernilai positif'}, 400
         if int(args['reminder']) < 0:
-            return {'message': 'Pengingat stok harus bernilai positif'}, 200
+            return {'message': 'Pengingat stok harus bernilai positif'}, 400
 
         # Check for duplicate
         stock_outlet_list = StockOutlet.query.filter_by(id_outlet = id_outlet)
@@ -173,14 +177,14 @@ class InventoryPerOutlet(Resource):
             id_inventory = stock_outlet.id_inventory
             inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
             if inventory.name == args['name']:
-                return {"message": "Bahan baku yang ingin kamu tambahkan sudah ada"}
+                return {"message": "Bahan baku yang ingin kamu tambahkan sudah ada"}, 409
 
         # Validate unit if the item has already added in other outlet
         inventories = Inventories.query.filter_by(id_users = id_user)
         for inventory in inventories:
             # Unit is different
             if inventory.name == args['name'] and inventory.unit != args['unit']:
-                return {"message": "Unit untuk bahan baku " + inventory.name + " tidak tepat"}
+                return {"message": "Unit untuk bahan baku " + inventory.name + " tidak tepat"}, 400
             
             # The unit is correct
             elif inventory.name == args['name']:
@@ -267,17 +271,17 @@ class InventoryDetail(Resource):
 
         # Check for emptyness
         if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['reminder'] == '':
-            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Positivity
         if int(args['stock']) < 0:
-            return {'message': 'Stok harus bernilai positif'}, 200
+            return {'message': 'Stok harus bernilai positif'}, 400
         if int(args['reminder']) < 0:
-            return {'message': 'Pengingat stok harus bernilai positif'}, 200
+            return {'message': 'Pengingat stok harus bernilai positif'}, 400
 
         # Validate emptyness
         if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['reminder'] == '':
-            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Edit stock outlet
         target_stock_outlet.reminder = args['reminder']
@@ -294,7 +298,7 @@ class InventoryDetail(Resource):
         inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
 
-        return {'message': 'Sukses mengubah bahan baku'}
+        return {'message': 'Sukses mengubah bahan baku'}, 200
 
     # Delete existing stock outlet
     @jwt_required
@@ -355,13 +359,13 @@ class AddStock(Resource):
 
         # Check for emptyness
         if args['stock'] == '' or args['price'] == '':
-            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Positivity
         if int(args['stock']) < 0:
-            return {'message': 'Stok harus bernilai positif'}, 200
+            return {'message': 'Stok harus bernilai positif'}, 400
         if int(args['price']) < 0:
-            return {'message': 'Harga harus bernilai positif'}, 200
+            return {'message': 'Harga harus bernilai positif'}, 400
 
         # Search for specified stock outlet and inventory related
         stock_outlet = StockOutlet.query.filter_by(id = id_stock_outlet).first()
@@ -407,11 +411,12 @@ class InventoryLogOutlet(Resource):
             logs = logs.filter_by(status = args['type'])
 
         # Filter by date
-        filtered_logs = []
-        for log in logs:
-            created_at = log.created_at
-            if created_at.strftime("%Y-%m-%d") == args['date']:
-                filtered_logs.append(log)
+        if args['date'] != '':
+            filtered_logs = []
+            for log in logs:
+                created_at = log.created_at
+                if created_at.strftime("%Y-%m-%d") == args['date']:
+                    filtered_logs.append(log)
         
         # Get outlet name
         stock_outlet = StockOutlet.query.filter_by(id = id_stock_outlet).first()
@@ -465,11 +470,12 @@ class InventoryLogAll(Resource):
             log_list = filter(lambda log: log.status == args['type'], log_list)
 
         # Filter by date
-        filtered_logs = []
-        for log in log_list:
-            created_at = log.created_at
-            if created_at.strftime("%Y-%m-%d") == args['date']:
-                filtered_logs.append(log)
+        if args['date'] != '':
+            filtered_logs = []
+            for log in log_list:
+                created_at = log.created_at
+                if created_at.strftime("%Y-%m-%d") == args['date']:
+                    filtered_logs.append(log)
         
         # Prepare the result
         result = []

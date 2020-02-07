@@ -1,5 +1,5 @@
 import pytest, logging, hashlib
-from app import app, cache
+from app import app #cache
 from blueprints import db
 from flask import Flask, request, json
 from datetime import datetime
@@ -42,12 +42,12 @@ def reset_db():
     db.session.commit()
 
     # ---------- Create Cashier ----------
-    cashier_1 = Employees(id_outlet = 1, full_name = Budi Setiawan, username = budisetiawan, password = Budisetiawan1, position = 'Kasir')
+    cashier_1 = Employees(id_outlet = 1, full_name = 'Budi Setiawan', username = 'budisetiawan', password = 'Budisetiawan1', position = 'Kasir')
     db.session.add(cashier_1)
     db.session.commit()
 
     # ---------- Create Admin ----------
-    admin_1 = Employees(id_outlet = 1, full_name = Steve Jobs, username = stevejobs, password = Stevejobs1, position = 'Admin')
+    admin_1 = Employees(id_outlet = 1, full_name = 'Steve Jobs', username = 'stevejobs', password = 'Stevejobs1', position = 'Admin')
     db.session.add(admin_1)
     db.session.commit()
 
