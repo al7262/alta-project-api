@@ -33,9 +33,6 @@ class Products (db.Model):
         'updated_at' : fields.DateTime
     }
 
-    jwt_claims_fields = {
-        'id' : fields.Integer
-    }
 
     def __init__(self, id_users, name, category, price, show, image):
         self.id_users = id_users
@@ -47,3 +44,4 @@ class Products (db.Model):
 
     def __repr__(self):
         return '<Products %r>' %self.name
+    

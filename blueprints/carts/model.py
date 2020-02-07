@@ -33,7 +33,7 @@ class Carts(db.Model):
         'id_outlet': fields.Integer,
         'id_employee': fields.Integer,
         'id_customers': fields.Integer,
-        'order_code': fields.Integer,
+        'order_code': fields.String,
         'name': fields.String,
         'total_item': fields.Integer,
         'payment_method': fields.String,
@@ -79,7 +79,7 @@ class CartDetail(db.Model):
         'id_product': fields.Integer,
         'quantity': fields.Integer,
         'total_price_product': fields.Integer,
-        'updated_at': fields.DateTime,
+        'updated_at': fields.DateTime
     }
 
     jwt_claim_fields = {
