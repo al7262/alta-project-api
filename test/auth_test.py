@@ -1,5 +1,5 @@
 import json
-from . import app, client, create_token, db_reset #cache
+from . import app, client, create_token, db_reset, cache
 
 class TestAuth():
     # Register session test for valid input 
@@ -45,3 +45,19 @@ class TestAuth():
         res = client.post('/user/register', json = data)
         res_json = json.loads(res.data)
         assert res.status_code == 422
+    
+    # Login : Valid for cashier in apps
+    def test_login_valid_user(self, client):
+        # Prepare the DB
+        db_reset()
+
+        # Prepare the data to be inputted
+        data = {
+            "username": "garrycussoy",
+            "password": "Garryac1",
+        }
+
+        # Test the endpoints
+        res = client.post('/login', json = data)
+        res_json = json.loads(res.data)
+        assert res.status_code == 200

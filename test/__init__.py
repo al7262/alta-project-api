@@ -1,5 +1,5 @@
 import pytest, logging, hashlib
-from app import app #cache
+from app import app, cache
 from blueprints import db
 from flask import Flask, request, json
 from datetime import datetime
@@ -13,7 +13,7 @@ from blueprints.stock_outlet.model import StockOutlet
 from blueprints.carts.model import Carts, CartDetail
 
 # Creating dummy DB for testing purpose
-def reset_db():
+def db_reset():
     db.drop_all()
     db.create_all()
 
@@ -58,3 +58,51 @@ def call_client(request):
 @pytest.fixture
 def client(request):
     return call_client(request)
+
+def create_token(username):
+    # Checking whether admin or user and prepare the data
+    if username == 'budisetiawan':
+        cachename = "test-kasir-1-token"
+        data = {
+            'username': 'budisetiawan',
+            'password': 'Budisetiawan1',
+            'position': 'Kasir'
+        }
+    elif username == 'hedy@alterra.id':
+        cachename = "test-user-1-token"
+        data = {
+            'username': 'hedy@alterra.id',
+            'password': 'Hedygading1',
+            'position': 'Owner'
+        }
+    elif username == 'stevejobs':
+        cachename = "test-admin-1-token"
+        data = {
+            'username': 'stevejobs',
+            'password': 'Stevejobs1',
+            'position': 'Admin'
+        }
+
+    token = cache.get(cachename)
+    if token is None:
+        # Do Request
+        req = call_client(request)
+        if data['position'] == 'Owner' or data['position'] == 'Kasir':
+            res = req.post('/login/apps', json = data, content_type='application/json')
+        elif data['position'] == 'Owner' or data['position'] == 'Admin':
+            res = req.post('/login/dashboard', json = data, content_type='application/json')        
+
+        # Store Response
+        res_json = json.loads(res.data)
+        logging.warning('RESULT : %s', res_json)
+
+        # Assertion
+        assert res.status_code == 200
+
+        # Save token into cache
+        cache.set(cachename, res_json['token'], timeout = 60)
+
+        # Return, because it is useful for other test
+        return res_json['token']
+    else:
+        return token

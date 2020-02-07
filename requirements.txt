@@ -11,4 +11,4 @@ pytest
 pytest-cov
 flask_cors
 mock
-Werkzeug
+werkzeug==0.16.0
