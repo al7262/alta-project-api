@@ -16,7 +16,6 @@ Bp_user = Blueprint('user',__name__)
 api = Api(Bp_user)
 
 class RegisterUserResource(Resource):
-
     #enalble CORS
     def options(self,id=None):
         return{'status':'ok'} , 200

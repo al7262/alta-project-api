@@ -10,7 +10,6 @@ bp_auth = Blueprint('auth',__name__)
 api = Api(bp_auth)
 
 class LoginApps(Resource):
-        
     def options(self,id=None):
         return{'status':'ok'} , 200
 
@@ -26,7 +25,6 @@ class LoginApps(Resource):
         qry_employee = Employees.query.filter_by(username = args['username']).filter_by(password = encrypted)
         userData = qry_user.first()
         employeeData = qry_employee.first()
-        tes_employee = Employees.query
 
         if userData is not None:
             userData = marshal(userData,Users.jwt_claims_fields)

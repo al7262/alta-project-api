@@ -44,14 +44,14 @@ def db_reset():
     db.session.commit()
 
     # ---------- Create Cashier ----------
-    encrypted_1 = hashlib.md5('Budisetiawan1'.encode()).hexdigest()
-    cashier_1 = Employees(id_outlet = 1, full_name = 'Budi Setiawan', username = 'budisetiawan', password = encrypted_1, position = 'Kasir')
+    encrypted_4 = hashlib.md5('Budisetiawan1'.encode()).hexdigest()
+    cashier_1 = Employees(id_outlet = 1, full_name = 'Budi Setiawan', username = 'budisetiawan', password = encrypted_4, position = 'Kasir')
     db.session.add(cashier_1)
     db.session.commit()
 
     # ---------- Create Admin ----------
-    encrypted_1 = hashlib.md5('Stevejobs1'.encode()).hexdigest()
-    admin_1 = Employees(id_outlet = 1, full_name = 'Steve Jobs', username = 'stevejobs', password = 'Stevejobs1', position = encrypted_1)
+    encrypted_5 = hashlib.md5('Stevejobs1'.encode()).hexdigest()
+    admin_1 = Employees(id_outlet = 1, full_name = 'Steve Jobs', username = 'stevejobs', password = encrypted_5, position = 'Admin')
     db.session.add(admin_1)
     db.session.commit()
 

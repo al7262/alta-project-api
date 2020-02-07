@@ -22,9 +22,10 @@ class TestAuth():
     # Register session for duplicate email
     def test_register_duplicate_email(self, client):
         # Prepare the data to be inputted
+        db_reset
         data = {
-            "email": "azzahra@alterra.id",
-            "password": "Azzahra1",
+            "email": "hedy@alterra.id",
+            "password": "Gading09",
         }
 
         # Test the endpoints
@@ -47,7 +48,7 @@ class TestAuth():
         assert res.status_code == 422
     
     # Login : Valid for cashier in apps
-    def test_login_valid_user(self, client):
+    def test_login_valid_apps(self, client):
         # Prepare the DB
         db_reset()
 
@@ -61,4 +62,51 @@ class TestAuth():
         res = client.post('/login/apps', json = data)
         res_json = json.loads(res.data)
         assert res.status_code == 200
-        db.reset()
+
+    # Login : Valid for cashier in dashboard
+    def test_login_valid_dashboard(self, client):
+        # Prepare the DB
+        db_reset()
+
+        # Prepare the data to be inputted
+        data = {
+            "username": "stevejobs",
+            "password": "Stevejobs1",
+        }
+
+        # Test the endpoints
+        res = client.post('/login/dashboard', json = data)
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # Login : Cashier try to login in dashboard
+    def test_login_cashier_to_dashboard(self, client):
+        # Prepare the DB
+        db_reset()
+
+        # Prepare the data to be inputted
+        data = {
+            "username": "budisetiawan",
+            "password": "Budisetiawan1",
+        }
+
+        # Test the endpoints
+        res = client.post('/login/dashboard', json = data)
+        res_json = json.loads(res.data)
+        assert res.status_code == 401
+
+    # Login : Admin try to login in apps
+    def test_login_admin_apps(self, client):
+        # Prepare the DB
+        db_reset()
+
+        # Prepare the data to be inputted
+        data = {
+            "username": "stevejobs",
+            "password": "Stevejobs1",
+        }
+
+        # Test the endpoints
+        res = client.post('/login/apps', json = data)
+        res_json = json.loads(res.data)
+        assert res.status_code == 401

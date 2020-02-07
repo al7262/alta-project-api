@@ -26,10 +26,10 @@ def user_required(fn):
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt_claims()
-        if claims['email'] is not None:
+        if 'email' in claims:
             return fn(*args, **kwargs)
         else:
-            return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+            return {'status': 'FORBIDDEN', 'message': 'Hanya untuk owner'}, 403
     return wrapper
 
 def dashboard_required(fn):
@@ -41,12 +41,12 @@ def dashboard_required(fn):
             if claims['position'] == "Admin":
                 return fn(*args, **kwargs)
             else:
-                return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+                return {'status': 'FORBIDDEN', 'message': 'Hanya dapat diakses oleh Admin'}, 403
         else:
-            if claims['email'] is not None:
+            if 'email' in claims:
                 return fn(*args, **kwargs)
             else:
-                return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+                return {'status': 'FORBIDDEN', 'message': 'Hanya dapat diakses oleh Admin'}, 403
     return wrapper
 
 def apps_required(fn):
@@ -58,12 +58,12 @@ def apps_required(fn):
             if claims['position'] == "Kasir":
                 return fn(*args, **kwargs)
             else:
-                return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+                return {'status': 'FORBIDDEN', 'message': 'Hanya dapat diakses oleh kasir'}, 403
         else:
-            if claims['email'] is not None:
+            if 'email' in claims:
                 return fn(*args, **kwargs)
             else:
-                return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+                return {'status': 'FORBIDDEN', 'message': 'Hanya dapat diakses oleh kasir'}, 403
     return wrapper
 
 ##############################
