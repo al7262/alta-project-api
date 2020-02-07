@@ -20,12 +20,6 @@ class Recipe(db.Model):
         'amount' : fields.Integer
     }
 
-    jwt_claims_fields = {
-        'id' : fields.Integer,
-        'id_inventory' : fields.Integer,
-        'id_product' : fields.Integer
-    }
-
     def __init__(self, id_inventory, id_product, amount):
         self.id_inventory = id_inventory
         self.id_product = id_product
