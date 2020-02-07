@@ -12,7 +12,7 @@ class Employees(db.Model):
     username = db.Column(db.String(100), nullable = False, unique = True)
     full_name = db.Column(db.String(150), nullable = False, default = '')
     position = db.Column(db.String(20), nullable = False, default = '')
-    password = db.Column(db.String(150), nullable = False, default = '')
+    password = db.Column(db.String(190), nullable = False, default = '')
     created_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     updated_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     deleted = db.Column(db.Boolean, default = False)

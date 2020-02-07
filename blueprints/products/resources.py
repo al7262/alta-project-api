@@ -83,7 +83,12 @@ class ProductResource(Resource):
         parser.add_argument('price', location = 'json', required = True)
         parser.add_argument('show', location = 'json', required = True)
         parser.add_argument('image', location = 'json', required = True)
+        parser.add_argument('recipe', location = 'json', required = True, type = list)
         args = parser.parse_args()
+
+        # Check emptyness
+        if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '':
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Turn the show field into boolean
         if args['show'] == 'Ya':
@@ -96,7 +101,7 @@ class ProductResource(Resource):
         for product in products:
             product = marshal(product, Products.response_fields)
             if product['id_users'] == id_users and product['name'] == args['name'] and product['category'] == args['category']:
-                return {'message': 'Maaf, produk yang ingin kamu tambahkan sudah ada'}, 200
+                return {'message': 'Maaf, produk yang ingin kamu tambahkan sudah ada'}, 409
 
         # Store the new product into database
         new_product = Products(
@@ -109,7 +114,32 @@ class ProductResource(Resource):
         )
         db.session.add(new_product)
         db.session.commit()
-        return {"message": "Sukses menambahkan produk", "id_product": new_product.id}, 200
+
+        # Loop through recipe list
+        for recipe in args['recipe']:
+            # Check whether this inventory has already added or not
+            inventory = Inventories.query.filter_by(name = recipe['name']).filter_by(deleted = False).first()
+            if inventory is None:
+                # Create new inventory and stock outlet in all outlets
+                new_inventory = Inventories(id_users = id_users, name = recipe['name'], total_stock = 0, unit = recipe['unit'], unit_price = 0, times_edited = 0)
+                db.session.add(new_inventory)
+                db.session.commit()
+                id_inventory = new_inventory.id
+                outlets = Outlets.query.filter_by(deleted = False).filter_by(id_user = id_users)
+                for outlet in outlets:
+                    new_stock_outlet = StockOutlet(id_outlet = outlet.id, id_inventory = new_inventory.id, reminder = 0, stock = 0)
+                    db.session.add(new_stock_outlet)
+                    db.session.commit()
+            else:
+                # Checking whether the unit is correct or not
+                id_inventory = inventory.id
+            
+            # Add the new recipe
+            new_recipe = Recipe(id_inventory = id_inventory, id_product = new_product.id, amount = recipe['quantity'])
+            db.session.add(new_recipe)
+            db.session.commit()
+
+        return {"message": "Sukses menambahkan produk"}, 200
 
 class SpecificProductResource(Resource):
     # Enable CORS
@@ -119,25 +149,60 @@ class SpecificProductResource(Resource):
     # Get product specified by its ID
     @jwt_required
     def get(self, id_product):
-        # Get the product and show the result
+        # Get the product
         product = Products.query.filter_by(id = id_product).filter_by(deleted = False).first()
         if product is None:
             return {}, 200
         product = marshal(product, Products.response_fields)
-        return product, 200
+
+        # Get its recipe
+        recipes = Recipe.query.filter_by(id_product = product['id'])
+        recipe_list = []
+        for recipe in recipes:
+            # Get inventory name
+            inventory = Inventories.query.filter_by(deleted = False).filter_by(id = recipe.id_inventory).first()
+            data = {
+                'name': inventory.name,
+                'quantity': recipe.amount,
+                'unit': inventory.unit
+            }
+            recipe_list.append(data)
+        
+        # Check show field
+        if product['show'] == True:
+            show = 'Ya'
+        elif product['show'] == False:
+            show = 'Tidak'
+
+        # Show the result
+        result = {
+            'name': product['name'],
+            'category': product['category'],
+            'price': product['price'],
+            'image': product['image'],
+            'show': show,
+            'recipe': recipe_list
+        }
+        return result, 200
     
     # Edit specified product
     @jwt_required
     @dashboard_required
     def put(self, id_product):
         # Take input from users
+        claims = get_jwt_claims()
+        id_users = claims['id']
         parser = reqparse.RequestParser()
         parser.add_argument('name', location = 'json', required = True)
         parser.add_argument('category', location = 'json', required = True)
         parser.add_argument('price', location = 'json', required = True)
         parser.add_argument('show', location = 'json', required = True)
         parser.add_argument('image', location = 'json', required = True)
+        parser.add_argument('recipe', location = 'json', required = True, type = list)
         args = parser.parse_args()
+
+        # Get the specified product
+        product = Products.query.filter_by(deleted = False).filter_by(id = id_product).first()
 
         # Turn the show field into boolean
         if args['show'] == 'Ya':
@@ -145,17 +210,64 @@ class SpecificProductResource(Resource):
         elif args['show'] == 'Tidak':
             show = False
 
-        # Get the product and edit it
-        product = Products.query.filter_by(id = id_product).filter_by(deleted = False).first()
+        # Edit the product and commit it
         product.name = args['name']
         product.category = args['category']
         product.price = args['price']
         product.show = show
         product.image = args['image']
         product.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        # Commit and show the result
         db.session.commit()
+
+        # Come in recipe
+        come_in_recipe = []
+        for recipe in args['recipe']:
+            come_in_recipe.append(recipe['name'])
+
+        # Before edit recipe
+        recipes = Recipe.query.filter_by(id_product = product.id)
+        for recipe in recipes:
+            inventory = Inventories.query.filter_by(deleted = False).filter_by(id = recipe.id_inventory).first()
+            inventory_name = inventory.name
+            
+            # Delete the recipe if the inventory is not in come in recipe list
+            if inventory_name not in come_in_recipe:
+                db.session.delete(recipe)
+                db.session.commit()
+
+        # Add new recipe or modify existing one
+        for come_in_recipe in args['recipe']:
+            inventory = Inventories.query.filter_by(deleted = False).filter_by(id_users = id_users).filter_by(name = come_in_recipe['name']).first()
+            if inventory is None:
+                # Add new inventory and its stock outlet
+                new_inventory = Inventories(id_users = id_users, name = come_in_recipe['name'], total_stock = 0, unit = come_in_recipe['unit'], unit_price = 0, times_edited = 0)
+                db.session.add(new_inventory)
+                db.session.commit()
+                id_inventory = new_inventory.id
+                outlets = Outlets.query.filter_by(deleted = False).filter_by(id_user = id_users)
+                for outlet in outlets:
+                    new_stock_outlet = StockOutlet(id_outlet = outlet.id, id_inventory = new_inventory.id, reminder = 0, stock = 0)
+                    db.session.add(new_stock_outlet)
+                    db.session.commit()
+                
+                # Add new recipe
+                new_recipe = Recipe(id_inventory = new_inventory.id, id_product = id_product, amount = come_in_recipe['quantity'])
+                db.session.add(new_recipe)
+                db.session.commit()
+
+            else:
+                existing_recipe = Recipe.query.filter_by(id_inventory = inventory.id).filter_by(id_product = id_product).first()
+                # Add new recipe
+                if existing_recipe is None:
+                    new_recipe = Recipe(id_inventory = inventory.id, id_product = id_product, amount = come_in_recipe['quantity'])
+                    db.session.add(new_recipe)
+                    db.session.commit()
+
+                # Edit existing recipe    
+                else:
+                    existing_recipe.amount = come_in_recipe['quantity']
+                    db.session.commit()
+
         return {'message': 'Sukses mengubah produk'}, 200
 
     # Soft delete specified product
@@ -244,7 +356,7 @@ class CheckoutResource(Resource):
 
         # Empty active cart
         if specified_cart is None:
-            return {'message': 'Tidak ada transaksi aktif saat ini'}, 200
+            return {'message': 'Tidak ada transaksi aktif saat ini'}, 400
         
         # ---------- Prepare the receipt ----------
         # Get business logo
@@ -333,6 +445,10 @@ class SendOrder(Resource):
         parser.add_argument('phone', location = 'json', required = False)
         parser.add_argument('email', location = 'json', required = False)
         args = parser.parse_args()
+
+        # Check emptyness
+        if args['id_outlet'] == '' or args['payment_method'] == '':
+            return {'message': 'Tidak boleh ada field yang dikosongkan'}, 400
 
         # ---------- Create cart instance ----------
         # Seraching the outlet
@@ -424,7 +540,7 @@ class SendOrder(Resource):
                 db.session.add(new_log)
                 db.session.commit()
         
-        return {'message': 'Transaksi berhasil'}
+        return {'message': 'Transaksi berhasil'}, 200
 
 class DeleteProduct(Resource):
     # Enable CORS

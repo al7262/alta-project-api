@@ -40,3 +40,4 @@ CONNECT CLOUDFLARE
 DUMP SQL
 mysqldump -u username -p dbname > dbexport.sql (EXPORT)
 mysql -u username -p dbname < dbexport.sql (IMPORT)
+mysql -h portofolio.ce1fym8eoinv.ap-southeast-1.rds.amazonaws.com -u admin -p (PUNYA AGUNG)

@@ -16,7 +16,6 @@ Bp_user = Blueprint('user',__name__)
 api = Api(Bp_user)
 
 class RegisterUserResource(Resource):
-
     #enalble CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
@@ -44,10 +43,10 @@ class RegisterUserResource(Resource):
                     split = str(item).split('(')
                     error, num = split[0], split[1][0]
                     errorList.append("{err}(minimum {num})".format(err=error, num=num))
-                message = "Please check your passw@jwt_requiredord: " + ', '.join(x for x in errorList)
+                message = "Please check your passwword: " + ', '.join(x for x in errorList)
                 return {'message': message}, 422, {'Content-Type': 'application/json'}
             encrypted = hashlib.md5(args['password'].encode()).hexdigest()
-            
+
             user = Users(args['email'], encrypted)
             db.session.add(user)
             db.session.commit()

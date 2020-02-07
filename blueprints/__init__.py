@@ -26,10 +26,10 @@ def user_required(fn):
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt_claims()
-        if claims['email'] is not None:
+        if 'email' in claims:
             return fn(*args, **kwargs)
         else:
-            return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+            return {'status': 'FORBIDDEN', 'message': 'Hanya untuk owner'}, 403
     return wrapper
 
 def dashboard_required(fn):
@@ -41,12 +41,12 @@ def dashboard_required(fn):
             if claims['position'] == "Admin":
                 return fn(*args, **kwargs)
             else:
-                return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+                return {'status': 'FORBIDDEN', 'message': 'Hanya dapat diakses oleh Admin'}, 403
         else:
-            if claims['email'] is not None:
+            if 'email' in claims:
                 return fn(*args, **kwargs)
             else:
-                return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+                return {'status': 'FORBIDDEN', 'message': 'Hanya dapat diakses oleh Admin'}, 403
     return wrapper
 
 def apps_required(fn):
@@ -58,12 +58,12 @@ def apps_required(fn):
             if claims['position'] == "Kasir":
                 return fn(*args, **kwargs)
             else:
-                return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+                return {'status': 'FORBIDDEN', 'message': 'Hanya dapat diakses oleh kasir'}, 403
         else:
-            if claims['email'] is not None:
+            if 'email' in claims:
                 return fn(*args, **kwargs)
             else:
-                return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
+                return {'status': 'FORBIDDEN', 'message': 'Hanya dapat diakses oleh kasir'}, 403
     return wrapper
 
 ##############################
@@ -81,12 +81,10 @@ db_selected=os.getenv('DB_SELECTED')
 try:
     env = os.environ.get('FLASK_ENV', 'development')
     username_laptop = os.environ['HOME']
-    if username_laptop == '/home/alta8' and env is not 'testing':
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@0.0.0.0:3306/final_project_backend'
+    if env == 'testing':
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@0.0.0.0:3306/final_project_backend_testing'
     elif username_laptop == '/home/alta10' and env is not 'testing':
         app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend'
-    elif username_laptop == '/home/alta8':
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@0.0.0.0:3306/final_project_backend_testing'
     elif username_laptop == '/home/alta10':
         app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend_test'
     else:

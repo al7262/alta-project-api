@@ -62,11 +62,11 @@ class RecipeResource(Resource):
 
         # Check emptyness
         if args['name'] == '' or args['amount'] == '' or args['unit'] == '' or args['amount'] is None:
-            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Positivity check
         if int(args['amount']) <= 0:
-            return {'message': 'Kuantitas harus bernilai positif'}
+            return {'message': 'Kuantitas harus bernilai positif'}, 400
 
         # Check whether this inventory has already added or not
         inventory = Inventories.query.filter_by(name = args['name']).filter_by(deleted = False).first()
@@ -84,7 +84,7 @@ class RecipeResource(Resource):
         else:
             # Checking whether the unit is correct or not
             if inventory.unit != args['unit']:
-                return {'message': 'Maaf, unit untuk bahan baku ' + inventory.name + ' tidak tepat'}, 200
+                return {'message': 'Maaf, unit untuk bahan baku ' + inventory.name + ' tidak tepat'}, 400
             id_inventory = inventory.id
 
         # Check whether the recipe exist or not
@@ -121,11 +121,11 @@ class EditRecipe(Resource):
 
         # Check emptyness
         if args['name'] == '' or args['amount'] == '' or args['unit'] == '' or args['amount'] is None:
-            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 200
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Positivity check
         if int(args['amount']) <= 0:
-            return {'message': 'Kuantitas harus bernilai positif'}
+            return {'message': 'Kuantitas harus bernilai positif'}, 400
 
         # Get specified recipe and its inventory name
         recipe = Recipe.query.filter_by(id = id_recipe).first()
@@ -137,7 +137,7 @@ class EditRecipe(Resource):
         inventories = Inventories.query.filter_by(deleted = False).filter_by(id_users = id_users)
         for inventory in inventories:
             if inventory.name == args['name'] and inventory.name != recipe_name:
-                return {'message': 'Maaf, nama tersebut sudah digunakan untuk bahan baku yang lain'}, 200
+                return {'message': 'Maaf, nama tersebut sudah digunakan untuk bahan baku yang lain'}, 409
 
         # Edit inventory
         its_inventory.name = args['name']

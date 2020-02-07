@@ -17,7 +17,6 @@ bp_employees = Blueprint('employees', __name__)
 api = Api(bp_employees)
 
 class CreateEmployeeResource(Resource):
-
     #enalble CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
@@ -61,7 +60,6 @@ class CreateEmployeeResource(Resource):
         return {'message' : "Input Pegawai Gagal"},401
 
 class EmployeeResource(Resource):
-    
     def options(self,id=None):
         return{'status':'ok'} , 200
         
@@ -191,12 +189,11 @@ class EmployeeSearch(Resource):
         return rows, 200
 
 class EmployeeGetByOne(Resource):
-
     def options(self,id=None):
         return{'status':'ok'} , 200
 
     @jwt_required
-    @user_required
+    @apps_required
     def get(self,id=None):
         claims = get_jwt_claims()
         qry = Employees.query.get(id)

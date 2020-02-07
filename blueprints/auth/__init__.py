@@ -10,7 +10,6 @@ bp_auth = Blueprint('auth',__name__)
 api = Api(bp_auth)
 
 class LoginApps(Resource):
-        
     def options(self,id=None):
         return{'status':'ok'} , 200
 
@@ -20,7 +19,7 @@ class LoginApps(Resource):
         parser.add_argument('password', location = 'json', required = True)
 
         args = parser.parse_args()
-        
+
         encrypted = hashlib.md5(args['password'].encode()).hexdigest()
         qry_user = Users.query.filter_by(email = args['username']).filter_by(password = encrypted)
         qry_employee = Employees.query.filter_by(username = args['username']).filter_by(password = encrypted)
@@ -37,14 +36,15 @@ class LoginApps(Resource):
             
             if employeeData['deleted']==False:
             # Get ID users
-                qry_employee = qry_employee.first()
-                outlet = Outlets.query.filter_by(deleted = False).filter_by(id = qry_employee.id_outlet).first()
-                id_user = outlet.id_user
-                employeeData['id_employee'] = employeeData['id']
-                employeeData['id'] = id_user
+                if employeeData['position'] == 'Kasir':
+                    qry_employee = qry_employee.first()
+                    outlet = Outlets.query.filter_by(deleted = False).filter_by(id = qry_employee.id_outlet).first()
+                    id_user = outlet.id_user
+                    employeeData['id_employee'] = employeeData['id']
+                    employeeData['id'] = id_user
 
-                token = create_access_token(identity = employeeData['username'], user_claims = employeeData)
-                return {'token' : token}, 200
+                    token = create_access_token(identity = employeeData['username'], user_claims = employeeData)
+                    return {'token' : token}, 200
             
         return{'status' : 'UNATUTHORIZED' , 'message' : 'Username atau Password Tidak Valid'}, 401
     
