@@ -53,11 +53,11 @@ class TestAuth():
 
         # Prepare the data to be inputted
         data = {
-            "username": "garrycussoy",
-            "password": "Garryac1",
+            "username": "budisetiawan",
+            "password": "Budisetiawan1",
         }
 
         # Test the endpoints
-        res = client.post('/login', json = data)
+        res = client.post('/login/apps', json = data)
         res_json = json.loads(res.data)
         assert res.status_code == 200
