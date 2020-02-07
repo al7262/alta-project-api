@@ -61,3 +61,4 @@ class TestAuth():
         res = client.post('/login/apps', json = data)
         res_json = json.loads(res.data)
         assert res.status_code == 200
+        db.reset()
