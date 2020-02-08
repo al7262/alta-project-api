@@ -96,7 +96,7 @@ class ProductResource(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '' or 'name' not in args or 'price' not in args or 'image' not in args or 'category' not in args:
+        if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '' or args['name'] is not None or args['price'] is not None or args['image'] is not None or args['category'] is not None:
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Turn the show field into boolean
@@ -215,7 +215,7 @@ class SpecificProductResource(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '' or 'name' not in args or 'price' not in args or 'image' not in args or 'category' not in args:
+        if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '' or args['name'] is not None or args['price'] is not None or args['image'] is not None or args['category'] is not None:
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Get the specified product
@@ -345,7 +345,7 @@ class ItemsPerCategory(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if args['category'] == '' or 'category' not in args:
+        if args['category'] == '' or args['category'] is not None:
             return [], 200
 
         # Get id user and category
@@ -480,7 +480,7 @@ class SendOrder(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if args['id_outlet'] == '' or 'id_outlet' not in args or args['payment_method'] == '' or 'payment_method' not in args or args['paid_price'] == '' or 'paid_price' not in args:
+        if args['id_outlet'] == '' or args['id_outlet'] is not None or args['payment_method'] == '' or args['payment_method'] is not None or args['paid_price'] == '' or args['paid_price'] is not None:
             return {'message': 'Tidak boleh ada field yang dikosongkan'}, 400
 
         # ---------- Create cart instance ----------
