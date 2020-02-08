@@ -36,11 +36,11 @@ def db_reset():
     db.session.commit()
 
     outlet_2 = Outlets(id_user = 1, name = 'Malang', phone_number = '089245572345', address = 'Jl. Semeru No. 31', tax = 10, city = 'Malang')
-    db.session.add(outlet_1)
+    db.session.add(outlet_2)
     db.session.commit()
 
     outlet_3 = Outlets(id_user = 1, name = 'Jakarta', phone_number = '089245571758', address = 'Jl. Merbabu No. 42', tax = 15, city = 'Jakarta')
-    db.session.add(outlet_1)
+    db.session.add(outlet_3)
     db.session.commit()
 
     # ---------- Create Cashier ----------
@@ -53,6 +53,56 @@ def db_reset():
     encrypted_5 = hashlib.md5('Stevejobs1'.encode()).hexdigest()
     admin_1 = Employees(id_outlet = 1, full_name = 'Steve Jobs', username = 'stevejobs', password = encrypted_5, position = 'Admin')
     db.session.add(admin_1)
+    db.session.commit()
+
+    # ---------- Create Customer ----------
+    customer_1 = Customers(id_users = 1, fullname = 'Buzz Lightyear', phone_number = '089514145654', email = 'buzz@lightyear.com')
+    db.session.add(customer_1)
+    db.session.commit()
+
+    # ---------- Create Product ----------
+    product_1 = Products(id_users = 1, name = 'Indomie Yogyakarta', category = 'Indomie', price = 12000, image = 'http://dummy.jpg', show = True)
+    db.session.add(product_1)
+    db.session.commit()
+
+    product_2 = Products(id_users = 1, name = 'Indomie Makassar', category = 'Indomie', price = 15000, image = 'http://dummy.jpg', show = True)
+    db.session.add(product_2)
+    db.session.commit()
+
+    product_3 = Products(id_users = 1, name = 'Indomie Ayam Geprek', category = 'Indomie', price = 12000, image = 'http://dummy.jpg', show = True)
+    db.session.add(product_3)
+    db.session.commit()
+
+    product_4 = Products(id_users = 1, name = 'Indomie Cabe Hijau', category = 'Indomie', price = 12000, image = 'http://dummy.jpg', show = False)
+    db.session.add(product_4)
+    db.session.commit()
+
+    # ---------- Create Inventory ----------
+    inventory_1 = Inventories(id_users = 1, name = 'Mie', total_stock = 0, unit = 'gram', unit_price = 0, times_edited = 0)
+    db.session.add(inventory_1)
+
+    inventory_2 = Inventories(id_users = 1, name = 'Merica', total_stock = 0, unit = 'gram', unit_price = 0, times_edited = 0)
+    db.session.add(inventory_2)
+
+    inventory_3 = Inventories(id_users = 1, name = 'Daun Bawang', total_stock = 0, unit = 'gram', unit_price = 0, times_edited = 0)
+    db.session.add(inventory_3)
+
+    # ---------- Create Cart ----------
+    cart_1 = Carts(id_users = 1, id_outlet = 1, id_employee = 1, order_code = 'A32BC1', name = 'Lelianto Eko Pradana', total_item = 1, payment_method = 'Tunai', total_payment = 12000, total_discount = 0, total_tax = 1200, paid_price = 15000)
+    db.session.add(cart_1)
+    db.session.commit()
+
+    cart_2 = Carts(id_users = 1, id_outlet = 1, order_code = 'A32BC2', name = 'Willy Sumarno', total_item = 1, payment_method = 'Tunai', total_payment = 12000, total_discount = 0, total_tax = 1200, paid_price = 15000)
+    db.session.add(cart_2)
+    db.session.commit()
+
+    # ---------- Create Cart Detail ----------
+    cart_detail_1 = CartDetail(id_cart = 1, id_product = 1, quantity = 1, total_price_product = 10000)
+    db.session.add(cart_detail_1)
+    db.session.commit()
+
+    cart_detail_2 = CartDetail(id_cart = 2, id_product = 1, quantity = 1, total_price_product = 10000)
+    db.session.add(cart_detail_1)
     db.session.commit()
 
 def call_client(request):

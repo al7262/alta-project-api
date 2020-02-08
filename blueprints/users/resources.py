@@ -56,17 +56,18 @@ class RegisterUserResource(Resource):
         return {'message' : "Registrasi Gagal"},401
 
 class UserResource(Resource):
-    
+    # Enable CORS    
     def options(self,id=None):
-        return{'status':'ok'} , 200
+        return {'status':'ok'} , 200
         
+    # To keep the password secret
     policy = PasswordPolicy.from_names(
         length = 6,
         uppercase = 1,
         numbers = 1
     )
 
-    # showing user profile (himself)
+    # Showing user profile (himself)
     @jwt_required
     @user_required
     def get(self):
@@ -77,6 +78,7 @@ class UserResource(Resource):
     @jwt_required
     @user_required
     def put(self):
+        # Take input from user
         claims = get_jwt_claims()
         qry = Users.query.filter_by(id = claims['id']).first()
         parser = reqparse.RequestParser()
@@ -89,7 +91,11 @@ class UserResource(Resource):
 
         args = parser.parse_args()
 
-        if args['password'] is not None:
+        # Check emptyness
+        if args['fullname'] == '' or args['password'] == '' or args['phone_number'] == '' or args['business_name'] == '' or args['image'] == '' or 'fullname' not in args or 'password' not in args or 'phone_number' not in args or 'business_name' not in args or 'image' not in args:
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
+
+        if args['password'] is not None or args['password'] != '':
             validation = self.policy.test(args['password'])
             if validation:
                 errorList = []
@@ -101,13 +107,10 @@ class UserResource(Resource):
                 return {'message': message}, 422, {'Content-Type': 'application/json'}
             encrypted = hashlib.md5(args['password'].encode()).hexdigest()
             qry.password = encrypted
-        if args['fullname'] is not None:
+
             qry.fullname = args['fullname']
-        if args['phone_number'] is not None:
             qry.phone_number = args['phone_number']
-        if args['business_name'] is not None:
             qry.business_name = args['business_name']
-        if args['image'] is not None:
             qry.image = args['image']
 
         db.session.commit()

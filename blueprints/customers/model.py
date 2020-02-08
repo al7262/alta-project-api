@@ -30,6 +30,7 @@ class Customers(db.Model):
         self.fullname = fullname
         self.phone_number = phone_number
         self.email = email
+        self.total_transaction = 0
 
     def __repr__(self):
         return '<Customers %r>' %self.fullname
