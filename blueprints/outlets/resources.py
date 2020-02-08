@@ -94,7 +94,7 @@ class CreateOutletResource(Resource):
     def options(self,id=None):
         return{'status':'ok'} , 200
 
-    # create product
+    # create outlet
     @jwt_required
     @user_required
     def post(self):
