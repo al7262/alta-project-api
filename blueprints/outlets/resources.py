@@ -27,16 +27,13 @@ class OutletResource(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('p', type = int, location = 'args', default = 1)
         parser.add_argument('rp', type = int, location = 'args', default = 25)
-        parser.add_argument('name', location = 'args')
+        parser.add_argument('keyword', location = 'args')
 
         args = parser.parse_args()
 
         offset = (args['p'] * args['rp']) - args['rp']
 
-        qry = Outlets.query.filter_by(id_user = claims['id'])
-
-        if args['name'] is not None:
-            qry = qry.filter_by(name= args['name'])
+        qry = Outlets.query.filter_by(id_user = claims['id']).filter(Outlets.name.like("%"+args["keyword"]+"%") | Outlets.city.like("%"+args["keyword"]+"%"))
         
             
         rows = []
@@ -165,6 +162,5 @@ class OutletGetByOne(Resource):
         return {'message' : 'Data Tidak Ditemukan'}, 404
 
 api.add_resource(OutletResource,'/outlet','/outlet/<int:id>')
-api.add_resource(SearchOutlet,'/outlet/search')
 api.add_resource(CreateOutletResource,'/outlet/create')
 api.add_resource(OutletGetByOne,'/outlet/get/<int:id>')
