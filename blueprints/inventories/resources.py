@@ -29,21 +29,24 @@ class InventoryResource(Resource):
     def get(self):
         # Take input from users
         claims = get_jwt_claims()
-        id_user = claims['id']
+        if 'email' in claims:
+            id_user = claims['id']
+        else:
+            id_user = claims['id']
         parser = reqparse.RequestParser()
         parser.add_argument('name', location = 'args', required = False)
         parser.add_argument('status', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all inventories
-        inventories = Inventories.query.filter_by(id_users = id_user).filter_by(deleted = 0)
+        inventories = Inventories.query.filter_by(id_users = id_user).filter_by(deleted = False)
 
         # Empty inventories
-        if inventories is None:
+        if inventories.all() == []:
             return [], 200
 
         # Filter by inventory name
-        if args['name'] != '':
+        if args['name'] != '' or args['name'] is not None:
             inventories = inventories.filter(Inventories.name.like("%" + args['name'] + "%"))
 
         # Show the result
@@ -112,6 +115,7 @@ class InventoryPerOutlet(Resource):
 
             # Prepare the data to be shown
             data = {
+                'id': stock_outlet['id'],
                 'name': inventory['name'],
                 'unit': inventory['unit'],
                 'unit_price': inventory['unit_price'],
@@ -157,7 +161,10 @@ class InventoryPerOutlet(Resource):
 
         # Get ID users
         claims = get_jwt_claims()
-        id_user = claims['id']        
+        if 'email' in claims:
+            id_user = claims['id']
+        else:
+            id_user = claims['id']        
 
         # Check for emptyness
         if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['unit_price'] == '' or args['reminder'] == '':
@@ -241,6 +248,7 @@ class InventoryDetail(Resource):
 
         # Prepare the result
         result = {
+            'id': id_stock_outlet,
             'name': inventory.name,
             'stock': stock_outlet.stock,
             'unit': inventory.unit,

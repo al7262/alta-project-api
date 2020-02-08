@@ -4,7 +4,7 @@ from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
 from .model import Employees
 from blueprints.outlets.model import Outlets
-from blueprints import db, app, user_required
+from blueprints import db, app, user_required, dashboard_required, apps_required
 from datetime import datetime
 from password_strength import PasswordPolicy
 import json, hashlib
@@ -17,18 +17,18 @@ bp_employees = Blueprint('employees', __name__)
 api = Api(bp_employees)
 
 class CreateEmployeeResource(Resource):
-    #enalble CORS
+    # Enable CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
 
-    # to keep the password secret
+    # To keep the password secret
     policy = PasswordPolicy.from_names(
         length = 6,
         uppercase = 1,
         numbers = 1
     )
 
-    # create user account
+    # Create user account
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('id_outlet', location = 'json', required = True)
@@ -38,6 +38,10 @@ class CreateEmployeeResource(Resource):
         parser.add_argument('position', location = 'json', required = True)
         args = parser.parse_args()
         
+        # Check emptyness
+        if args['full_name'] == '' or args['username'] == '' or args['password'] == '':
+            return {'message': 'tidak boleh ada kolom yang dikosongkan'}, 400
+
         qry = Employees.query.filter_by(username = args['username']).first()
         if qry is None:
             validation = self.policy.test(args['password'])
@@ -47,7 +51,7 @@ class CreateEmployeeResource(Resource):
                     split = str(item).split('(')
                     error, num = split[0], split[1][0]
                     errorList.append("{err}(minimum {num})".format(err=error, num=num))
-                message = "Please check your passw@jwt_requiredord: " + ', '.join(x for x in errorList)
+                message = "Tolong periksa kembali password Anda: " + ', '.join(x for x in errorList)
                 return {'message': message}, 422, {'Content-Type': 'application/json'}
             encrypted = hashlib.md5(args['password'].encode()).hexdigest()
             
@@ -56,8 +60,8 @@ class CreateEmployeeResource(Resource):
             db.session.commit()
             app.logger.debug('DEBUG : %s', employee)
             
-            return {'message' : "Input Pegawai Berhasil"},200,{'Content-Type': 'application/json'}
-        return {'message' : "Input Pegawai Gagal"},401
+            return {'message' : "Input Pegawai Berhasil"}, 200, {'Content-Type': 'application/json'}
+        return {'message' : "Input Pegawai Gagal"}, 401
 
 class EmployeeResource(Resource):
     def options(self,id=None):
@@ -69,7 +73,7 @@ class EmployeeResource(Resource):
         numbers = 1
     )
 
-    # showing user profile (himself)
+    # Showing user profile (himself)
     @jwt_required
     @user_required
     def get(self):
@@ -193,7 +197,7 @@ class EmployeeGetByOne(Resource):
         return{'status':'ok'} , 200
 
     @jwt_required
-    @apps_required
+    @user_required
     def get(self,id=None):
         claims = get_jwt_claims()
         qry = Employees.query.get(id)

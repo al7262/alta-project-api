@@ -54,7 +54,6 @@ class LoginApps(Resource):
         return {'claims' : claims}, 200
 
 class LoginDashboard(Resource):
-        
     def options(self,id=None):
         return{'status':'ok'} , 200
 

@@ -63,7 +63,7 @@ class TestAuth():
         res_json = json.loads(res.data)
         assert res.status_code == 200
 
-    # Login : Valid for cashier in dashboard
+    # Login : Valid for admin in dashboard
     def test_login_valid_dashboard(self, client):
         # Prepare the DB
         db_reset()
@@ -79,6 +79,38 @@ class TestAuth():
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
+    # Login : Valid for owner in dashboard
+    def test_login_owner_valid_dashboard(self, client):
+        # Prepare the DB
+        db_reset()
+
+        # Prepare the data to be inputted
+        data = {
+            "username": "hedy@alterra.id",
+            "password": "Hedygading1",
+        }
+
+        # Test the endpoints
+        res = client.post('/login/dashboard', json = data)
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # Login : Valid for owner in apps
+    def test_login_owner_valid_apps(self, client):
+        # Prepare the DB
+        db_reset()
+
+        # Prepare the data to be inputted
+        data = {
+            "username": "hedy@alterra.id",
+            "password": "Hedygading1",
+        }
+
+        # Test the endpoints
+        res = client.post('/login/apps', json = data)
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
     # Login : Cashier try to login in dashboard
     def test_login_cashier_to_dashboard(self, client):
         # Prepare the DB
@@ -110,3 +142,37 @@ class TestAuth():
         res = client.post('/login/apps', json = data)
         res_json = json.loads(res.data)
         assert res.status_code == 401
+    
+    # Get claim - apps
+    def test_claim_apps(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Prepare the data to be inputted
+        data = {
+            "username": "hedy@alterra.id",
+            "password": "Hedygading1",
+        }
+
+        # Test the endpoints
+        res = client.get('/login/apps', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # Get claim - dashboard
+    def test_claim(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Prepare the data to be inputted
+        data = {
+            "username": "hedy@alterra.id",
+            "password": "Hedygading1",
+        }
+
+        # Test the endpoints
+        res = client.get('/login/dashboard', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200

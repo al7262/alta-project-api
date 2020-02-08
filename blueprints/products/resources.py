@@ -5,6 +5,7 @@ from sqlalchemy import desc
 from .model import Products
 from blueprints.carts.model import Carts, CartDetail
 from blueprints.employees.model import Employees
+from blueprints.customers.model import Customers
 from blueprints.inventories.model import Inventories, InventoryLog
 from blueprints.stock_outlet.model import StockOutlet
 from blueprints.recipes.model import Recipe
@@ -40,26 +41,29 @@ class ProductResource(Resource):
         args = parser.parse_args()
 
         # Get id user
-        id_user = claims['id']
+        if 'email' in claims:
+            id_user = claims['id']
+        else:
+            id_user = claims['id']
 
         # Get all products of the specified user
         products = Products.query.filter_by(id_users = id_user).filter_by(deleted = False)
 
         # ----- Filter -----
         # Category
-        if args['category'] != '':
+        if args['category'] != '' or args['category'] is not None:
             products = products.filter_by(category = args['category'])
 
         # Show
-        if args['show'] != '':
-            if args['show'] == 'Ya':
-                products = products.filter_by(show = True)
-            elif args['show'] == 'Tidak':
-                products = products.filter_by(show = False)
+        if args['show'] == 'Ya':
+            products = products.filter_by(show = True)
+        elif args['show'] == 'Tidak':
+            products = products.filter_by(show = False)
         
         # Product Name
-        if args['name'] != '':
-            products = products.filter(Products.name.like("%" + args['name'] + "%"))
+        if args['name'] != '' or args['name'] is not None:
+            if products.all() != []:
+                products = products.filter(Products.name.like("%" + args['name'] + "%"))
 
         # Showing the result
         result = []
@@ -74,7 +78,12 @@ class ProductResource(Resource):
     def post(self):
         # Get claims
         claims = get_jwt_claims()
-        id_users = claims['id']
+        
+        # Get id user
+        if 'email' in claims:
+            id_users = claims['id']
+        else:
+            id_users = claims['id']
 
         # Take input from users
         parser = reqparse.RequestParser()
@@ -87,7 +96,7 @@ class ProductResource(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '':
+        if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '' or 'name' not in args or 'price' not in args or 'image' not in args or 'category' not in args:
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Turn the show field into boolean
@@ -176,6 +185,7 @@ class SpecificProductResource(Resource):
 
         # Show the result
         result = {
+            'id': product['id'],
             'name': product['name'],
             'category': product['category'],
             'price': product['price'],
@@ -191,7 +201,10 @@ class SpecificProductResource(Resource):
     def put(self, id_product):
         # Take input from users
         claims = get_jwt_claims()
-        id_users = claims['id']
+        if 'email' in claims:
+            id_users = claims['id']
+        else:
+            id_users = claims['id']
         parser = reqparse.RequestParser()
         parser.add_argument('name', location = 'json', required = True)
         parser.add_argument('category', location = 'json', required = True)
@@ -200,6 +213,10 @@ class SpecificProductResource(Resource):
         parser.add_argument('image', location = 'json', required = True)
         parser.add_argument('recipe', location = 'json', required = True, type = list)
         args = parser.parse_args()
+
+        # Check emptyness
+        if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '' or 'name' not in args or 'price' not in args or 'image' not in args or 'category' not in args:
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Get the specified product
         product = Products.query.filter_by(deleted = False).filter_by(id = id_product).first()
@@ -298,7 +315,10 @@ class CategoryResource(Resource):
     def get(self):
         # Get id user
         claims = get_jwt_claims()
-        id_user = claims['id']
+        if 'email' in claims:
+            id_user = claims['id']
+        else:
+            id_user = claims['id']
 
         # Get all products of the specified user
         products = Products.query.filter_by(id_users = id_user).filter_by(deleted = False)
@@ -324,8 +344,15 @@ class ItemsPerCategory(Resource):
         parser.add_argument('category', location = 'args', required = True)
         args = parser.parse_args()
 
+        # Check emptyness
+        if args['category'] == '' or 'category' not in args:
+            return [], 200
+
         # Get id user and category
-        id_user = claims['id']
+        if 'email' in claims:
+            id_user = claims['id']
+        else:
+            id_user = claims['id']
         category = args['category']
 
         # Get all products of the specified user and filter by category
@@ -349,14 +376,17 @@ class CheckoutResource(Resource):
     def get(self, id_cart):
         # Get user id
         claims = get_jwt_claims()
-        id_users = claims['id']
+        if 'email' in claims:
+            id_users = claims['id']
+        else:
+            id_users = claims['id']
         
         # Searching for specified cart
         specified_cart = Carts.query.filter_by(id = id_cart).filter_by(deleted = True).first()
 
         # Empty active cart
         if specified_cart is None:
-            return {'message': 'Tidak ada transaksi aktif saat ini'}, 400
+            return {'message': 'Tidak ada transaksi aktif saat ini'}, 404
         
         # ---------- Prepare the receipt ----------
         # Get business logo
@@ -366,7 +396,7 @@ class CheckoutResource(Resource):
         # Get cashier name
         if specified_cart.id_employee == None:
             # Get owner name
-            cashier_name = owner.name
+            cashier_name = owner.fullname
         else:
             employee = Employees.query.filter_by(deleted = False).filter_by(id = specified_cart.id_employee).first()
             cashier_name = employee.full_name
@@ -418,13 +448,16 @@ class SendOrder(Resource):
     def options(self, id=None):
         return {'status': 'ok'}, 200
     
-    # Get all data needed to be shown in receipt
+    # Finalize order
     @jwt_required
     @apps_required
     def post(self):
         # Get owner ID
         claims = get_jwt_claims()
-        id_users = claims['id']
+        if 'email' in claims:
+            id_users = claims['id']
+        else:
+            id_users = claims['id']
         owner = Users.query.filter_by(id = id_users).first()
 
         # Check who is login (owner or cashier) and get related information
@@ -447,7 +480,7 @@ class SendOrder(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if args['id_outlet'] == '' or args['payment_method'] == '':
+        if args['id_outlet'] == '' or 'id_outlet' not in args or args['payment_method'] == '' or 'payment_method' not in args or args['paid_price'] == '' or 'paid_price' not in args:
             return {'message': 'Tidak boleh ada field yang dikosongkan'}, 400
 
         # ---------- Create cart instance ----------
@@ -464,12 +497,19 @@ class SendOrder(Resource):
             total_payment = total_payment + total_item_price
             item_tax = (outlet.tax * total_item_price) // 100
             
-        # Validate some input
-        if int(args['paid_price']) < total_payment:
-            return {'message': 'Ada kesalahan input'}, 200
-        id_customers = args['id_customers']
-        if args['id_customers'] == '':
+        # Customer related
+        if args['id_customers'] == '' or args['id_customers'] is None:
             id_customers = None
+        else:
+            id_customers = args['id_customers']
+            # Edit customers
+            customer = Customers.query.filter_by(id = id_customers).first()
+            customer.total_transaction = customer.total_transaction + 1
+            db.session.commit()
+            
+        # Validate some input
+        if int(args['paid_price']) < total_payment or int(args['paid_price']) <= 0:
+            return {'message': 'Ada kesalahan input'}, 422
 
         # Generate order code
         all_carts = Carts.query.filter_by(deleted = True).filter_by(id_users = id_users)
@@ -546,26 +586,6 @@ class DeleteProduct(Resource):
     # Enable CORS
     def options(self, id_product=None):
         return {'status': 'ok'}, 200
-
-    # Hard delete specified product
-    @jwt_required
-    @dashboard_required
-    def delete(self, id_product):
-        # Get the product
-        product = Products.query.filter_by(id = id_product).filter_by(deleted = False).first()
-        id_product = product.id
-
-        # Delete related recipe first
-        recipes = Recipe.query.filter_by(id_product = id_product).all()
-        for recipe in recipes:
-            db.session.delete(recipe)
-            db.session.commit()
-        
-        # Hard delete the product
-        db.session.delete(product)
-        db.session.commit()
-
-        return {'message': 'Sukses menghapus produk'}, 200
 
 api.add_resource(ProductResource, '')
 api.add_resource(SpecificProductResource, '/<id_product>')
