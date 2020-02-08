@@ -92,7 +92,7 @@ class UserResource(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if args['fullname'] == '' or args['password'] == '' or args['phone_number'] == '' or args['business_name'] == '' or args['image'] == '' or 'fullname' not in args or 'password' not in args or 'phone_number' not in args or 'business_name' not in args or 'image' not in args:
+        if args['fullname'] == '' or args['password'] == '' or args['phone_number'] == '' or args['business_name'] == '' or args['image'] == '' or args['fullname'] is None or args['password'] is None or args['phone_number'] is None or args['business_name'] is None or args['image'] is None:
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         if args['password'] is not None or args['password'] != '':

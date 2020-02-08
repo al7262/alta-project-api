@@ -278,7 +278,7 @@ class InventoryDetail(Resource):
         args = parser.parse_args()
 
         # Check for emptyness
-        if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['reminder'] == '':
+        if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['reminder'] == '' or args['name'] is None or args['stock'] is None or args['unit'] is None or args['reminder'] is None:
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Positivity
@@ -286,10 +286,6 @@ class InventoryDetail(Resource):
             return {'message': 'Stok harus bernilai positif'}, 400
         if int(args['reminder']) < 0:
             return {'message': 'Pengingat stok harus bernilai positif'}, 400
-
-        # Validate emptyness
-        if args['name'] == '' or args['stock'] == '' or args['unit'] == '' or args['reminder'] == '':
-            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Edit stock outlet
         target_stock_outlet.reminder = args['reminder']
@@ -366,7 +362,7 @@ class AddStock(Resource):
         args = parser.parse_args()
 
         # Check for emptyness
-        if args['stock'] == '' or args['price'] == '':
+        if args['stock'] == '' or args['price'] == '' or args['stock'] is None or args['price'] is None:
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Positivity
