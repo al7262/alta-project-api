@@ -81,6 +81,7 @@ class EmployeeResource(Resource):
         claims = get_jwt_claims()
         parser.add_argument('name_outlet', location = 'args')
         parser.add_argument('position', location = 'args')
+        parser.add_argument('keyword', location = 'args')
         args = parser.parse_args()
 
         if args['name_outlet'] is None or args['name_outlet'] == "":
@@ -90,9 +91,9 @@ class EmployeeResource(Resource):
             for outlet in qry:
                 if not outlet.deleted:
                     if args['position'] is None or args['position'] == "":
-                        qry_employee = Employees.query.filter_by(id_outlet = outlet.id).all()
+                        qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
                     elif args['position'] is not None:
-                        qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter_by(position = args['position']).all()
+                        qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter_by(position = args['position']).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
                     for employee in qry_employee:
                         if not employee.deleted:
                             rows.append(marshal(employee, Employees.response_fields))        
@@ -102,9 +103,9 @@ class EmployeeResource(Resource):
         qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
         if not qry.deleted:
             if args['position'] is None or args['position'] == "":
-                qry_employee = Employees.query.filter_by(id_outlet = qry.id).all()
+                qry_employee = Employees.query.filter_by(id_outlet = qry.id).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
             elif args['position'] is not None:
-                qry_employee = Employees.query.filter_by(id_outlet = qry.id).filter_by(position = args['position']).all()
+                qry_employee = Employees.query.filter_by(id_outlet = qry.id).filter_by(position = args['position']).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
             for employee in qry_employee:
                 if not employee.deleted:
                     rows.append(marshal(employee, Employees.response_fields))
@@ -210,5 +211,4 @@ class EmployeeGetByOne(Resource):
 
 api.add_resource(CreateEmployeeResource,'/employee/create')
 api.add_resource(EmployeeResource,'/employee','/employee/<int:id>')
-api.add_resource(EmployeeSearch,'/employee/search')
 api.add_resource(EmployeeGetByOne,'/employee/get/<int:id>')

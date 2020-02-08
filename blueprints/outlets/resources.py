@@ -33,9 +33,11 @@ class OutletResource(Resource):
 
         offset = (args['p'] * args['rp']) - args['rp']
 
-        qry = Outlets.query.filter_by(id_user = claims['id']).filter(Outlets.name.like("%"+args["keyword"]+"%") | Outlets.city.like("%"+args["keyword"]+"%"))
+        qry = Outlets.query.filter_by(id_user = claims['id'])
+
+        if args['keyword'] is not None:
+            qry = qry.filter(Outlets.name.like("%"+args["keyword"]+"%") | Outlets.city.like("%"+args["keyword"]+"%"))
         
-            
         rows = []
         for row in qry.limit(args['rp']).offset(offset).all():
             if not row.deleted:

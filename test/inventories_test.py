@@ -315,14 +315,14 @@ class TestInventories():
         res_json = json.loads(res.data)
         assert res.status_code == 400
 
-    # Edit stock outlet (Case 3 : Positivity constraint 2)
-    def test_edit_stock_outlet_case_3(self, client):
+    # Edit stock outlet (Case 4 : success)
+    def test_edit_stock_outlet_case_4(self, client):
         # Prepare the DB and token
         token = create_token('hedy@alterra.id')
 
         data = {
             'name': 'Telur',
-            'stock': -1,
+            'stock': 10,
             'unit': 'butir',
             'reminder': 5
         }
@@ -330,4 +330,94 @@ class TestInventories():
         # Test the endpoints
         res = client.put('/inventory/detail/1', json = data, headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # Soft delete inventory
+    def test_soft_delete_inventory(self, client):
+        # Prepare the DB and token
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.delete('/inventory/detail/2', headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # Add stock to an inventory (Case 1: Empty field)
+    def test_add_stock_case_1(self, client):
+        # Prepare the DB and token
+        token = create_token('hedy@alterra.id')
+
+        data = {
+            'stock': "",
+            'price': 25000
+        }   
+
+        # Test the endpoints
+        res = client.put('/inventory/add-stock/1', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
         assert res.status_code == 400
+
+    # Add stock to an inventory (Case 2: Positivity constraint 1)
+    def test_add_stock_case_2(self, client):
+        # Prepare the DB and token
+        token = create_token('hedy@alterra.id')
+
+        data = {
+            'stock': -1,
+            'price': 25000
+        }   
+
+        # Test the endpoints
+        res = client.put('/inventory/add-stock/1', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 400
+
+    # Add stock to an inventory (Case 3: Positivity constraint 2)
+    def test_add_stock_case_3(self, client):
+        # Prepare the DB and token
+        token = create_token('hedy@alterra.id')
+
+        data = {
+            'stock': 20,
+            'price': -25000
+        }   
+
+        # Test the endpoints
+        res = client.put('/inventory/add-stock/1', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 400
+
+    # Add stock to an inventory (Case 4: Success)
+    def test_add_stock_case_4(self, client):
+        # Prepare the DB and token
+        token = create_token('stevejobs')
+
+        data = {
+            'stock': 20,
+            'price': 30000
+        }   
+
+        # Test the endpoints
+        res = client.put('/inventory/add-stock/1', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
+    # Stock reminder in an outlet
+    def test_stock_reminder_outlet(self, client):
+        # Prepare the DB and token
+        token = create_token('stevejobs')
+
+        # Test the endpoints
+        res = client.get('/inventory/reminder/1', headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # Stock reminder in all outlets
+    def test_stock_reminder_all_outlets(self, client):
+        # Prepare the DB and token
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get('/inventory/reminder', headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200

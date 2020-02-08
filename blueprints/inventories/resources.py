@@ -362,7 +362,7 @@ class AddStock(Resource):
         args = parser.parse_args()
 
         # Check for emptyness
-        if args['stock'] == '' or args['price'] == '':
+        if args['stock'] == '' or args['price'] == '' or args['stock'] is None or args['price'] is None:
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Positivity
