@@ -33,11 +33,11 @@ class OutletResource(Resource):
 
         offset = (args['p'] * args['rp']) - args['rp']
 
-        qry = Outlets.query.filter_by(id_user = claims['id'])
-
         if args['keyword'] is not None:
-            qry = qry.filter(Outlets.name.like("%"+args["keyword"]+"%") | Outlets.city.like("%"+args["keyword"]+"%"))
-        
+            qry = Outlets.query.filter_by(id_user = claims['id']).filter(Outlets.name.like("%"+args["keyword"]+"%") | Outlets.city.like("%"+args["keyword"]+"%"))
+        elif args['keyword'] is None:
+            qry = Outlets.query.filter_by(id_user = claims['id'])
+            
         rows = []
         for row in qry.limit(args['rp']).offset(offset).all():
             if not row.deleted:
@@ -117,33 +117,6 @@ class CreateOutletResource(Resource):
     
             return {'message' : "Masukkan Outlet Berhasil"},200,{'Content-Type': 'application/json'}
         return {'message' : "Outlet Sudah Ada"},401,
-
-
-class SearchOutlet(Resource):
-
-    def options(self,id=None):
-        return{'status':'ok'} , 200
-
-    @jwt_required
-    @user_required
-    def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('p', type = int, location = 'args', default = 1)
-        parser.add_argument('rp', type = int, location = 'args', default = 25)
-        parser.add_argument('keyword', location = 'args')
-
-        args = parser.parse_args()
-
-        offset = (args['p'] * args['rp']) - args['rp']
-
-        qry = Outlets.query.filter(Outlets.name.like("%"+args["keyword"]+"%") | Outlets.city.like("%"+args["keyword"]+"%"))
-        
-            
-        rows = []
-        for row in qry.limit(args['rp']).offset(offset).all():
-            if not row.deleted:
-                rows.append(marshal(row, Outlets.response_fields))
-        return rows, 200
 
 class OutletGetByOne(Resource):
     

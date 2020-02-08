@@ -82,6 +82,7 @@ class EmployeeResource(Resource):
         parser.add_argument('name_outlet', location = 'args')
         parser.add_argument('position', location = 'args')
         parser.add_argument('keyword', location = 'args')
+
         args = parser.parse_args()
 
         if args['name_outlet'] is None or args['name_outlet'] == "":
@@ -91,9 +92,15 @@ class EmployeeResource(Resource):
             for outlet in qry:
                 if not outlet.deleted:
                     if args['position'] is None or args['position'] == "":
-                        qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
+                        if args['keyword'] is not None:
+                            qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
+                        elif args['keyword'] is None:
+                            qry_employee = Employees.query.filter_by(id_outlet = outlet.id)
                     elif args['position'] is not None:
-                        qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter_by(position = args['position']).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
+                        if args['keyword'] is not None:
+                            qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter_by(position = args['position']).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
+                        elif args['keyword'] is None:
+                            qry_employee = Employees.query.filter_by(id_outlet = outlet.id)
                     for employee in qry_employee:
                         if not employee.deleted:
                             rows.append(marshal(employee, Employees.response_fields))        
@@ -103,9 +110,15 @@ class EmployeeResource(Resource):
         qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
         if not qry.deleted:
             if args['position'] is None or args['position'] == "":
-                qry_employee = Employees.query.filter_by(id_outlet = qry.id).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
+                if args['keyword'] is not None:
+                    qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
+                elif args['keyword'] is None:
+                    qry_employee = Employees.query.filter_by(id_outlet = outlet.id)
             elif args['position'] is not None:
-                qry_employee = Employees.query.filter_by(id_outlet = qry.id).filter_by(position = args['position']).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
+                if args['keyword'] is not None:
+                    qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter_by(position = args['position']).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
+                elif args['keyword'] is None:
+                    qry_employee = Employees.query.filter_by(id_outlet = outlet.id)
             for employee in qry_employee:
                 if not employee.deleted:
                     rows.append(marshal(employee, Employees.response_fields))
@@ -163,35 +176,6 @@ class EmployeeResource(Resource):
         qry.deleted = True
         db.session.commit()
         return {"message": "Data Telah Dihapus"},200
-
-class EmployeeSearch(Resource):
-
-    def options(self,id=None):
-        return{'status':'ok'} , 200
-
-    @jwt_required
-    @user_required
-    def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('p', type = int, location = 'args', default = 1)
-        parser.add_argument('rp', type = int, location = 'args', default = 25)
-        parser.add_argument('keyword', location = 'args')
-
-        args = parser.parse_args()
-
-        offset = (args['p'] * args['rp']) - args['rp']
-
-        qry = Outlets.query.filter_by(id_user = claims['id']).all()
-
-        for outlet in qry:
-            if not outlet.deleted:
-                qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%"))
-            
-        rows = []
-        for row in qry.limit(args['rp']).offset(offset).all():
-            if not row.deleted:
-                rows.append(marshal(row, Employees.response_fields))
-        return rows, 200
 
 class EmployeeGetByOne(Resource):
     def options(self,id=None):

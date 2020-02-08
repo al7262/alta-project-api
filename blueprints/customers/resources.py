@@ -4,7 +4,8 @@ from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
 from .model import Customers
 from blueprints import db, app, dashboard_required, apps_required
-from datetime import datetime
+from datetime import datetime, timedelta, date
+from dateutil.relativedelta import *
 import json
 
 # Import Authentication
@@ -32,17 +33,11 @@ class CustomerResource(Resource):
         args = parser.parse_args()
 
         offset = (args['p'] * args['rp']) - args['rp']
-
+            
         if args['keyword'] is not None:
             qry = Customers.query.filter_by(id_users = claims['id']).filter(Customers.fullname.like("%"+args["keyword"]+"%") | Customers.phone_number.like("%"+args["keyword"]+"%") | Customers.email.like("%"+args["keyword"]+"%"))
-            rows = []
-            for row in qry.limit(args['rp']).offset(offset).all():
-                rows.append(marshal(row, Customers.response_fields))
-            return rows, 200
-            
-        qry = Customers.query.filter_by(id_users = claims['id'])  
-    
-            
+        elif args['keyword'] is None:
+            qry = Customers.query.filter_by(id_users = claims['id'])
         rows = []
         for row in qry.limit(args['rp']).offset(offset).all():
             rows.append(marshal(row, Customers.response_fields))
@@ -143,24 +138,6 @@ class CustomerGetByOne(Resource):
             return marshal_qry, 200
         return {'message' : 'Data Tidak Ditemukan'}, 404
 
-class CustomerInfo(Resource):
-    
-    def options(self,id=None):
-        return{'status':'ok'} , 200
-
-    @jwt_required
-    @apps_required
-    # showing product
-    def get(self,id=None):
-        claims = get_jwt_claims()
-        qry = Customers.query.get(id)
-        marshal_qry = (marshal(qry, Customers.response_fields))
-
-        if qry is not None:
-            return marshal_qry, 200
-        return {'message' : 'Data Tidak Ditemukan'}, 404
-
 api.add_resource(CustomerResource,'/customer','/customer/<int:id>')
 api.add_resource(CreateCustomerResource,'/customer/create')
 api.add_resource(CustomerGetByOne,'/customer/get/<int:id>')
-api.add_resource(CustomerInfo,'/customer/info')
