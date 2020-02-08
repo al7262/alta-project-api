@@ -81,12 +81,12 @@ db_selected=os.getenv('DB_SELECTED')
 try:
     env = os.environ.get('FLASK_ENV', 'development')
     username_laptop = os.environ['HOME']
-    if env == 'testing':
+    if username_laptop == '/home/alta8' and env == 'testing':
         app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@0.0.0.0:3306/final_project_backend_testing'
-    elif username_laptop == '/home/alta10' and env is not 'testing':
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend'
-    elif username_laptop == '/home/alta10':
+    elif username_laptop == '/home/alta10'and env == 'testing':
         app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend_test'
+    elif username_laptop == '/home/alta10'and env != 'testing':
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend'
     else:
         app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:agungajin19@portofolio.ce1fym8eoinv.ap-southeast-1.rds.amazonaws.com:3306/pos_api'
 

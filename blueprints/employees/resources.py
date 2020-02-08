@@ -87,42 +87,45 @@ class EmployeeResource(Resource):
 
         if args['name_outlet'] is None or args['name_outlet'] == "":
             qry = Outlets.query.filter_by(id_user = claims['id']).all()
-
-            rows = []
-            for outlet in qry:
-                if not outlet.deleted:
-                    if args['position'] is None or args['position'] == "":
-                        if args['keyword'] is not None:
-                            qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
-                        elif args['keyword'] is None:
-                            qry_employee = Employees.query.filter_by(id_outlet = outlet.id)
-                    elif args['position'] is not None:
-                        if args['keyword'] is not None:
-                            qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter_by(position = args['position']).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
-                        elif args['keyword'] is None:
-                            qry_employee = Employees.query.filter_by(id_outlet = outlet.id)
-                    for employee in qry_employee:
-                        if not employee.deleted:
-                            rows.append(marshal(employee, Employees.response_fields))        
-            return rows, 200
+            if qry is not None:
+                rows = []
+                for outlet in qry:
+                    if not outlet.deleted:
+                        if args['position'] is None or args['position'] == "":
+                            if args['keyword'] is not None:
+                                qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
+                            elif args['keyword'] is None:
+                                qry_employee = Employees.query.filter_by(id_outlet = outlet.id).all()
+                        elif args['position'] is not None:
+                            if args['keyword'] is not None:
+                                qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter_by(position = args['position']).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
+                            elif args['keyword'] is None:
+                                qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter_by(position = args['position']).all()
+                        if qry_employee is not None:
+                            for employee in qry_employee:
+                                if not employee.deleted:
+                                    rows.append(marshal(employee, Employees.response_fields))        
+                return rows, 200
 
         rows = []
         qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
-        if not qry.deleted:
-            if args['position'] is None or args['position'] == "":
-                if args['keyword'] is not None:
-                    qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
-                elif args['keyword'] is None:
-                    qry_employee = Employees.query.filter_by(id_outlet = outlet.id)
-            elif args['position'] is not None:
-                if args['keyword'] is not None:
-                    qry_employee = Employees.query.filter_by(id_outlet = outlet.id).filter_by(position = args['position']).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
-                elif args['keyword'] is None:
-                    qry_employee = Employees.query.filter_by(id_outlet = outlet.id)
-            for employee in qry_employee:
-                if not employee.deleted:
-                    rows.append(marshal(employee, Employees.response_fields))
-            return rows, 200
+        if qry is not None:
+            if not qry.deleted:
+                if args['position'] is None or args['position'] == "":
+                    if args['keyword'] is not None:
+                        qry_employee = Employees.query.filter_by(id_outlet = qry.id).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
+                    elif args['keyword'] is None:
+                        qry_employee = Employees.query.filter_by(id_outlet = qry.id).all()
+                elif args['position'] is not None:
+                    if args['keyword'] is not None:
+                        qry_employee = Employees.query.filter_by(id_outlet = qry.id).filter_by(position = args['position']).filter(Employees.full_name.like("%"+args["keyword"]+"%") | Employees.username.like("%"+args["keyword"]+"%")).all()
+                    elif args['keyword'] is None:
+                        qry_employee = Employees.query.filter_by(id_outlet = qry.id).filter_by(position = args['position']).all()
+                if qry_employee is not None:
+                    for employee in qry_employee:
+                        if not employee.deleted:
+                            rows.append(marshal(employee, Employees.response_fields))
+                    return rows, 200
         return {'message' : "Data Tidak Ditemukan"},404
     
     @jwt_required
