@@ -22,7 +22,7 @@ class CustomerResource(Resource):
 
     @jwt_required
     @dashboard_required
-    # show outlet
+    # Get all customers
     def get(self):
         claims = get_jwt_claims()
         parser = reqparse.RequestParser()
@@ -30,14 +30,14 @@ class CustomerResource(Resource):
         parser.add_argument('rp', type = int, location = 'args', default = 25)
         parser.add_argument('keyword', location = 'args')
 
+        # Pagination
         args = parser.parse_args()
-
         offset = (args['p'] * args['rp']) - args['rp']
             
+        qry = Customers.query.filter_by(id_users = claims['id'])
         if args['keyword'] is not None:
-            qry = Customers.query.filter_by(id_users = claims['id']).filter(Customers.fullname.like("%"+args["keyword"]+"%") | Customers.phone_number.like("%"+args["keyword"]+"%") | Customers.email.like("%"+args["keyword"]+"%"))
-        elif args['keyword'] is None:
-            qry = Customers.query.filter_by(id_users = claims['id'])
+            qry = qry.filter_by(id_users = claims['id']).filter(Customers.fullname.like("%"+args["keyword"]+"%") | Customers.phone_number.like("%"+args["keyword"]+"%") | Customers.email.like("%"+args["keyword"]+"%"))
+
         rows = []
         for row in qry.limit(args['rp']).offset(offset).all():
             rows.append(marshal(row, Customers.response_fields))
@@ -49,6 +49,7 @@ class CustomerResource(Resource):
         today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
         start = today + relativedelta(days = -(int(time[8::]))+1)
         end = today + relativedelta(days = +1)
+        custumer_id = ''
         for costumer in qry:
             total_costumer = total_costumer + 1
             if costumer.total_transaction > min:
@@ -58,34 +59,49 @@ class CustomerResource(Resource):
             create_at = costumer.created_at
             if start <= create_at and create_at <= end:
                 new_customer = new_customer + 1
-        qry_costumer_loyal = Customers.query.get(custumer_id)
-        custumer_loyal = marshal(qry_costumer_loyal, Customers.response_fields)
-        result = {
-            "list_all_customer" : rows,
-            "total_costumer" : total_costumer,
-            "costumer_loyal" : custumer_loyal,
-            "new_customer" : new_customer
-        }
+
+        # Case when loyal customer exists
+        if custumer_id != '':   
+            qry_costumer_loyal = Customers.query.get(custumer_id)
+            custumer_loyal = marshal(qry_costumer_loyal, Customers.response_fields)
+            result = {
+                "list_all_customer" : rows,
+                "total_costumer" : total_costumer,
+                "costumer_loyal" : custumer_loyal,
+                "new_customer" : new_customer
+            }
+
+        # Case when there are no customer have made transaction        
+        else:
+            result = {
+                "list_all_customer" : rows,
+                "total_costumer" : total_costumer,
+                "costumer_loyal" : "Belum ada pelanggan yang melakukan transaksi",
+                "new_customer" : new_customer
+            }
         return result, 200
 
     @jwt_required
     @apps_required
-    # edit outlet
+    # Edit customers
     def put(self,id=None):
+        # Take input from users
         claims = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument('fullname', location = 'json', required = True)
         parser.add_argument('phone_number', location = 'json', required = True)
         parser.add_argument('email', location = 'json', required = True)
-
         args = parser.parse_args()
 
         qry = Customers.query.get(id)
 
         if qry is None:
-            return {'message' : "Not Found !!!"},404
-        if args['fullname'] is not None:
-            qry.fullname = args['fullname']
+            return {'message' : "Data pelanggan yang Anda cari tidak ditemukan"}, 404
+        if args['fullname'] is None or args['fullname'] == '':
+            return {'message': 'Data pada kolom nama lengkap harus isi'}, 400
+
+        # Filter
+        qry.fullname = args['fullname']
         if args['phone_number'] is not None:
             qry.phone_number = args['phone_number']
         if args['email'] is not None:
@@ -96,11 +112,10 @@ class CustomerResource(Resource):
 
 #CRUD outlet POST (accessed by owner)
 class CreateCustomerResource(Resource):
-
     def options(self,id=None):
         return{'status':'ok'} , 200
 
-    # create product
+    # Add new customer
     @jwt_required
     @apps_required
     def post(self):
@@ -111,15 +126,25 @@ class CreateCustomerResource(Resource):
         parser.add_argument('email', location = 'json', required = True)
         
         args = parser.parse_args()
-        qry = Customers.query.filter_by(id_users = claims['id']).filter_by(email = args['email']).filter_by(phone_number = args['phone_number']).first()
-        if qry is None:
+        
+        if args['fullname'] == '' or args['fullname'] is None:
+            return {'message': 'Kolom nama tidak boleh dikosongkan'}, 400
+        
+        # Check for duplicate
+        qry = Customers.query.filter_by(id_users = claims['id']).filter_by(fullname = args['fullname'])
+        if args['phone_number'] is not None:
+            qry = qry.filter_by(phone_number = args['phone_number'])
+        if args['email'] is not None:
+            qry = qry.filter_by(email = args['email'])
+        
+        if qry.all() == []:
             customer = Customers(claims['id'], args['fullname'], args['phone_number'], args['email'])
             db.session.add(customer)
             db.session.commit()
             app.logger.debug('DEBUG : %s', customer)
             
-            return {'message' : "Masukkan Pelanggan Berhasil"},200,{'Content-Type': 'application/json'}
-        return {'message' : "Masukkan Pelanggan Gagal"}, 404
+            return {'message' : "Masukkan pelanggan berhasil"}, 200, {'Content-Type': 'application/json'}
+        return {'message' : "Masukkan pelanggan gagal"}, 409
 
 class CustomerGetByOne(Resource):
     
@@ -128,9 +153,8 @@ class CustomerGetByOne(Resource):
 
     @jwt_required
     @apps_required
-    # showing product
+    # Get customer by ID
     def get(self,id=None):
-        claims = get_jwt_claims()
         qry = Customers.query.get(id)
         marshal_qry = (marshal(qry, Customers.response_fields))
 
