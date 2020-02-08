@@ -96,7 +96,7 @@ class ProductResource(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '' or args['name'] is not None or args['price'] is not None or args['image'] is not None or args['category'] is not None:
+        if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '' or args['name'] is None or args['price'] is None or args['image'] is None or args['category'] is None:
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Turn the show field into boolean
@@ -215,7 +215,7 @@ class SpecificProductResource(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '' or args['name'] is not None or args['price'] is not None or args['image'] is not None or args['category'] is not None:
+        if args['name'] == '' or args['price'] == '' or args['image'] == '' or args['category'] == '' or args['name'] is None or args['price'] is None or args['image'] is None or args['category'] is None:
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         # Get the specified product
@@ -342,10 +342,11 @@ class ItemsPerCategory(Resource):
         claims = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument('category', location = 'args', required = True)
+        parser.add_argument('id_outlet', location = 'args', required = False)
         args = parser.parse_args()
 
         # Check emptyness
-        if args['category'] == '' or args['category'] is not None:
+        if args['category'] == '' or args['category'] is None:
             return [], 200
 
         # Get id user and category
@@ -362,6 +363,21 @@ class ItemsPerCategory(Resource):
         result = []
         for product in products:
             product = marshal(product, Products.response_fields)
+            
+            # ----- Counting the stock -----
+            if args['id_outlet'] != '' and args['id_outlet'] is not None:
+                # Find all its recipe
+                max_stock = []
+                recipes = Recipe.query.filter_by(id_product = product['id'])
+                if recipes.all() != []:
+                    for recipe in recipes:
+                        # Find related stock outlet
+                        inventory_id = recipe.id_inventory
+                        related_stock_outlet = StockOutlet.query.filter_by(id_outlet = args['id_outlet']).filter_by(id_inventory = inventory_id).first()
+                        max_portion = int(related_stock_outlet.stock // recipe.amount)
+                        max_stock.append(max_portion)
+                    product['stock'] = min(max_stock)
+
             result.append(product)
         return result, 200
 
@@ -480,7 +496,7 @@ class SendOrder(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if args['id_outlet'] == '' or args['id_outlet'] is not None or args['payment_method'] == '' or args['payment_method'] is not None or args['paid_price'] == '' or args['paid_price'] is not None:
+        if args['id_outlet'] == '' or args['id_outlet'] is None or args['payment_method'] == '' or args['payment_method'] is None or args['paid_price'] == '' or args['paid_price'] is None:
             return {'message': 'Tidak boleh ada field yang dikosongkan'}, 400
 
         # ---------- Create cart instance ----------
