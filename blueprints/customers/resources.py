@@ -71,7 +71,7 @@ class CustomerResource(Resource):
             "costumer_loyal" : custumer_loyal,
             "new_customer" : new_customer
         }
-        return rows, 200
+        return result, 200
 
     @jwt_required
     @apps_required

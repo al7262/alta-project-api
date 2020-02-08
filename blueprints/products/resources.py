@@ -38,6 +38,7 @@ class ProductResource(Resource):
         parser.add_argument('category', location = 'args', required = False)
         parser.add_argument('show', location = 'args', required = False)
         parser.add_argument('name', location = 'args', required = False)
+        parser.add_argument('id_outlet', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get id user
@@ -51,7 +52,7 @@ class ProductResource(Resource):
 
         # ----- Filter -----
         # Category
-        if args['category'] != '' or args['category'] is not None:
+        if args['category'] != '' and args['category'] is not None:
             products = products.filter_by(category = args['category'])
 
         # Show
@@ -61,7 +62,7 @@ class ProductResource(Resource):
             products = products.filter_by(show = False)
         
         # Product Name
-        if args['name'] != '' or args['name'] is not None:
+        if args['name'] != '' and args['name'] is not None:
             if products.all() != []:
                 products = products.filter(Products.name.like("%" + args['name'] + "%"))
 
@@ -69,6 +70,21 @@ class ProductResource(Resource):
         result = []
         for product in products:
             product = marshal(product, Products.response_fields)
+            
+            # ----- Counting the stock -----
+            if args['id_outlet'] != '' and args['id_outlet'] is not None:
+                # Find all its recipe
+                max_stock = []
+                recipes = Recipe.query.filter_by(id_product = product['id'])
+                if recipes.all() != []:
+                    for recipe in recipes:
+                        # Find related stock outlet
+                        inventory_id = recipe.id_inventory
+                        related_stock_outlet = StockOutlet.query.filter_by(id_outlet = args['id_outlet']).filter_by(id_inventory = inventory_id).first()
+                        max_portion = int(related_stock_outlet.stock // recipe.amount)
+                        max_stock.append(max_portion)
+                    product['stock'] = min(max_stock)
+            
             result.append(product)
         return result, 200
     
