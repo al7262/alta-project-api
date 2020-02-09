@@ -180,7 +180,6 @@ class Dashboard(Resource):
                 inventories_data = []
                 for stock_outlet in stock_outlet_filtered:
                     stock_outlet = marshal(stock_outlet, StockOutlet.response_fields)
-                    print(stock_outlet)
                     id_inventory = stock_outlet['id_inventory']
                     inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
                     if inventory is not None:
@@ -198,7 +197,7 @@ class Dashboard(Resource):
              
         elif args['name_outlet'] is not None:
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
-            qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
+            qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
             if qry_cart is not None:
                 for cart in qry_cart:
                     create_at = cart.created_at
@@ -208,6 +207,9 @@ class Dashboard(Resource):
                 
             # ini untuk produk terlaris
             qry_product = Products.query.filter_by(id_users = claims['id']).all()
+            for product in qry_product:
+                if product.category not in categories:
+                    categories.append(product.category)
             qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
             if qry_cart is not None:
                 for product in qry_product:
@@ -227,9 +229,9 @@ class Dashboard(Resource):
                     info_products.append(info_product)
             list_product.sort(reverse = True)
             if len(list_product) < 5 :
-                tops = list_product[0::].copy
+                tops = list_product[0::].copy()
             else:
-                tops = list_product[0:5].copy
+                tops = list_product[0:5].copy()
             for top in tops:
                 for info in info_products:
                     if info['total'] == top:
@@ -257,9 +259,9 @@ class Dashboard(Resource):
                 info_categories.append(info_category)
             list_category.sort(reverse = True)
             if len(list_category) < 5 :
-                tops = list_category[0::].copy
+                tops = list_category[0::].copy()
             else:
-                tops = list_category[0:5].copy
+                tops = list_category[0:5].copy()
             for top in tops:
                 for info in info_categories:
                     if info['total'] == top:
@@ -277,17 +279,17 @@ class Dashboard(Resource):
                 for stock_outlet in stock_outlet_filtered:
                     stock_outlet = marshal(stock_outlet, StockOutlet.response_fields)
 
-                id_inventory = stock_outlet['id_inventory']
-                inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
-                if inventory is not None:
-                    inventory_name = inventory.name
+                    id_inventory = stock_outlet['id_inventory']
+                    inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
+                    if inventory is not None:
+                        inventory_name = inventory.name
 
-                    data = {
-                        'name': inventory_name,
-                        'stock': stock_outlet['stock'],
-                        'outlet': outlet_name
-                    }
-                    inventories_data.append(data)
+                        data = {
+                            'name': inventory_name,
+                            'stock': stock_outlet['stock'],
+                            'outlet': outlet_name
+                        }
+                        inventories_data.append(data)
 
 
         # Ini untuk grafik
