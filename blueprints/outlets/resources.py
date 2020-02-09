@@ -108,15 +108,15 @@ class CreateOutletResource(Resource):
         
         args = parser.parse_args()
 
-        qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name']).first()
+        qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name']).filter_by(deleted = False).first()
         if qry is None:
             outlet = Outlets(claims['id'], args['name'], args['phone_number'], args['address'], args['city'], args['tax'])
             db.session.add(outlet)
             db.session.commit()
             app.logger.debug('DEBUG : %s', outlet)
     
-            return {'message' : "Masukkan Outlet Berhasil"},200,{'Content-Type': 'application/json'}
-        return {'message' : "Outlet Sudah Ada"},401,
+            return {'message' : "Masukkan Outlet Berhasil"}, 200, {'Content-Type': 'application/json'}
+        return {'message' : "Outlet Sudah Ada"}, 409,
 
 class OutletGetByOne(Resource):
     
