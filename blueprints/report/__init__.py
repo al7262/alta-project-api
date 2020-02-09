@@ -221,7 +221,7 @@ class InventoryLogReport(Resource):
         owner = Users.query.filter_by(id = id_users).first()
 
         # Prepare variable needed
-        log_list = []
+        result = []
 
         # Take input from users
         parser = reqparse.RequestParser()
@@ -232,8 +232,55 @@ class InventoryLogReport(Resource):
         parser.add_argument('date_end', location = 'args', required = False)
         args = parser.parse_args()
 
-        # Get all products
-        logs = InventoryLog.query.filter_by()
+        # Get all inventories
+        inventories = Inventories.query.filter_by(id_users = id_users)
+
+        # ----- Filter by name -----
+        if args['name'] is not None and args['name'] != '':
+            inventories = inventories.filter(Inventories.name.like('%' + args['name'] + '%'))
+        
+        # Get all related stock outlet
+        for inventory in inventories:
+            stock_outlet_list = StockOutlet.query.filter_by(id_inventory = inventory.id)
+
+            # ----- Filter by outlet -----
+            if args['id_outlet'] != '' and args['id_outlet'] is not None:
+                stock_outlet_list = stock_outlet_list.filter_by(id_outlet = id_outlet)
+        
+            # Get all related logs
+            for stock_outlet in stock_outlet_list:
+                logs = InventoryLog.query.filter_by(id_stock_outlet = stock_outlet.id)
+                
+                # Get outlet
+                outlet = Outlets.query.filter_by(id = stock_outlet.id_outlet).first()
+
+                # ----- Filter by type -----
+                if args['type'] is not None and args['type'] != '':
+                    logs = logs.filter_by(status = args['type'])
+
+                # ----- Filter by date -----
+                if args['date_start'] is not None and args['date_end'] is not None and args['date_start'] != '' and args['date_end'] != '':
+                    start_year = int(args['date_start'][0:4])
+                    start_month = int(args['date_start'][5:7])
+                    start_day = int(args['date_start'][8:10])
+                    end_year = int(args['date_end'][0:4])
+                    end_month = int(args['date_end'][5:7])
+                    end_day = int(args['date_end'][8:10])
+                    logs = logs.filter(InventoryLog.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+
+                for log in logs:
+                    # Prepare the data
+                    data = {
+                        'name': inventory.name,
+                        'outlet': outlet.name,
+                        'date': log.created_at.strftime('%Y-%m-%d'),
+                        'time': log.created_at.strftime('%H-%M-%S'),
+                        'type': log.status,
+                        'amount': log.amount,
+                        'last_stock': log.last_stock
+                    }
+                    result.append(data)
+        return result, 200
 
 api.add_resource(ProductReport, '/product-sales')
 api.add_resource(HistoryReport, '/history')

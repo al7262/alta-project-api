@@ -142,12 +142,12 @@ class EmployeeResource(Resource):
         parser.add_argument('id_outlet', location = 'json', required = True)
         parser.add_argument('fullname', location = 'json', required = True)
         parser.add_argument('username', location = 'json', required = True)
-        parser.add_argument('password', location = 'json', required = True)
+        parser.add_argument('password', location = 'json', required = False)
         parser.add_argument('position', location = 'json', required = True)
 
         args = parser.parse_args()
 
-        if args['password'] is not None:
+        if args['password'] is not None and args['password'] != '':
             validation = self.policy.test(args['password'])
             if validation:
                 errorList = []
