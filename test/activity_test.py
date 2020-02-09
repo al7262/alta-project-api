@@ -47,3 +47,18 @@ class TestActivity():
         res = client.get('/activity/1?order_code=' + data['order_code'] + '&date=' + data['date'], headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
+
+    # Activity (Case 4 : Using order code filter Yesterday)
+    def test_activity_case_4(self, client):
+        # Prepare the DB and token
+        token = create_token('hedy@alterra.id')
+
+        data = {
+            'order_code': 'A32BC1',
+            'date': 'Kemarin'
+        }
+
+        # Test the endpoints
+        res = client.get('/activity/1?order_code=' + data['order_code'] + '&date=' + data['date'], headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
