@@ -160,7 +160,7 @@ class EmployeeResource(Resource):
             encrypted = hashlib.md5(args['password'].encode()).hexdigest()
             qry.password = encrypted
         if args['fullname'] is not None:
-            qry.fullname = args['fullname']
+            qry.full_name = args['fullname']
         if args['id_outlet'] is not None:
             qry.id_outlet = args['id_outlet']
         if args['username'] is not None:

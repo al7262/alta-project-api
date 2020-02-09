@@ -245,7 +245,7 @@ class InventoryLogReport(Resource):
 
             # ----- Filter by outlet -----
             if args['id_outlet'] != '' and args['id_outlet'] is not None:
-                stock_outlet_list = stock_outlet_list.filter_by(id_outlet = id_outlet)
+                stock_outlet_list = stock_outlet_list.filter_by(id_outlet = args['id_outlet'])
         
             # Get all related logs
             for stock_outlet in stock_outlet_list:
