@@ -7,7 +7,7 @@ from blueprints.stock_outlet.model import StockOutlet
 from blueprints.outlets.model import Outlets
 from blueprints.recipes.model import Recipe
 from blueprints import db, app
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import re
 
@@ -407,21 +407,33 @@ class InventoryLogOutlet(Resource):
         # Take input from users
         parser = reqparse.RequestParser()
         parser.add_argument('type', location = 'args', required = False)
-        parser.add_argument('date', location = 'args', required = True)
+        parser.add_argument('date', location = 'args', required = False)
+        parser.add_argument('date_start', location = 'args', required = False)
+        parser.add_argument('date_end', location = 'args', required = False)
         args = parser.parse_args()
 
         # Filter by type
         if args['type'] != '' or args['type'] != 'Semua':
             logs = logs.filter_by(status = args['type'])
 
-        # Filter by date
-        if args['date'] != '':
-            filtered_logs = []
+        filtered_logs = []
+        # Filter by date - 1st version
+        if args['date'] != '' and args['date'] is not None:
             for log in logs:
                 created_at = log.created_at
                 if created_at.strftime("%Y-%m-%d") == args['date']:
                     filtered_logs.append(log)
         
+        # Filter by date - 2nd version
+        if args['date_start'] is not None and args['date_end'] is not None:
+            start_year = int(args['date_start'][0:4])
+            start_month = int(args['date_start'][5:7])
+            start_day = int(args['date_start'][8:10])
+            end_year = int(args['date_end'][0:4])
+            end_month = int(args['date_end'][5:7])
+            end_day = int(args['date_end'][8:10])
+            filtered_logs = logs.filter(InventoryLog.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+
         # Get outlet name
         stock_outlet = StockOutlet.query.filter_by(id = id_stock_outlet).first()
         id_outlet = stock_outlet.id_outlet
@@ -466,21 +478,34 @@ class InventoryLogAll(Resource):
         # Take input from users
         parser = reqparse.RequestParser()
         parser.add_argument('type', location = 'args', required = False)
-        parser.add_argument('date', location = 'args', required = True)
+        parser.add_argument('date', location = 'args', required = False)
+        parser.add_argument('date_start', location = 'args', required = False)
+        parser.add_argument('date_end', location = 'args', required = False)
         args = parser.parse_args()
 
         # Filter by type
         if args['type'] != '' or args['type'] != 'Semua':
             log_list = filter(lambda log: log.status == args['type'], log_list)
+            log_list = list(log_list)
 
-        # Filter by date
+        filtered_logs = []
+        # Filter by date 1st version
         if args['date'] != '':
-            filtered_logs = []
             for log in log_list:
                 created_at = log.created_at
                 if created_at.strftime("%Y-%m-%d") == args['date']:
                     filtered_logs.append(log)
         
+        # Filter by date - 2nd version
+        if args['date_start'] is not None and args['date_end'] is not None:
+            start_year = int(args['date_start'][0:4])
+            start_month = int(args['date_start'][5:7])
+            start_day = int(args['date_start'][8:10])
+            end_year = int(args['date_end'][0:4])
+            end_month = int(args['date_end'][5:7])
+            end_day = int(args['date_end'][8:10])
+            filtered_logs = filter(lambda log: log.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) and log.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1), log_list)
+
         # Prepare the result
         result = []
         for log in filtered_logs:

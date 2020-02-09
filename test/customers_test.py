@@ -16,7 +16,7 @@ class TestCustomers():
     # Get all customers (Case 2: Using keyword parameter)
     def test_get_all_customers_case_2(self, client):
         # Prepare the DB and token
-        token = create_token('stevejobs')
+        token = create_token('hedy@alterra.id')
 
         # Test the endpoints
         res = client.get('/customer?keyword=Leli', headers={'Authorization': 'Bearer ' + token})
@@ -74,7 +74,7 @@ class TestCustomers():
     # Add customer (Case 2: Success)
     def test_add_customer_case_2(self, client):
         # Prepare the DB and token
-        token = create_token('budisetiawan')
+        token = create_token('hedy@alterra.id')
 
         data = {
             'fullname': 'Joni English',

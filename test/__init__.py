@@ -49,6 +49,26 @@ def db_reset():
     db.session.add(cashier_1)
     db.session.commit()
 
+    encrypted = hashlib.md5('Cashierpass'.encode()).hexdigest()
+    cashier_2 = Employees(id_outlet = 1, full_name = 'Cashier02', username = 'cashier02', password = encrypted, position = 'Kasir')
+    db.session.add(cashier_2)
+    db.session.commit()
+
+    encrypted = hashlib.md5('Cashierpass'.encode()).hexdigest()
+    cashier_3 = Employees(id_outlet = 1, full_name = 'Cashier03', username = 'cashier03', password = encrypted, position = 'Kasir')
+    db.session.add(cashier_3)
+    db.session.commit()
+
+    encrypted = hashlib.md5('Cashierpass'.encode()).hexdigest()
+    cashier_4 = Employees(id_outlet = 1, full_name = 'Cashier04', username = 'cashier04', password = encrypted, position = 'Kasir')
+    db.session.add(cashier_4)
+    db.session.commit()
+
+    encrypted = hashlib.md5('Cashierpass'.encode()).hexdigest()
+    cashier_5 = Employees(id_outlet = 1, full_name = 'Cashier05', username = 'cashier05', password = encrypted, position = 'Kasir')
+    db.session.add(cashier_5)
+    db.session.commit()
+
     # ---------- Create Admin ----------
     encrypted_5 = hashlib.md5('Stevejobs1'.encode()).hexdigest()
     admin_1 = Employees(id_outlet = 1, full_name = 'Steve Jobs', username = 'stevejobs', password = encrypted_5, position = 'Admin')
@@ -136,6 +156,15 @@ def create_token(username):
             'password': 'Stevejobs1',
             'position': 'Admin'
         }
+    else:
+        for index in [2,3,4,5]:
+            if username == 'Cashier0' + str(index):
+                cachename = "test-cashier-" + str(index)
+                data = {
+                    'username': 'Cashier0' + str(index),
+                    'password': 'Cashierpass',
+                    'position': 'Kasir'
+                }
 
     token = cache.get(cachename)
     if token is None:
