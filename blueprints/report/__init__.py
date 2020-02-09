@@ -12,7 +12,7 @@ from blueprints.recipes.model import Recipe
 from blueprints.users.model import Users
 from blueprints.outlets.model import Outlets
 from blueprints import db, app
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import random
 
@@ -57,61 +57,73 @@ class ProductReport(Resource):
         # ----- First Filter -----
         # By name
         if args['name'] != '' and args['name'] is not None:
-            products = products.filter_by(name = args['name'])
+            products = products.filter(Products.name.like('%' + args['name'] + '%'))
         
         # By category
         if args['category'] != '' and args['category'] is not None:
             products = products.filter_by(category = args['category'])
 
         # Search all transactions related to the products in specified outlet
-        if args['id_outlet'] != '' and args['id_outlet'] is not None:
-            for product in products:
-                # Prepare variable needed
-                add_status = True
-                total_sales_of_product = 0
-                total_sold_of_product = 0
-                detail_transaction = CartDetail.query.filter_by(id_product = product.id)
+        for product in products:
+            # Prepare variable needed
+            add_status = True
+            total_sales_of_product = 0
+            total_sold_of_product = 0
+            detail_transaction = CartDetail.query.filter_by(id_product = product.id)
 
-                # ----- Second Filter -----
-                # By date interval
-                if args['date_start'] is not None and args['date_end'] is not None and args['date_start'] != '' and args['date_end'] != '':
-                    start_year = int(args['date_start'][0:4])
-                    start_month = int(args['date_start'][5:7])
-                    start_day = int(args['date_start'][8:10])
-                    end_year = int(args['date_end'][0:4])
-                    end_month = int(args['date_end'][5:7])
-                    end_day = int(args['date_end'][8:10])
-                    detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+            # ----- Second Filter -----
+            # By date interval
+            if args['date_start'] is not None and args['date_end'] is not None and args['date_start'] != '' and args['date_end'] != '':
+                start_year = int(args['date_start'][0:4])
+                start_month = int(args['date_start'][5:7])
+                start_day = int(args['date_start'][8:10])
+                end_year = int(args['date_end'][0:4])
+                end_month = int(args['date_end'][5:7])
+                end_day = int(args['date_end'][8:10])
+                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
-                for detail in detail_transaction:
-                    # ----- Third Filter -----
-                    # By outlet id
-                    if args['id_outlet'] != '' and args['id_outlet'] is not None:
-                        transaction = Carts.query.filter_by(deleted = True).filter_by(id = detail.id_cart).first()
-                        if transaction.id_outlet != int(args['id_outlet']):
-                            add_status = False
-                    
-                    # Calculate some values
-                    if add_status == True:
-                        total_sold_of_product = total_sold_of_product + detail.quantity
-                        total_sales_of_product = total_sales_of_product + detail.total_price_product
+            for detail in detail_transaction:
+                # ----- Third Filter -----
+                # By outlet id
+                if args['id_outlet'] != '' and args['id_outlet'] is not None:
+                    transaction = Carts.query.filter_by(deleted = True).filter_by(id = detail.id_cart).first()
+                    if transaction.id_outlet != int(args['id_outlet']):
+                        add_status = False
+                
+                # Calculate some values
+                if add_status == True:
+                    total_sold_of_product = total_sold_of_product + detail.quantity
+                    total_sales_of_product = total_sales_of_product + detail.total_price_product
 
-                total_sales = total_sales + total_sales_of_product
-                total_sold = total_sold + total_sold_of_product
-                data = {
-                    'name': product.name,
-                    'category': product.category,
-                    'total_sold': total_sold_of_product,
-                    'total_sales': total_sales_of_product   
-                }
-                product_list.append(data)
-            
-            result = {
-                'total_sales': total_sales,
-                'total_sold': total_sold,
-                'detail': product_list
+            total_sales = total_sales + total_sales_of_product
+            total_sold = total_sold + total_sold_of_product
+            data = {
+                'name': product.name,
+                'category': product.category,
+                'total_sold': total_sold_of_product,
+                'total_sales': total_sales_of_product   
             }
-        
+            product_list.append(data)
+            
+        result = {
+            'total_sales': total_sales,
+            'total_sold': total_sold,
+            'detail': product_list
+        }
         return result, 200
 
+class HistoryReport(Resource):
+    # Enable CORS
+    def options(self, id_product=None):
+        return {'status': 'ok'}, 200
+    
+    # Get product report
+    @jwt_required
+    @dashboard_required
+    def get(self):
+        # Get ID users and
+        claims = get_jwt_claims()
+        id_users = claims['id']
+
 api.add_resource(ProductReport, '/product-sales')
+api.add_resource(HistoryReport, '/history')
