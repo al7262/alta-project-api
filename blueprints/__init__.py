@@ -139,6 +139,9 @@ app.register_blueprint(bp_dashboard,url_prefix = '')
 from blueprints.activity import bp_activity
 app.register_blueprint(bp_activity,url_prefix = '/activity')
 
+from blueprints.report import bp_report
+app.register_blueprint(bp_report,url_prefix = '/report')
+
 db.create_all()
 
 @app.after_request

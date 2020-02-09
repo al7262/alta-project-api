@@ -591,6 +591,7 @@ class SendOrder(Resource):
             )
             db.session.add(new_cart_detail)
             db.session.commit()
+            item['total_price_product'] = new_cart_detail.total_price_product
         
         # ---------- Edit inventory and stock outlet, and add inventory log ----------
         for item in args['item_list']:
@@ -612,7 +613,10 @@ class SendOrder(Resource):
                 db.session.add(new_log)
                 db.session.commit()
         
-        return {'message': 'Transaksi berhasil'}, 200
+        # Prepare the data to be shown
+        new_cart = marshal(new_cart, Carts.carts_fields)
+        new_cart['item_list'] = args['item_list']
+        return new_cart, 200
 
 class DeleteProduct(Resource):
     # Enable CORS
