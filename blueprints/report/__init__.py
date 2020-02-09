@@ -161,14 +161,14 @@ class HistoryReport(Resource):
         # Looping through all transactions
         for transaction in transactions:
             detail_transaction = CartDetail.query.filter_by(id_cart = transaction.id)
-            outlet = Outlets.query.filter_by(id = transaction.id_outlet).filter_by(deleted = False).first()
+            outlet = Outlets.query.filter_by(id = transaction.id_outlet).first()
             
             # Search for cashier name
             if transaction.id_employee == None or transaction.id_employee == '':
                 cashier_name = owner.fullname
             else:
                 # Search for the employee
-                cashier = Employees.query.filter_by(deleted = False).filter_by(id = transaction.id_employee).first()
+                cashier = Employees.query.filter_by(id = transaction.id_employee).first()
                 cashier_name = cashier.full_name
 
             for detail in detail_transaction:
@@ -176,7 +176,7 @@ class HistoryReport(Resource):
                 add_stock = True
                 
                 # ----- Filter by Product Name -----
-                product = Products.query.filter_by(id = detail.id_product).filter_by(deleted = False).first()
+                product = Products.query.filter_by(id = detail.id_product).first()
                 if args['name'] is not None and args['name'] != '':
                     if not re.search(args['name'].lower(), product.name.lower()):
                         add_stock = False
@@ -186,7 +186,9 @@ class HistoryReport(Resource):
                     total_sales = total_sales + detail.total_price_product
                     tax_summary = int(tax_summary + ((outlet.tax * detail.total_price_product) / 100))
                     data = {
-                        'time': transaction.created_at,
+                        'date_time': transaction.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                        'date': transaction.created_at.strftime("%Y-%m-%d"),
+                        'time': transaction.created_at.strftime('%H:%M:%S'),
                         'outlet': outlet.name,
                         'cashier_name': cashier_name,
                         'product_name': product.name,
