@@ -118,7 +118,7 @@ class HistoryReport(Resource):
     def options(self, id_product=None):
         return {'status': 'ok'}, 200
     
-    # Get product report
+    # Get history report
     @jwt_required
     @dashboard_required
     def get(self):
@@ -206,5 +206,35 @@ class HistoryReport(Resource):
 
         return result, 200
 
+class InventoryLogReport(Resource):
+    # Enable CORS
+    def options(self, id_product=None):
+        return {'status': 'ok'}, 200
+    
+    # Get inventory log report
+    @jwt_required
+    @dashboard_required
+    def get(self):
+        # Get the owner
+        claims = get_jwt_claims()
+        id_users = claims['id']
+        owner = Users.query.filter_by(id = id_users).first()
+
+        # Prepare variable needed
+        log_list = []
+
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', location = 'args', required = False)
+        parser.add_argument('id_outlet', location = 'args', required = False)
+        parser.add_argument('type', location = 'args', required = False)
+        parser.add_argument('date_start', location = 'args', required = False)
+        parser.add_argument('date_end', location = 'args', required = False)
+        args = parser.parse_args()
+
+        # Get all products
+        logs = InventoryLog.query.filter_by()
+
 api.add_resource(ProductReport, '/product-sales')
 api.add_resource(HistoryReport, '/history')
+api.add_resource(InventoryLogReport, '/inventory-log')

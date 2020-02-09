@@ -194,6 +194,8 @@ class EmployeeGetByOne(Resource):
         claims = get_jwt_claims()
         qry = Employees.query.get(id)
         marshal_qry = (marshal(qry, Employees.response_fields))
+        outlet = Outlets.query.filter_by(id = marshal_qry['id_outlet']).filter_by(deleted = False).first()
+        marshal_qry['outlet_name'] = outlet.name
 
         if qry is not None:
             if not qry.deleted:
