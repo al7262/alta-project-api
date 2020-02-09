@@ -411,7 +411,75 @@ class TestInventories():
         res = client.get('/inventory/reminder/1', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
+
+    # Get inventory log in an outlet (Case 1: Date filter 1st version)
+    def test_inventory_log_an_outlet_case_1(self, client):
+        # Prepare the DB and token
+        token = create_token('hedy@alterra.id')
+
+        data = {
+            'type': 'Masuk',
+            'date': '20-02-09',
+            'date_start': '',
+            'date_end': ''
+        }
+
+        # Test the endpoints
+        res = client.get('/inventory/log/1', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
+    # Get inventory log in an outlet (Case 2: Date filter 2nd version)
+    def test_inventory_log_an_outlet_case_2(self, client):
+        # Prepare the DB and token
+        token = create_token('stevejobs')
+
+        data = {
+            'type': 'Masuk',
+            'date': '',
+            'date_start': '2020-02-01',
+            'date_end': '2020-03-09'
+        }
+
+        # Test the endpoints
+        res = client.get('/inventory/log/1', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
+    # Get inventory log in all outlet (Case 1: Date filter 1st version)
+    def test_inventory_log_all_outlet_case_1(self, client):
+        # Prepare the DB and token
+        token = create_token('hedy@alterra.id')
+
+        data = {
+            'type': 'Masuk',
+            'date': '2020-02-09',
+            'date_start': '',
+            'date_end': ''
+        }
+
+        # Test the endpoints
+        res = client.get('/inventory/log/all/1', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
     
+    # Get inventory log in all outlet (Case 2: Date filter 2nd version)
+    def test_inventory_log_all_outlet_case_2(self, client):
+        # Prepare the DB and token
+        token = create_token('stevejobs')
+
+        data = {
+            'type': 'Masuk',
+            'date': '',
+            'date_start': '2020-02-01',
+            'date_end': '2020-03-10'
+        }
+
+        # Test the endpoints
+        res = client.get('/inventory/log/all/1', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
     # Stock reminder in all outlets
     def test_stock_reminder_all_outlets(self, client):
         # Prepare the DB and token
