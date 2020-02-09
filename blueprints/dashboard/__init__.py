@@ -83,6 +83,7 @@ class Dashboard(Resource):
         list_category = []
         info_category = {}
         info_categories = []
+        info_another = {}
 
         # variable untuk produk terlaris dan kategori terlaris
         tops = []
@@ -137,6 +138,19 @@ class Dashboard(Resource):
                             break
     
             # ini untuk kategori terlaris
+            total_quantity = 0
+            for product in qry_product:
+                if qry_cart is not None:
+                    for cart in qry_cart:
+                        create_at = cart.created_at
+                        if start <= create_at and create_at <= end:
+                            qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
+                            if qry_cartdetail is not None:
+                                total_quantity = total_quantity + qry_cartdetail.quantity
+            info_another = {
+                "category_product" : "another",
+                "total" : total_quantity
+            }               
             for category in categories:
                 qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(category = category).all()
                 total_quantity = 0
@@ -165,7 +179,8 @@ class Dashboard(Resource):
                         if info not in top_category:
                             top_category.append(info)
                             break
-            
+            top_category = top_category + info_another
+
             # ini untuk pengingat stock
             inventories = Inventories.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
             stock_outlet_list = []
@@ -240,6 +255,19 @@ class Dashboard(Resource):
                             break
             
             # ini untuk kategori terlaris
+            total_quantity = 0
+            for product in qry_product:
+                if qry_cart is not None:
+                    for cart in qry_cart:
+                        create_at = cart.created_at
+                        if start <= create_at and create_at <= end:
+                            qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
+                            if qry_cartdetail is not None:
+                                total_quantity = total_quantity + qry_cartdetail.quantity
+            info_another = {
+                "category_product" : "another",
+                "total" : total_quantity
+            }
             for category in categories: 
                 qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(category = category).all()
                 total_quantity = 0
@@ -268,7 +296,8 @@ class Dashboard(Resource):
                         if info not in top_category:
                             top_category.append(info)
                             break
-
+            top_category = top_category + info_another
+            
             #ini untuk pengingat stock
             stock_outlet_list = StockOutlet.query.filter_by(id_outlet = qry_outlet.id)
             stock_outlet_filtered = filter(lambda stock_outlet: stock_outlet.stock <= stock_outlet.reminder, stock_outlet_list)

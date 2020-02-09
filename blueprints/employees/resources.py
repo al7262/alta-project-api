@@ -104,7 +104,9 @@ class EmployeeResource(Resource):
                         if qry_employee is not None:
                             for employee in qry_employee:
                                 if not employee.deleted:
-                                    rows.append(marshal(employee, Employees.response_fields))        
+                                    marshal_employee = marshal(employee, Employees.response_fields)
+                                    marshal_employee['name_outlet'] = args['name_outlet']
+                                    rows.append(marshal_employee)        
                 return rows, 200
 
         rows = []
@@ -124,7 +126,9 @@ class EmployeeResource(Resource):
                 if qry_employee is not None:
                     for employee in qry_employee:
                         if not employee.deleted:
-                            rows.append(marshal(employee, Employees.response_fields))
+                            marshal_employee = marshal(employee, Employees.response_fields)
+                            marshal_employee['name_outlet'] = args['name_outlet']
+                            rows.append(marshal_employee)        
                     return rows, 200
         return {'message' : "Data Tidak Ditemukan"},404
     
