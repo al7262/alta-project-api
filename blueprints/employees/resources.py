@@ -105,8 +105,8 @@ class EmployeeResource(Resource):
                             for employee in qry_employee:
                                 if not employee.deleted:
                                     marshal_employee = marshal(employee, Employees.response_fields)
-                                    marshal_employee['name_outlet'] = args['name_outlet']
-                                    rows.append(marshal_employee)        
+                                    marshal_employee['name_outlet'] = outlet.name
+                                    rows.append(marshal_employee)
                 return rows, 200
 
         rows = []
