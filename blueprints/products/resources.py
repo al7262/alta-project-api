@@ -1,5 +1,5 @@
 # Import
-from flask import Blueprint
+from flask import Blueprint, request
 from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
 from .model import Products
@@ -13,6 +13,9 @@ from blueprints.users.model import Users
 from blueprints.outlets.model import Outlets
 from blueprints import db, app
 from datetime import datetime
+from twilio.rest import Client
+from io import BytesIO
+from PIL import Image, ImageDraw
 import json
 import random
 import os
@@ -376,6 +379,10 @@ class ItemsPerCategory(Resource):
         # Get all products of the specified user and filter by category
         products = Products.query.filter_by(id_users = id_user).filter_by(deleted = False).filter_by(category = category)
 
+        # Check emptyness
+        if products.all() == []:
+            return [], 200
+
         # Show the result
         result = []
         for product in products:
@@ -391,7 +398,9 @@ class ItemsPerCategory(Resource):
                         # Find related stock outlet
                         inventory_id = recipe.id_inventory
                         related_stock_outlet = StockOutlet.query.filter_by(id_outlet = args['id_outlet']).filter_by(id_inventory = inventory_id).first()
-                        max_portion = int(related_stock_outlet.stock // recipe.amount)
+                        max_portion = 0
+                        if related_stock_outlet is not None:
+                            max_portion = int(related_stock_outlet.stock // recipe.amount)
                         max_stock.append(max_portion)
                     product['stock'] = min(max_stock)
 
@@ -425,17 +434,18 @@ class CheckoutResource(Resource):
         # Get business logo
         owner = Users.query.filter_by(id = id_users).first()
         logo = owner.image
+        business_name = owner.business_name
 
         # Get cashier name
         if specified_cart.id_employee == None:
             # Get owner name
             cashier_name = owner.fullname
         else:
-            employee = Employees.query.filter_by(deleted = False).filter_by(id = specified_cart.id_employee).first()
+            employee = Employees.query.filter_by(id = specified_cart.id_employee).first()
             cashier_name = employee.full_name
         
         # Get outlet information
-        outlet = Outlets.query.filter_by(deleted = False).filter_by(id = specified_cart.id_outlet).first()
+        outlet = Outlets.query.filter_by(id = specified_cart.id_outlet).first()
         
         # Serach for all items in cart
         cart_detail = CartDetail.query.filter_by(id_cart = specified_cart.id)
@@ -443,7 +453,7 @@ class CheckoutResource(Resource):
         transaction_total_price = 0
         for detail in cart_detail:
             # Get related product information
-            product = Products.query.filter_by(deleted = False).filter_by(id = detail.id_product).first()
+            product = Products.query.filter_by(id = detail.id_product).first()
             product_name = product.name
             item_data = {
                 'product_name': product_name,
@@ -457,6 +467,7 @@ class CheckoutResource(Resource):
         # Create receipt
         receipt = {
             'logo': logo,
+            'business_name': business_name,
             'outlet_name': outlet.name,
             'address': outlet.address,
             'city': outlet.city,
@@ -617,7 +628,11 @@ class SendOrder(Resource):
         # Prepare the data to be shown
         new_cart = marshal(new_cart, Carts.carts_fields)
         new_cart['item_list'] = args['item_list']
-        return new_cart, 200
+        result = {
+            'id_order': new_cart.id,
+            'message': 'Transaksi berhasil'
+        }
+        return result, 200
 
 class SendWhatsapp(Resource):
     # Enable CORS
@@ -630,8 +645,39 @@ class SendWhatsapp(Resource):
     def post(self):
         # Take input from user
         parser = reqparse.RequestParser()
-        parser.add_argument('item_list', location = 'json', required = True)
+        parser.add_argument('image', location = 'json', required = True)
         args = parser.parse_args()
+
+        # Send the receipt
+        account_sid = 'AC74c51f7d88218337455c1aba6fb8e45c'
+        auth_token = '1612839a4c29ad63b826eb534be2ad0a'
+        client = Client(account_sid, auth_token)
+        message = client.messages \
+            .create(
+                media_url = [args['image']],
+                from_ = 'whatsapp:+14155238886',
+                body = "Terimakasih untuk kunjungannya. Berikut ini kami kirimkan struk transaksimu.",
+                to = 'whatsapp:+6289514845202'
+            )
+        
+        return {'message': 'Sukses mengirim struk transaksi'}, 200
+
+class SendEmail(Resource):
+    # Enable CORS
+    def options(self, id_product=None):
+        return {'status': 'ok'}, 200
+
+    # Send receipt to email
+    @jwt_required
+    @apps_required
+    def post(self):
+        # Take input from user
+        parser = reqparse.RequestParser()
+        parser.add_argument('image', location = 'json', required = True)
+        args = parser.parse_args()
+
+        # Send the receipt  
+        return {'message': 'Sukses mengirim struk transaksi'}, 200
 
 api.add_resource(ProductResource, '')
 api.add_resource(SpecificProductResource, '/<id_product>')
@@ -640,3 +686,4 @@ api.add_resource(ItemsPerCategory, '/category/items')
 api.add_resource(SendOrder, '/checkout')
 api.add_resource(CheckoutResource, '/checkout/<id_cart>')
 api.add_resource(SendWhatsapp, '/checkout/send-whatsapp')
+api.add_resource(SendEmail, '/checkout/send-email')
