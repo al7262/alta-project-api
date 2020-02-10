@@ -57,7 +57,7 @@ class Dashboard(Resource):
             elif args['date_interval'] == "Bulan lalu":
                 start = today + relativedelta(months= -1, days = -(int(time[8::]))+1)
                 end = today + relativedelta(days = -(int(time[8::]))+1)
-        elif args['start_time'] is not None and args['end_time'] is not None:
+        if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
             start = datetime(int(start_time[0:4]),int(start_time[5:7]),int(start_time[8::]))
             end_time = args['end_time']
@@ -65,7 +65,7 @@ class Dashboard(Resource):
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"massage" : "inputan anda salah"}, 401
-
+        print(start, "dan", end)
         # variabel untuk jumlah pemasukan
         number_transaction = 0
 
@@ -99,6 +99,7 @@ class Dashboard(Resource):
                     for cart in qry_cart:
                         create_at = cart.created_at
                         if start <= create_at and create_at <= end:
+                            print("AKU MASUK")
                             sales_amount = sales_amount + cart.total_payment
                             number_transaction = number_transaction + 1
             
@@ -179,7 +180,7 @@ class Dashboard(Resource):
                         if info not in top_category:
                             top_category.append(info)
                             break
-            top_category = top_category + info_categories
+            top_category.append(info_another)
 
             # ini untuk pengingat stock
             inventories = Inventories.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
@@ -296,7 +297,7 @@ class Dashboard(Resource):
                         if info not in top_category:
                             top_category.append(info)
                             break
-            top_category = top_category + info_another
+            top_category.append(info_another)
             
             #ini untuk pengingat stock
             stock_outlet_list = StockOutlet.query.filter_by(id_outlet = qry_outlet.id)
@@ -323,9 +324,9 @@ class Dashboard(Resource):
 
         # Ini untuk grafik
         chart = []
-        if args['month'] is not None:
+        if args['month'] is not None and args['month'] != "":
             month = int(args['month'])
-        if args['month'] is None:
+        if args['month'] is None or args['month'] == "":
             month = 0
         now_month = int(time[5:7])
         end = today + relativedelta(months = (month)+1, days = -(int(time[8::]))+1)
