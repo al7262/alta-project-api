@@ -105,7 +105,7 @@ class EmployeeResource(Resource):
                             for employee in qry_employee:
                                 if not employee.deleted:
                                     marshal_employee = marshal(employee, Employees.response_fields)
-                                    marshal_employee['name_outlet'] = args['name_outlet']
+                                    marshal_employee['name_outlet'] = outlet.name
                                     rows.append(marshal_employee)        
                 return rows, 200
 
@@ -159,8 +159,9 @@ class EmployeeResource(Resource):
                 return {'message': message}, 422, {'Content-Type': 'application/json'}
             encrypted = hashlib.md5(args['password'].encode()).hexdigest()
             qry.password = encrypted
+
         if args['fullname'] is not None:
-            qry.fullname = args['fullname']
+            qry.full_name = args['fullname']
         if args['id_outlet'] is not None:
             qry.id_outlet = args['id_outlet']
         if args['username'] is not None:
