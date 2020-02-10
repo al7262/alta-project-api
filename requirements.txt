@@ -12,3 +12,5 @@ pytest-cov
 flask_cors
 mock
 werkzeug==0.16.0
+twilio
+pillow

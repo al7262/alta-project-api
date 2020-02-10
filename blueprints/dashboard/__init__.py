@@ -179,7 +179,7 @@ class Dashboard(Resource):
                         if info not in top_category:
                             top_category.append(info)
                             break
-            top_category = top_category + info_another
+            top_category = top_category + info_categories
 
             # ini untuk pengingat stock
             inventories = Inventories.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
