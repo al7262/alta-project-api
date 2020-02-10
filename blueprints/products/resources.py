@@ -644,11 +644,9 @@ class SendWhatsapp(Resource):
     @apps_required
     def post(self):
         # Take input from user
-        image = request.form.get('image')
-
-        # Proccess the images
-        opened_image = Image.open(BytesIO(image.content))
-        opened_image.show()
+        parser = reqparse.RequestParser()
+        parser.add_argument('image', location = 'json', required = True)
+        args = parser.parse_args()
 
         # Send the receipt
         account_sid = 'AC74c51f7d88218337455c1aba6fb8e45c'
@@ -656,12 +654,29 @@ class SendWhatsapp(Resource):
         client = Client(account_sid, auth_token)
         message = client.messages \
             .create(
-                media_url = [opened_image],
+                media_url = [args['image']],
                 from_ = 'whatsapp:+14155238886',
                 body = "Terimakasih untuk kunjungannya. Berikut ini kami kirimkan struk transaksimu.",
                 to = 'whatsapp:+6289514845202'
             )
         
+        return {'message': 'Sukses mengirim struk transaksi'}, 200
+
+class SendEmail(Resource):
+    # Enable CORS
+    def options(self, id_product=None):
+        return {'status': 'ok'}, 200
+
+    # Send receipt to email
+    @jwt_required
+    @apps_required
+    def post(self):
+        # Take input from user
+        parser = reqparse.RequestParser()
+        parser.add_argument('image', location = 'json', required = True)
+        args = parser.parse_args()
+
+        # Send the receipt  
         return {'message': 'Sukses mengirim struk transaksi'}, 200
 
 api.add_resource(ProductResource, '')
@@ -671,3 +686,4 @@ api.add_resource(ItemsPerCategory, '/category/items')
 api.add_resource(SendOrder, '/checkout')
 api.add_resource(CheckoutResource, '/checkout/<id_cart>')
 api.add_resource(SendWhatsapp, '/checkout/send-whatsapp')
+api.add_resource(SendEmail, '/checkout/send-email')

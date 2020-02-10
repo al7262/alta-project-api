@@ -14,3 +14,6 @@ mock
 werkzeug==0.16.0
 twilio
 pillow
+numpy
+opencv-python
+mailjet_rest
