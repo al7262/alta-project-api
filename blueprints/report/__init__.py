@@ -154,7 +154,7 @@ class CategoryReport(Resource):
             elif args['date_interval'] == "Bulan lalu":
                 start = today + relativedelta(months= -1, days = -(int(time[8::]))+1)
                 end = today + relativedelta(days = -(int(time[8::]))+1)
-        if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
+        if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
             start = datetime(int(start_time[0:4]),int(start_time[5:7]),int(start_time[8::]))
             end_time = args['end_time']
