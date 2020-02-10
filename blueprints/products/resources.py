@@ -15,6 +15,7 @@ from blueprints import db, app
 from datetime import datetime
 import json
 import random
+import os
 
 # Import Authentication
 from flask_jwt_extended import jwt_required, get_jwt_claims
@@ -618,10 +619,19 @@ class SendOrder(Resource):
         new_cart['item_list'] = args['item_list']
         return new_cart, 200
 
-class DeleteProduct(Resource):
+class SendWhatsapp(Resource):
     # Enable CORS
     def options(self, id_product=None):
         return {'status': 'ok'}, 200
+    
+    # Send receipt to whatsapp
+    @jwt_required
+    @apps_required
+    def post(self):
+        # Take input from user
+        parser = reqparse.RequestParser()
+        parser.add_argument('item_list', location = 'json', required = True)
+        args = parser.parse_args()
 
 api.add_resource(ProductResource, '')
 api.add_resource(SpecificProductResource, '/<id_product>')
@@ -629,4 +639,4 @@ api.add_resource(CategoryResource, '/category')
 api.add_resource(ItemsPerCategory, '/category/items')
 api.add_resource(SendOrder, '/checkout')
 api.add_resource(CheckoutResource, '/checkout/<id_cart>')
-api.add_resource(DeleteProduct, '/delete/<id_product>')
+api.add_resource(SendWhatsapp, '/checkout/send-whatsapp')

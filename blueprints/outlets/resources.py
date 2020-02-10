@@ -66,7 +66,9 @@ class OutletResource(Resource):
         parser.add_argument('name', location = 'json')
         parser.add_argument('phone_number', location = 'json')
         parser.add_argument('address', location = 'json')
+        parser.add_argument('province', location = 'json')
         parser.add_argument('city', location = 'json')
+        parser.add_argument('district', location = 'json')
         parser.add_argument('tax', location = 'json')
         args = parser.parse_args()
 
@@ -78,10 +80,15 @@ class OutletResource(Resource):
             qry.name = args['name']
         if args['phone_number'] is not None:
             qry.phone_number = args['phone_number']
-        if args['address'] is not None:
-            qry.address = args['address']
+        if args['province'] is not None:
+            qry.province = args['province']
         if args['city'] is not None:
             qry.city = args['city']
+        if args['district'] is not None:
+            qry.district = args['district']
+        if args['address'] is not None:
+            address = args['address'] + ', ' + args['district'] + ', ' + args['city'] + ', ' + args['province']
+            qry.address = address
         if args['tax'] is not None:
             qry.tax = args['tax']
 
@@ -103,14 +110,17 @@ class CreateOutletResource(Resource):
         parser.add_argument('name', location = 'json', required = True)
         parser.add_argument('phone_number', location = 'json', required = True)
         parser.add_argument('address', location = 'json', required = True)
+        parser.add_argument('province', location = 'json', required = True)
         parser.add_argument('city', location = 'json', required = True)
+        parser.add_argument('district', location = 'json', required = True)
         parser.add_argument('tax', location = 'json', required = True)
         
         args = parser.parse_args()
 
         qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name']).filter_by(deleted = False).first()
         if qry is None:
-            outlet = Outlets(claims['id'], args['name'], args['phone_number'], args['address'], args['city'], args['tax'])
+            address = args['address'] + ', ' + args['district'] + ', ' + args['city'] + ', ' + args['province']
+            outlet = Outlets(claims['id'], args['name'], args['phone_number'], address, args['city'], args['tax'])
             db.session.add(outlet)
             db.session.commit()
             app.logger.debug('DEBUG : %s', outlet)
@@ -131,8 +141,17 @@ class OutletGetByOne(Resource):
         qry = Outlets.query.get(id)
         marshal_qry = (marshal(qry, Outlets.response_fields))
 
+        # Get district, city, province
+        location_list = marshal_qry['address'].split(', ')
+        province = location_list[-1]
+        district = location_list[-3]
+        address = location_list[-4]
+
         if qry is not None:
             if not qry.deleted:
+                marshal_qry['district'] = district
+                marshal_qry['province'] = province
+                marshal_qry['address'] = address
                 return marshal_qry, 200
         return {'message' : 'Data Tidak Ditemukan'}, 404
 

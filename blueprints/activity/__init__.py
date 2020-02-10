@@ -31,7 +31,7 @@ class ActivityResource(Resource):
         # Take input from users
         parser = reqparse.RequestParser()
         parser.add_argument('order_code', location = 'args', required = False)
-        parser.add_argument('date', location = 'args', required = True)
+        parser.add_argument('date', location = 'args', required = True, default = 'Hari Ini')
         args = parser.parse_args()
         
         # Get all carts in an outlet
