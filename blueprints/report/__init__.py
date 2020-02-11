@@ -275,7 +275,7 @@ class InventoryLogReport(Resource):
                         'name': inventory.name,
                         'outlet': outlet.name,
                         'date': log.created_at.strftime('%Y-%m-%d'),
-                        'time': log.created_at.strftime('%H-%M-%S'),
+                        'time': log.created_at.strftime('%H:%M:%S'),
                         'type': log.status,
                         'amount': log.amount,
                         'last_stock': log.last_stock
