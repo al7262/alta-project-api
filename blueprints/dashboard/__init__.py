@@ -85,7 +85,7 @@ class Dashboard(Resource):
                             number_transaction = number_transaction + 1
             
             # ini untuk produk terlaris
-            qry_product = Products.query.filter_by(id_users = claims['id']).all()
+            qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
             for product in qry_product:
                 if product.category not in categories:
                     categories.append(product.category)
@@ -126,7 +126,7 @@ class Dashboard(Resource):
                                 total_quantity = total_quantity + qry_cartdetail.quantity
             info_another = ["another",total_quantity]
             for category in categories:
-                qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(category = category).all()
+                qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(category = category).filter_by(deleted = False).all()
                 total_quantity = 0
                 for product in qry_product:
                     if qry_cart is not None:
@@ -191,7 +191,7 @@ class Dashboard(Resource):
                         number_transaction = number_transaction + 1
                 
             # ini untuk produk terlaris
-            qry_product = Products.query.filter_by(id_users = claims['id']).all()
+            qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
             for product in qry_product:
                 if product.category not in categories:
                     categories.append(product.category)
@@ -234,7 +234,7 @@ class Dashboard(Resource):
                 "total" : total_quantity
             }
             for category in categories: 
-                qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(category = category).all()
+                qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(category = category).filter_by(deleted = False).all()
                 total_quantity = 0
                 for product in qry_product:
                     if qry_cart is not None:
