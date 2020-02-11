@@ -49,8 +49,8 @@ class ProductReport(Resource):
         parser.add_argument('name', location = 'args', required = False)
         parser.add_argument('category', location = 'args', required = False)
         parser.add_argument('id_outlet', location = 'args', required = False)
-        parser.add_argument('date_start', location = 'args', required = False)
-        parser.add_argument('date_end', location = 'args', required = False)
+        parser.add_argument('start_time', location = 'args', required = False)
+        parser.add_argument('end_time', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all products from specific owner
@@ -75,13 +75,13 @@ class ProductReport(Resource):
 
             # ----- Second Filter -----
             # By date interval
-            if args['date_start'] is not None and args['date_end'] is not None and args['date_start'] != '' and args['date_end'] != '':
-                start_year = int(args['date_start'][0:4])
-                start_month = int(args['date_start'][5:7])
-                start_day = int(args['date_start'][8:10])
-                end_year = int(args['date_end'][0:4])
-                end_month = int(args['date_end'][5:7])
-                end_day = int(args['date_end'][8:10])
+            if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != '' and args['end_time'] != '':
+                start_year = int(args['start_time'][6:10])
+                start_month = int(args['start_time'][3:5])
+                start_day = int(args['start_time'][0:2])
+                end_year = int(args['end_time'][6:10])
+                end_month = int(args['end_time'][3:5])
+                end_day = int(args['end_time'][0:2])
                 detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
             for detail in detail_transaction:
@@ -138,21 +138,21 @@ class HistoryReport(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('name', location = 'args', required = False)
         parser.add_argument('id_outlet', location = 'args', required = False)
-        parser.add_argument('date_start', location = 'args', required = False)
-        parser.add_argument('date_end', location = 'args', required = False)
+        parser.add_argument('start_time', location = 'args', required = False)
+        parser.add_argument('end_time', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all transactions history from specific owner
         transactions = Carts.query.filter_by(deleted = True).filter_by(id_users = id_users)
         
         # ----- Filter by Date Interval -----
-        if args['date_start'] is not None and args['date_end'] is not None and args['date_start'] != '' and args['date_end'] != '':
-            start_year = int(args['date_start'][0:4])
-            start_month = int(args['date_start'][5:7])
-            start_day = int(args['date_start'][8:10])
-            end_year = int(args['date_end'][0:4])
-            end_month = int(args['date_end'][5:7])
-            end_day = int(args['date_end'][8:10])
+        if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != '' and args['end_time'] != '':
+            start_year = int(args['start_time'][6:10])
+            start_month = int(args['start_time'][3:5])
+            start_day = int(args['start_time'][0:2])
+            end_year = int(args['end_time'][6:10])
+            end_month = int(args['end_time'][3:5])
+            end_day = int(args['end_time'][0:2])
             transactions = transactions.filter(Carts.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
         # ----- Filter by Outlet -----
@@ -229,8 +229,8 @@ class InventoryLogReport(Resource):
         parser.add_argument('name', location = 'args', required = False)
         parser.add_argument('id_outlet', location = 'args', required = False)
         parser.add_argument('type', location = 'args', required = False)
-        parser.add_argument('date_start', location = 'args', required = False)
-        parser.add_argument('date_end', location = 'args', required = False)
+        parser.add_argument('start_time', location = 'args', required = False)
+        parser.add_argument('end_time', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all inventories
@@ -260,13 +260,13 @@ class InventoryLogReport(Resource):
                     logs = logs.filter_by(status = args['type'])
 
                 # ----- Filter by date -----
-                if args['date_start'] is not None and args['date_end'] is not None and args['date_start'] != '' and args['date_end'] != '':
-                    start_year = int(args['date_start'][0:4])
-                    start_month = int(args['date_start'][5:7])
-                    start_day = int(args['date_start'][8:10])
-                    end_year = int(args['date_end'][0:4])
-                    end_month = int(args['date_end'][5:7])
-                    end_day = int(args['date_end'][8:10])
+                if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != '' and args['end_time'] != '':
+                    start_year = int(args['start_time'][6:10])
+                    start_month = int(args['start_time'][3:5])
+                    start_day = int(args['start_time'][0:2])
+                    end_year = int(args['end_time'][6:10])
+                    end_month = int(args['end_time'][3:5])
+                    end_day = int(args['end_time'][0:2])
                     logs = logs.filter(InventoryLog.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
                 for log in logs:
@@ -275,7 +275,7 @@ class InventoryLogReport(Resource):
                         'name': inventory.name,
                         'outlet': outlet.name,
                         'date': log.created_at.strftime('%Y-%m-%d'),
-                        'time': log.created_at.strftime('%H-%M-%S'),
+                        'time': log.created_at.strftime('%H:%M:%S'),
                         'type': log.status,
                         'amount': log.amount,
                         'last_stock': log.last_stock
@@ -296,37 +296,20 @@ class CategoryReport(Resource):
         
         # Take input from users
         parser = reqparse.RequestParser()
-        parser.add_argument('date_interval', location = 'args')
         parser.add_argument('start_time', location = 'args')
         parser.add_argument('end_time', location = 'args')
         args = parser.parse_args()
 
         # setting input time
         time = datetime.now().strftime("%Y-%m-%d")
-        today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
+        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
         start = today
         end = today + relativedelta(days = +1)
-        if args['date_interval'] is not None:
-            if args['date_interval'] == "Hari ini":
-                start = today
-                end = today + relativedelta(days = +1)
-            elif args['date_interval'] == "Kemarin":
-                start = today + relativedelta(days = -1)
-                end = today
-            elif args['date_interval'] == "Minggu ini":
-                start = today + relativedelta(days = -7)
-                end = today + relativedelta(days = +1)
-            elif args['date_interval'] == "Bulan ini":
-                start = today + relativedelta(days = -(int(time[8::]))+1)
-                end = today + relativedelta(days = +1)
-            elif args['date_interval'] == "Bulan lalu":
-                start = today + relativedelta(months= -1, days = -(int(time[8::]))+1)
-                end = today + relativedelta(days = -(int(time[8::]))+1)
         if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[0:4]),int(start_time[5:7]),int(start_time[8::]))
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
             end_time = args['end_time']
-            end = datetime(int(end_time[0:4]),int(end_time[5:7]),int(end_time[8::]))
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"massage" : "inputan anda salah"}, 401
@@ -387,7 +370,6 @@ class OutletReport(Resource):
         
         # Take input from users
         parser = reqparse.RequestParser()
-        parser.add_argument('date_interval', location = 'args')
         parser.add_argument('start_time', location = 'args')
         parser.add_argument('end_time', location = 'args')
         parser.add_argument('name_outlet', location = 'args')
@@ -395,30 +377,14 @@ class OutletReport(Resource):
 
         # setting input time
         time = datetime.now().strftime("%Y-%m-%d")
-        today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
+        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
         start = today
         end = today + relativedelta(days = +1)
-        if args['date_interval'] is not None:
-            if args['date_interval'] == "Hari ini":
-                start = today
-                end = today + relativedelta(days = +1)
-            elif args['date_interval'] == "Kemarin":
-                start = today + relativedelta(days = -1)
-                end = today
-            elif args['date_interval'] == "Minggu ini":
-                start = today + relativedelta(days = -7)
-                end = today + relativedelta(days = +1)
-            elif args['date_interval'] == "Bulan ini":
-                start = today + relativedelta(days = -(int(time[8::]))+1)
-                end = today + relativedelta(days = +1)
-            elif args['date_interval'] == "Bulan lalu":
-                start = today + relativedelta(months= -1, days = -(int(time[8::]))+1)
-                end = today + relativedelta(days = -(int(time[8::]))+1)
         if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[0:4]),int(start_time[5:7]),int(start_time[8::]))
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
             end_time = args['end_time']
-            end = datetime(int(end_time[0:4]),int(end_time[5:7]),int(end_time[8::]))
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"massage" : "inputan anda salah"}, 401
@@ -491,7 +457,6 @@ class ProfitReport(Resource):
         
         # Take input from users
         parser = reqparse.RequestParser()
-        parser.add_argument('date_interval', location = 'args')
         parser.add_argument('start_time', location = 'args')
         parser.add_argument('end_time', location = 'args')
         parser.add_argument('name_outlet', location = 'args')
@@ -499,31 +464,15 @@ class ProfitReport(Resource):
 
         # setting input time
         time = datetime.now().strftime("%Y-%m-%d")
-        today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
+        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
         start = today
         end = today + relativedelta(days = +1)
-        if args['date_interval'] is not None:
-            if args['date_interval'] == "Hari ini":
-                start = today
-                end = today + relativedelta(days = +1)
-            elif args['date_interval'] == "Kemarin":
-                start = today + relativedelta(days = -1)
-                end = today
-            elif args['date_interval'] == "Minggu ini":
-                start = today + relativedelta(days = -7)
-                end = today + relativedelta(days = +1)
-            elif args['date_interval'] == "Bulan ini":
-                start = today + relativedelta(days = -(int(time[8::]))+1)
-                end = today + relativedelta(days = +1)
-            elif args['date_interval'] == "Bulan lalu":
-                start = today + relativedelta(months= -1, days = -(int(time[8::]))+1)
-                end = today + relativedelta(days = -(int(time[8::]))+1)
-
+        
         if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[0:4]),int(start_time[5:7]),int(start_time[8::]))
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
             end_time = args['end_time']
-            end = datetime(int(end_time[0:4]),int(end_time[5:7]),int(end_time[8::]))
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"massage" : "inputan anda salah"}, 401
