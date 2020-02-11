@@ -24,7 +24,7 @@ class TestProducts():
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
-    # Get all product from specified owner (accessed by cashier with filter)
+    # Get all product from specified owner (accessed by cashier with filter case 1)
     def test_get_all_products_cashier_1(self, client):
         # Prepare the DB and token
         db_reset()
@@ -33,7 +33,7 @@ class TestProducts():
         data = {
             'category': 'Mie Ayam',
             'show': 'Ya',
-            'name': 'Mi' 
+            'name': 'Mi'
         }
 
         # Test the endpoints
@@ -41,7 +41,7 @@ class TestProducts():
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
-    # Get all product from specified owner (accessed by cashier with filter)
+    # Get all product from specified owner (accessed by cashier with filter case 2)
     def test_get_all_products_cashier_2(self, client):
         # Prepare the DB and token
         db_reset()
@@ -50,7 +50,7 @@ class TestProducts():
         data = {
             'category': 'Mie Ayam',
             'show': 'Tidak',
-            'name': 'Mi' 
+            'name': '',
         }
 
         # Test the endpoints
