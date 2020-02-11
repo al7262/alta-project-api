@@ -169,14 +169,17 @@ class Dashboard(Resource):
                     inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
                     if inventory is not None:
                         inventory_name = inventory.name
+                        inventory_unit = inventory.unit
                         outlet = Outlets.query.filter_by(deleted = False).filter_by(id = stock_outlet['id_outlet']).first()
                         if outlet is not None:
                             outlet_name = outlet.name
+                            
 
                             data = {
                             'name': inventory_name,
                             'stock': stock_outlet['stock'],
-                            'outlet': outlet_name
+                            'outlet': outlet_name,
+                            'unit' : inventory_unit
                             }
                             inventories_data.append(data)
              
@@ -270,11 +273,13 @@ class Dashboard(Resource):
                     inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
                     if inventory is not None:
                         inventory_name = inventory.name
+                        inventory_unit = inventory.unit
 
                         data = {
                             'name': inventory_name,
                             'stock': stock_outlet['stock'],
-                            'outlet': outlet_name
+                            'outlet': outlet_name,
+                            'unit' : inventory_unit
                         }
                         inventories_data.append(data)
 
@@ -287,14 +292,15 @@ class Dashboard(Resource):
             month = 0
         now_month = int(time[5:7])
         end = today + relativedelta(months = (month)+1, days = -(int(time[8::]))+1)
-        qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
-        if args['name_outlet'] is not None:
-            qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
+        if args['name_outlet'] is not None and args['name_outlet'] != "":
+            qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).filter_by(deleted = False).first()
+        if qry_outlet is None or args['name_outlet'] == "":
+            qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(deleted = False).all()
         start = today + relativedelta(months = (month), days = -(int(time[8::]))+1)
         count = 1
         while start < end: 
             amount_sales = 0
-            if args['name_outlet'] is not None:
+            if args['name_outlet'] is not None and args['name_outlet'] != "":
                 qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
                 if qry_cart is not None:
                     for carts in qry_cart:
@@ -307,7 +313,7 @@ class Dashboard(Resource):
                 chart[str(count)] = amount_sales
                 start = start + relativedelta(days = +1)
                 count+=1
-            if args['name_outlet'] is None:
+            if args['name_outlet'] is None or args['name_outlet'] == "":
                 for outlet in qry_outlet:
                     qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
                     if qry_cart is not None:
@@ -321,7 +327,7 @@ class Dashboard(Resource):
                 chart[str(count)] = amount_sales
                 start = start + relativedelta(days = +1)
                 count+=1
-
+        
         #ini untuk member loyal
         min = 0
         new_customer = 0
