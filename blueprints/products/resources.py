@@ -13,7 +13,7 @@ from blueprints.users.model import Users
 from blueprints.outlets.model import Outlets
 from blueprints import db, app
 from datetime import datetime
-from twilio.rest import Client
+from twilio.rest import Client as twilio_client
 from io import BytesIO
 from PIL import Image, ImageDraw
 from mailjet_rest import Client
@@ -656,16 +656,14 @@ class SendWhatsapp(Resource):
         # Send the receipt
         account_sid = 'AC74c51f7d88218337455c1aba6fb8e45c'
         auth_token = '1612839a4c29ad63b826eb534be2ad0a'
-        client = Client(account_sid, auth_token)
-        if 'FLASK_ENV' not in os.environ: os.environ['FLASK_ENV'] = 'development'
-        if os.environ['FLASK_ENV'] == 'development':
-            message = client.messages \
-                .create(
-                    media_url = [args['image']],
-                    from_ = 'whatsapp:+14155238886',
-                    body = "Terima kasih atas kunjungannya. Berikut ini kami kirimkan struk transaksimu. Kami tunggu kedatanganmu kembali.",
-                    to = 'whatsapp:+6289514845202'
-                )
+        client = twilio_client(account_sid, auth_token)
+        message = client.messages \
+            .create(
+                media_url = [args['image']],
+                from_ = 'whatsapp:+14155238886',
+                body = "Terima kasih atas kunjungannya. Berikut ini kami kirimkan struk transaksimu. Kami tunggu kedatanganmu kembali.",
+                to = 'whatsapp:+6289514845202'
+            )
         
         return {'message': 'Sukses mengirim struk transaksi'}, 200
 

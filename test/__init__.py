@@ -304,12 +304,19 @@ def create_token(username):
         }
     else:
         for index in [2,3,4,5]:
-            if username == 'Cashier0' + str(index):
+            if username == 'cashier0' + str(index):
                 cachename = "test-cashier-" + str(index)
                 data = {
-                    'username': 'Cashier0' + str(index),
+                    'username': 'cashier0' + str(index),
                     'password': 'Cashierpass',
                     'position': 'Kasir'
+                }
+            elif username == 'administrator0' + str(index):
+                cachename = "test-admin-" + str(index)
+                data = {
+                    'username': 'administrator0' + str(index),
+                    'password': 'Adminpass',
+                    'position': 'Admin'
                 }
 
     token = cache.get(cachename)

@@ -32,12 +32,12 @@ class TestProducts():
 
         data = {
             'category': 'Mie Ayam',
-            'show': 'Ya',
+            'show': 'Tidak',
             'name': 'Mi'
         }
 
         # Test the endpoints
-        res = client.get('/product', json = data, headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/product?category=' + data['category'] + '&show=' + data['show'] + '&name=' + data['name'], headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
@@ -45,16 +45,17 @@ class TestProducts():
     def test_get_all_products_cashier_2(self, client):
         # Prepare the DB and token
         db_reset()
-        token = create_token('budisetiawan')
+        token = create_token('cashier02')
 
         data = {
-            'category': 'Mie Ayam',
-            'show': 'Tidak',
+            'category': 'Indomie',
+            'show': 'Ya',
             'name': '',
+            'id_outlet': 1
         }
 
         # Test the endpoints
-        res = client.get('/product', json = data, headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/product?category=' + data['category'] + '&show=' + data['show'] + '&name=' + data['name'] + '&id_outlet=' + str(data['id_outlet']), headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
 
@@ -109,7 +110,7 @@ class TestProducts():
         token = create_token('stevejobs')
 
         data = {
-            "name": "Mie Ayam Bakso",
+            "name": "Mie Ayam Bakso Goreng",
             "category": "Mie Ayam",
             "price": 10000,
             "show": "Ya",
@@ -151,9 +152,9 @@ class TestProducts():
         token = create_token('stevejobs')
 
         data = {
-            "name": "Indomie Jakarta",
+            "name": "Indomie Goreng",
             "category": "Indomie",
-            "price": 9000,
+            "price": 12000,
             "show": "Ya",
             "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5gLpyIuURwUvD41khAPpAvJ1dteWvXM1S_pePXKbQ9YjRhLrA6Q&s",
             "recipe": [
@@ -193,7 +194,7 @@ class TestProducts():
         token = create_token('stevejobs')
 
         # Test the endpoints
-        res = client.get('/product/6', headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/product/4', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
@@ -222,7 +223,7 @@ class TestProducts():
     # Edit product success (Case 1 : Add new ingredients)
     def test_edit_product_success_case_1(self, client):
         # Prepare the DB and token
-        token = create_token('stevejobs')
+        token = create_token('admin02')
 
         data = {
             "name": "Indomie Bandung",
@@ -270,7 +271,7 @@ class TestProducts():
         token = create_token('stevejobs')
 
         # Test the endpoints
-        res = client.delete('/product/6', headers={'Authorization': 'Bearer ' + token})
+        res = client.delete('/product/5', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
@@ -300,7 +301,7 @@ class TestProducts():
         token = create_token('hedy@alterra.id')
 
         # Test the endpoints
-        res = client.get('/product/category/items?category=Indomie', headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/product/category/items?category=Indomie&id_outlet=1', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
 
@@ -311,6 +312,16 @@ class TestProducts():
 
         # Test the endpoints
         res = client.get('/product/category/items?category=Ayam', headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # Get all product per category (Case 3: Category not exist)
+    def test_get_product_by_category_case_3(self, client):
+        # Prepare the DB and token
+        token = create_token('administrator02')
+
+        # Test the endpoints
+        res = client.get('/product/category/items?category=AyamBakar', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
 
@@ -414,5 +425,35 @@ class TestProducts():
 
         # Test the endpoints
         res = client.post('/product/checkout', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # Sending whatsapp
+    def test_send_whatsapp(self, client):
+        # Prepare the DB and token
+        token = create_token('budisetiawan')
+
+        # Prepare the data to be shown
+        data = {
+            'image': 'https://dummy.jpg'
+        }
+
+        # Test the endpoints
+        res = client.post('/product/checkout/send-whatsapp', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # Sending whatsapp
+    def test_send_email(self, client):
+        # Prepare the DB and token
+        token = create_token('budisetiawan')
+
+        # Prepare the data to be shown
+        data = {
+            'image': 'https://dummy.jpg'
+        }
+
+        # Test the endpoints
+        res = client.post('/product/checkout/send-email', json = data, headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
