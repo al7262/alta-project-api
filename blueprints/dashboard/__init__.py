@@ -33,7 +33,6 @@ class Dashboard(Resource):
         parser.add_argument('name_outlet', location = 'args')
         parser.add_argument('start_time', location = 'args')
         parser.add_argument('end_time', location = 'args')
-        parser.add_argument('date_interval', location = 'args')
         parser.add_argument('month', location = 'args')
 
         args = parser.parse_args()
@@ -41,27 +40,11 @@ class Dashboard(Resource):
         today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
         start = today
         end = today + relativedelta(days = +1)
-        if args['date_interval'] is not None:
-            if args['date_interval'] == "Hari ini":
-                start = today
-                end = today + relativedelta(days = +1)
-            elif args['date_interval'] == "Kemarin":
-                start = today + relativedelta(days = -1)
-                end = today
-            elif args['date_interval'] == "Minggu ini":
-                start = today + relativedelta(days = -7)
-                end = today + relativedelta(days = +1)
-            elif args['date_interval'] == "Bulan ini":
-                start = today + relativedelta(days = -(int(time[8::]))+1)
-                end = today + relativedelta(days = +1)
-            elif args['date_interval'] == "Bulan lalu":
-                start = today + relativedelta(months= -1, days = -(int(time[8::]))+1)
-                end = today + relativedelta(days = -(int(time[8::]))+1)
         if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[0:4]),int(start_time[5:7]),int(start_time[8::]))
+            start = datetime(int(start_time[6::]),int(start_time[3:5]),int(start_time[0:2]))
             end_time = args['end_time']
-            end = datetime(int(end_time[0:4]),int(end_time[5:7]),int(end_time[8::]))
+            end = datetime(int(end_time[6::]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"massage" : "inputan anda salah"}, 401
@@ -75,15 +58,13 @@ class Dashboard(Resource):
         # variabel untuk produk terlaris
         total_quantity = 0
         list_product = []
-        info_product = {}
         info_products = []
 
         # variabel untuk kategori terlaris
         categories = []
         list_category = []
-        info_category = {}
         info_categories = []
-        info_another = {}
+        info_another = []
 
         # variable untuk produk terlaris dan kategori terlaris
         tops = []
@@ -120,12 +101,7 @@ class Dashboard(Resource):
                             if qry_cartdetail is not None:
                                 total_quantity = total_quantity + qry_cartdetail.quantity
                     list_product.append(total_quantity)
-                    info_product = {
-                        "id" : product.id,
-                        "name" : product.name,
-                        "total" : total_quantity
-                    }
-                    info_products.append(info_product)
+                    info_products.append([product.name,total_quantity])
             list_product.sort(reverse = True)
             if len(list_product) < 5:
                 tops = list_product[0::].copy()
@@ -133,7 +109,7 @@ class Dashboard(Resource):
                 tops = list_product[0:5].copy()
             for top in tops:
                 for info in info_products:
-                    if info['total'] == top:
+                    if info[1] == top:
                         if info not in top_product:
                             top_product.append(info)
                             break
@@ -148,10 +124,7 @@ class Dashboard(Resource):
                             qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
                             if qry_cartdetail is not None:
                                 total_quantity = total_quantity + qry_cartdetail.quantity
-            info_another = {
-                "category_product" : "another",
-                "total" : total_quantity
-            }               
+            info_another = ["another",total_quantity]
             for category in categories:
                 qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(category = category).all()
                 total_quantity = 0
@@ -164,11 +137,7 @@ class Dashboard(Resource):
                                 if qry_cartdetail is not None:
                                     total_quantity = total_quantity + qry_cartdetail.quantity
                 list_category.append(total_quantity)
-                info_category = {
-                    "category_product" : category,
-                    "total" : total_quantity
-                }
-                info_categories.append(info_category)
+                info_categories.append([category,total_quantity])
             list_category.sort(reverse = True)
             if len(list_category) < 5 :
                 tops = list_category[0::].copy()
@@ -176,7 +145,7 @@ class Dashboard(Resource):
                 tops = list_category[0:5].copy()
             for top in tops:
                 for info in info_categories:
-                    if info['total'] == top:
+                    if info[1] == top:
                         if info not in top_category:
                             top_category.append(info)
                             break
@@ -237,12 +206,7 @@ class Dashboard(Resource):
                             if qry_cartdetail is not None:
                                 total_quantity = total_quantity + qry_cartdetail.total_price_product
                     list_product.append(total_quantity)
-                    info_product = {
-                        "id" : product.id,
-                        "nama_product" : product.name, 
-                        "total" : total_quantity
-                    }
-                    info_products.append(info_product)
+                    info_products.append([product.name,total_quantity])
             list_product.sort(reverse = True)
             if len(list_product) < 5 :
                 tops = list_product[0::].copy()
@@ -250,7 +214,7 @@ class Dashboard(Resource):
                 tops = list_product[0:5].copy()
             for top in tops:
                 for info in info_products:
-                    if info['total'] == top:
+                    if info[1] == top:
                         if info not in top_product:
                             top_product.append(info)
                             break
@@ -323,7 +287,7 @@ class Dashboard(Resource):
 
 
         # Ini untuk grafik
-        chart = []
+        chart = {}
         if args['month'] is not None and args['month'] != "":
             month = int(args['month'])
         if args['month'] is None or args['month'] == "":
@@ -332,6 +296,7 @@ class Dashboard(Resource):
         end = today + relativedelta(months = (month)+1, days = -(int(time[8::]))+1)
         qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
         start = today + relativedelta(months = (month), days = -(int(time[8::]))+1)
+        count = 1
         while start < end: 
             amount_sales = 0
             for outlet in qry_outlet:
@@ -344,8 +309,9 @@ class Dashboard(Resource):
                             amount_sales = amount_sales + carts.total_payment
                 if qry_cart is None:
                     amount_sales = amount_sales + 0
-            chart.append(amount_sales)
+            chart[str(count)] = amount_sales
             start = start + relativedelta(days = +1)
+            count+=1
 
         #ini untuk member loyal
         min = 0

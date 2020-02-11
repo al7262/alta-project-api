@@ -27,10 +27,6 @@ class Promos (db.Model):
         'updated_at' : fields.DateTime
     }
 
-    jwt_claims_fields = {
-        'id' : fields.Integer
-    }
-
     def __init__(self, id_users, name, status, day):
         self.id_users = id_users
         self.name = name
