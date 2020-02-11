@@ -70,7 +70,6 @@ class ProductReport(Resource):
         # Search all transactions related to the products in specified outlet
         for product in products:
             # Prepare variable needed
-            add_status = True
             total_sales_of_product = 0
             total_sold_of_product = 0
             detail_transaction = CartDetail.query.filter_by(id_product = product.id)
@@ -87,17 +86,21 @@ class ProductReport(Resource):
                 detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
             for detail in detail_transaction:
+                # Check for related outlet
+                related_cart = Carts.query.filter_by(deleted = True).filter_by(id = detail.id_cart).first()
+                related_outlet = Outlets.query.filter_by(deleted = False).filter_by(id = related_cart.id_outlet).first()
+                if related_outlet is None:
+                    continue
+                
                 # ----- Third Filter -----
-                # By outlet id
+                # By outlet ID
                 if args['id_outlet'] != '' and args['id_outlet'] is not None:
-                    transaction = Carts.query.filter_by(deleted = True).filter_by(id = detail.id_cart).first()
-                    if transaction.id_outlet != int(args['id_outlet']):
-                        add_status = False
+                    if related_outlet.id != int(args['id_outlet']):
+                        continue
                 
                 # Calculate some values
-                if add_status == True:
-                    total_sold_of_product = total_sold_of_product + detail.quantity
-                    total_sales_of_product = total_sales_of_product + detail.total_price_product
+                total_sold_of_product = total_sold_of_product + detail.quantity
+                total_sales_of_product = total_sales_of_product + detail.total_price_product
 
             total_sales = total_sales + total_sales_of_product
             total_sold = total_sold + total_sold_of_product
@@ -457,9 +460,9 @@ class CategoryReport(Resource):
 
         # Prepare variable needed
         categories = []
-        product_categories = []
-        quantity_categories = []
-        price_categories = []
+        category_list = []
+        total_quantity_category = 0
+        total_price_category = 0
 
         qry_product = Products.query.filter_by(id_users = claims['id']).all()
         for product in qry_product:
@@ -476,79 +479,79 @@ class CategoryReport(Resource):
                 if qry_cart is not None:
                     for cart in qry_cart:
                         create_at = cart.created_at
-                        print(create_at)
                         if start <= create_at and create_at <= end:
                             qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
                             if qry_cartdetail is not None:
                                 total_quantity = total_quantity + qry_cartdetail.quantity
                     total_price = total_price + (product.price * total_quantity)
-            product_categories.append(total_product)
-            quantity_categories.append(total_quantity)
-            price_categories.append(total_price)
-        total_quantity_category = sum(quantity_categories)
-        total_price_category = sum(price_categories)
-
-        result = {
-            "category" : categories,
-            "total_product" : product_categories,
-            "total_quantity" : quantity_categories,
-            "total_price" : price_categories,
-            "total_items_sold" : total_quantity_category,
-            "total_sales" : total_price_category
-        }
+            data = {
+                'category': category,
+                'total_product': total_product,
+                'total_sold': total_quantity,
+                'total_sales': total_price
+            }
+            total_quantity_category = total_quantity_category + total_quantity
+            total_price_category = total_price_category + total_price
+            category_list.append(data)
 
         # ----- Sort -----
         # By total sales - desc
         if args['total_sales_sort'] == 'desc':
-            product_list_length = len(product_list)
+            category_list_length = len(category_list)
             restart = True
             while restart:
                 restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sales'] < product_list[index + 1]['total_sales']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
+                for index in range(category_list_length - 1):
+                    if category_list[index]['total_sales'] < category_list[index + 1]['total_sales']:
+                        dummy = category_list[index]
+                        category_list[index] = category_list[index + 1]
+                        category_list[index + 1] = dummy
                         restart = True
 
         # By total sales - asc
         if args['total_sales_sort'] == 'asc':
-            product_list_length = len(product_list)
+            category_list_length = len(category_list)
             restart = True
             while restart:
                 restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sales'] > product_list[index + 1]['total_sales']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
+                for index in range(category_list_length - 1):
+                    if category_list[index]['total_sales'] > category_list[index + 1]['total_sales']:
+                        dummy = category_list[index]
+                        category_list[index] = category_list[index + 1]
+                        category_list[index + 1] = dummy
                         restart = True
 
         # By total sold - desc
         if args['total_sold_sort'] == 'desc':
-            product_list_length = len(product_list)
+            category_list_length = len(category_list)
             restart = True
             while restart:
                 restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_items_sold'] < product_list[index + 1]['total_items_sold']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
+                for index in range(category_list_length - 1):
+                    if category_list[index]['total_items_sold'] < category_list[index + 1]['total_items_sold']:
+                        dummy = category_list[index]
+                        category_list[index] = category_list[index + 1]
+                        category_list[index + 1] = dummy
                         restart = True
 
         # By total sold - asc
         if args['total_sold_sort'] == 'asc':
-            product_list_length = len(product_list)
+            category_list_length = len(category_list)
             restart = True
             while restart:
                 restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_items_sold'] > product_list[index + 1]['total_items_sold']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
+                for index in range(category_list_length - 1):
+                    if category_list[index]['total_items_sold'] > category_list[index + 1]['total_items_sold']:
+                        dummy = category_list[index]
+                        category_list[index] = category_list[index + 1]
+                        category_list[index + 1] = dummy
                         restart = True
+
+        result = {
+            'category_list': category_list,
+            "total_items_sold" : total_quantity_category,
+            "total_sales" : total_price_category
+        }
 
         return result, 200
 
