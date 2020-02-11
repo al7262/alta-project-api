@@ -16,6 +16,8 @@ from datetime import datetime
 from twilio.rest import Client
 from io import BytesIO
 from PIL import Image, ImageDraw
+from mailjet_rest import Client
+
 import json
 import random
 import os
@@ -85,7 +87,9 @@ class ProductResource(Resource):
                         # Find related stock outlet
                         inventory_id = recipe.id_inventory
                         related_stock_outlet = StockOutlet.query.filter_by(id_outlet = args['id_outlet']).filter_by(id_inventory = inventory_id).first()
-                        max_portion = int(related_stock_outlet.stock // recipe.amount)
+                        max_portion = 0
+                        if related_stock_outlet is not None:
+                            max_portion = int(related_stock_outlet.stock // recipe.amount)
                         max_stock.append(max_portion)
                     product['stock'] = min(max_stock)
             
@@ -540,7 +544,8 @@ class SendOrder(Resource):
             total_item_price = int(item['unit']) * int(item['price'])
             total_payment = total_payment + total_item_price
             item_tax = (outlet.tax * total_item_price) // 100
-            
+            total_tax = total_tax + item_tax
+
         # Customer related
         if args['id_customers'] == '' or args['id_customers'] is None:
             id_customers = None
@@ -629,7 +634,7 @@ class SendOrder(Resource):
         new_cart = marshal(new_cart, Carts.carts_fields)
         new_cart['item_list'] = args['item_list']
         result = {
-            'id_order': new_cart.id,
+            'id_order': new_cart['id'],
             'message': 'Transaksi berhasil'
         }
         return result, 200
@@ -652,13 +657,15 @@ class SendWhatsapp(Resource):
         account_sid = 'AC74c51f7d88218337455c1aba6fb8e45c'
         auth_token = '1612839a4c29ad63b826eb534be2ad0a'
         client = Client(account_sid, auth_token)
-        message = client.messages \
-            .create(
-                media_url = [args['image']],
-                from_ = 'whatsapp:+14155238886',
-                body = "Terimakasih untuk kunjungannya. Berikut ini kami kirimkan struk transaksimu.",
-                to = 'whatsapp:+6289514845202'
-            )
+        if 'FLASK_ENV' not in os.environ: os.environ['FLASK_ENV'] = 'development'
+        if os.environ['FLASK_ENV'] == 'development':
+            message = client.messages \
+                .create(
+                    media_url = [args['image']],
+                    from_ = 'whatsapp:+14155238886',
+                    body = "Terima kasih atas kunjungannya. Berikut ini kami kirimkan struk transaksimu. Kami tunggu kedatanganmu kembali.",
+                    to = 'whatsapp:+6289514845202'
+                )
         
         return {'message': 'Sukses mengirim struk transaksi'}, 200
 
@@ -676,7 +683,45 @@ class SendEmail(Resource):
         parser.add_argument('image', location = 'json', required = True)
         args = parser.parse_args()
 
-        # Send the receipt  
+        # ---------- Prepare the data needed ----------
+        required_data = {
+            'email': 'garry@alterra.id',
+            'name': 'Garry Ariel'
+        }
+
+        # API configuration
+        api_key = 'bb6a7959ba912ff930bfffac2036b568'
+        api_secret = '0173c13cba0c2d75a2f1ac26e6adf2da'
+        mailjet = Client(auth=(api_key, api_secret), version='v3.1')
+
+        # Preparing the body of the email
+        first_greeting = "<h3>Terima kasih atas kunjungannya. Berikut ini kami kirimkan struk transaksimu. Kami tunggu kedatanganmu kembali.</h3>"
+        receipt_image = '<br /><br /><img src="' + args['image'] + '" />'
+
+        # Prepare the email to be sent
+        data = {
+        'Messages': [
+            {
+            "From": {
+                "Email": "serbabuku96@gmail.com",
+                "Name": "SerbaBuku"
+            },
+            "To": [
+                {
+                "Email": required_data["email"],
+                "Name": required_data["name"]
+                }
+            ],
+            "Subject": "Transaksi",
+            "HTMLPart": first_greeting + receipt_image,
+            "CustomID": "AppGettingStartedTest"
+            }
+        ]
+        }
+        
+        # Send the email
+        if 'FLASK_ENV' not in os.environ: os.environ['FLASK_ENV'] = 'development'
+        if os.environ['FLASK_ENV'] == 'development': mailjet.send.create(data=data)
         return {'message': 'Sukses mengirim struk transaksi'}, 200
 
 api.add_resource(ProductResource, '')
