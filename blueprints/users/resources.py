@@ -103,7 +103,7 @@ class UserResource(Resource):
                     split = str(item).split('(')
                     error, num = split[0], split[1][0]
                     errorList.append("{err}(minimum {num})".format(err=error, num=num))
-                message = "Please check your password: " + ', '.join(x for x in errorList)
+                message = "Tolong periksa kembali password Anda: " + ', '.join(x for x in errorList)
                 return {'message': message}, 422, {'Content-Type': 'application/json'}
             encrypted = hashlib.md5(args['password'].encode()).hexdigest()
             qry.password = encrypted
@@ -116,5 +116,59 @@ class UserResource(Resource):
         db.session.commit()
         return marshal(qry, Users.response_fields), 200
 
+class ChangePassword(Resource):
+    # Enable CORS    
+    def options(self,id=None):
+        return {'status':'ok'} , 200
+        
+    # To keep the password secret
+    policy = PasswordPolicy.from_names(
+        length = 6,
+        uppercase = 1,
+        numbers = 1
+    )
+
+    @jwt_required
+    @user_required
+    def put(self):
+        # Take input from user
+        claims = get_jwt_claims()
+        
+        parser = reqparse.RequestParser()
+        parser.add_argument('old_password', location = 'json')
+        parser.add_argument('new_password', location = 'json')
+        parser.add_argument('confirm_new_password', location = 'json')
+        args = parser.parse_args()
+
+        # Check emptyness
+        if args['old_password'] == None or args['old_password'] == '' or args['new_password'] == None or args['new_password'] == '' or args['confirm_new_password'] == None or args['confirm_new_password'] == '':
+            return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
+        
+        # Check the old password
+        encrypted = hashlib.md5(args['old_password'].encode()).hexdigest()
+        owner = Users.query.filter_by(id = claims['id']).filter_by(password = encrypted).first()
+        if owner is None:
+            return {'message': 'Mohon maaf password lama yang Anda masukkan salah'}, 400
+        
+        # Check new password and confirmation
+        if args['new_password'] != args['confirm_new_password']:
+            return {'message': 'Tolong periksa kembali password Anda'}, 400
+        
+        # Validate the new password
+        validation = self.policy.test(args['new_password'])
+        if validation:
+            errorList = []
+            for item in validation:
+                split = str(item).split('(')
+                error, num = split[0], split[1][0]
+                errorList.append("{err}(minimum {num})".format(err=error, num=num))
+            message = "Tolong periksa kembali password Anda: " + ', '.join(x for x in errorList)
+            return {'message': message}, 422, {'Content-Type': 'application/json'}
+        encrypted = hashlib.md5(args['new_password'].encode()).hexdigest()
+        owner.password = encrypted
+        db.session.commit()
+        return {'message': 'Sukses mengubah password'}, 200
+
 api.add_resource(RegisterUserResource,'/user/register')
 api.add_resource(UserResource,'/user/profile')
+api.add_resource(ChangePassword,'/user/change-password')

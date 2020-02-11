@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, date
 from dateutil.relativedelta import *
 import json
 import random
+import re
 
 # Import Authentication
 from flask_jwt_extended import jwt_required, get_jwt_claims
@@ -58,23 +59,207 @@ class ProductReport(Resource):
         # ----- First Filter -----
         # By name
         if args['name'] != '' and args['name'] is not None:
-            products = products.filter_by(name = args['name'])
+            products = products.filter(Products.name.like('%' + args['name'] + '%'))
         
         # By category
         if args['category'] != '' and args['category'] is not None:
             products = products.filter_by(category = args['category'])
 
         # Search all transactions related to the products in specified outlet
-        if args['id_outlet'] != '' and args['id_outlet'] is not None:
-            for product in products:
-                # Prepare variable needed
-                add_status = True
-                total_sales_of_product = 0
-                total_sold_of_product = 0
-                detail_transaction = CartDetail.query.filter_by(id_product = product.id)
+        for product in products:
+            # Prepare variable needed
+            add_status = True
+            total_sales_of_product = 0
+            total_sold_of_product = 0
+            detail_transaction = CartDetail.query.filter_by(id_product = product.id)
 
-                # ----- Second Filter -----
-                # By date interval
+            # ----- Second Filter -----
+            # By date interval
+            if args['date_start'] is not None and args['date_end'] is not None and args['date_start'] != '' and args['date_end'] != '':
+                start_year = int(args['date_start'][0:4])
+                start_month = int(args['date_start'][5:7])
+                start_day = int(args['date_start'][8:10])
+                end_year = int(args['date_end'][0:4])
+                end_month = int(args['date_end'][5:7])
+                end_day = int(args['date_end'][8:10])
+                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+
+            for detail in detail_transaction:
+                # ----- Third Filter -----
+                # By outlet id
+                if args['id_outlet'] != '' and args['id_outlet'] is not None:
+                    transaction = Carts.query.filter_by(deleted = True).filter_by(id = detail.id_cart).first()
+                    if transaction.id_outlet != int(args['id_outlet']):
+                        add_status = False
+                
+                # Calculate some values
+                if add_status == True:
+                    total_sold_of_product = total_sold_of_product + detail.quantity
+                    total_sales_of_product = total_sales_of_product + detail.total_price_product
+
+            total_sales = total_sales + total_sales_of_product
+            total_sold = total_sold + total_sold_of_product
+            data = {
+                'name': product.name,
+                'category': product.category,
+                'total_sold': total_sold_of_product,
+                'total_sales': total_sales_of_product   
+            }
+            product_list.append(data)
+            
+        result = {
+            'total_sales': total_sales,
+            'total_sold': total_sold,
+            'detail': product_list
+        }
+        return result, 200
+
+class HistoryReport(Resource):
+    # Enable CORS
+    def options(self, id_product=None):
+        return {'status': 'ok'}, 200
+    
+    # Get history report
+    @jwt_required
+    @dashboard_required
+    def get(self):
+        # Get the owner
+        claims = get_jwt_claims()
+        id_users = claims['id']
+        owner = Users.query.filter_by(id = id_users).first()
+
+        # Prepare variable needed
+        product_list = []
+        total_items_sold = 0
+        total_sales = 0
+        tax_summary = 0
+
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', location = 'args', required = False)
+        parser.add_argument('id_outlet', location = 'args', required = False)
+        parser.add_argument('date_start', location = 'args', required = False)
+        parser.add_argument('date_end', location = 'args', required = False)
+        args = parser.parse_args()
+
+        # Get all transactions history from specific owner
+        transactions = Carts.query.filter_by(deleted = True).filter_by(id_users = id_users)
+        
+        # ----- Filter by Date Interval -----
+        if args['date_start'] is not None and args['date_end'] is not None and args['date_start'] != '' and args['date_end'] != '':
+            start_year = int(args['date_start'][0:4])
+            start_month = int(args['date_start'][5:7])
+            start_day = int(args['date_start'][8:10])
+            end_year = int(args['date_end'][0:4])
+            end_month = int(args['date_end'][5:7])
+            end_day = int(args['date_end'][8:10])
+            transactions = transactions.filter(Carts.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+
+        # ----- Filter by Outlet -----
+        if args['id_outlet'] is not None and args['id_outlet'] != '':
+            transactions = transactions.filter_by(id_outlet = args['id_outlet'])
+        
+        # Looping through all transactions
+        for transaction in transactions:
+            detail_transaction = CartDetail.query.filter_by(id_cart = transaction.id)
+            outlet = Outlets.query.filter_by(id = transaction.id_outlet).first()
+            
+            # Search for cashier name
+            if transaction.id_employee == None or transaction.id_employee == '':
+                cashier_name = owner.fullname
+            else:
+                # Search for the employee
+                cashier = Employees.query.filter_by(id = transaction.id_employee).first()
+                cashier_name = cashier.full_name
+
+            for detail in detail_transaction:
+                # Prepare the variable needed
+                add_stock = True
+                
+                # ----- Filter by Product Name -----
+                product = Products.query.filter_by(id = detail.id_product).first()
+                if args['name'] is not None and args['name'] != '':
+                    if not re.search(args['name'].lower(), product.name.lower()):
+                        add_stock = False
+
+                if add_stock == True:
+                    total_items_sold = total_items_sold + detail.quantity
+                    total_sales = total_sales + detail.total_price_product
+                    tax_summary = int(tax_summary + ((outlet.tax * detail.total_price_product) / 100))
+                    data = {
+                        'date_time': transaction.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                        'date': transaction.created_at.strftime("%Y-%m-%d"),
+                        'time': transaction.created_at.strftime('%H:%M:%S'),
+                        'outlet': outlet.name,
+                        'cashier_name': cashier_name,
+                        'product_name': product.name,
+                        'total_items': detail.quantity,
+                        'total_sales': detail.total_price_product
+                    }
+                    product_list.append(data)
+
+        result = {
+            'total_items_sold': total_items_sold,
+            'total_sales': total_sales,
+            'tax_summary': tax_summary,
+            'detail': product_list
+        }
+
+        return result, 200
+
+class InventoryLogReport(Resource):
+    # Enable CORS
+    def options(self, id_product=None):
+        return {'status': 'ok'}, 200
+    
+    # Get inventory log report
+    @jwt_required
+    @dashboard_required
+    def get(self):
+        # Get the owner
+        claims = get_jwt_claims()
+        id_users = claims['id']
+        owner = Users.query.filter_by(id = id_users).first()
+
+        # Prepare variable needed
+        result = []
+
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', location = 'args', required = False)
+        parser.add_argument('id_outlet', location = 'args', required = False)
+        parser.add_argument('type', location = 'args', required = False)
+        parser.add_argument('date_start', location = 'args', required = False)
+        parser.add_argument('date_end', location = 'args', required = False)
+        args = parser.parse_args()
+
+        # Get all inventories
+        inventories = Inventories.query.filter_by(id_users = id_users)
+
+        # ----- Filter by name -----
+        if args['name'] is not None and args['name'] != '':
+            inventories = inventories.filter(Inventories.name.like('%' + args['name'] + '%'))
+        
+        # Get all related stock outlet
+        for inventory in inventories:
+            stock_outlet_list = StockOutlet.query.filter_by(id_inventory = inventory.id)
+
+            # ----- Filter by outlet -----
+            if args['id_outlet'] != '' and args['id_outlet'] is not None:
+                stock_outlet_list = stock_outlet_list.filter_by(id_outlet = args['id_outlet'])
+        
+            # Get all related logs
+            for stock_outlet in stock_outlet_list:
+                logs = InventoryLog.query.filter_by(id_stock_outlet = stock_outlet.id)
+                
+                # Get outlet
+                outlet = Outlets.query.filter_by(id = stock_outlet.id_outlet).first()
+
+                # ----- Filter by type -----
+                if args['type'] is not None and args['type'] != '':
+                    logs = logs.filter_by(status = args['type'])
+
+                # ----- Filter by date -----
                 if args['date_start'] is not None and args['date_end'] is not None and args['date_start'] != '' and args['date_end'] != '':
                     start_year = int(args['date_start'][0:4])
                     start_month = int(args['date_start'][5:7])
@@ -82,37 +267,20 @@ class ProductReport(Resource):
                     end_year = int(args['date_end'][0:4])
                     end_month = int(args['date_end'][5:7])
                     end_day = int(args['date_end'][8:10])
-                    detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                    logs = logs.filter(InventoryLog.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
-                for detail in detail_transaction:
-                    # ----- Third Filter -----
-                    # By outlet id
-                    if args['id_outlet'] != '' and args['id_outlet'] is not None:
-                        transaction = Carts.query.filter_by(deleted = True).filter_by(id = detail.id_cart).first()
-                        if transaction.id_outlet != int(args['id_outlet']):
-                            add_status = False
-                    
-                    # Calculate some values
-                    if add_status == True:
-                        total_sold_of_product = total_sold_of_product + detail.quantity
-                        total_sales_of_product = total_sales_of_product + detail.total_price_product
-
-                total_sales = total_sales + total_sales_of_product
-                total_sold = total_sold + total_sold_of_product
-                data = {
-                    'name': product.name,
-                    'category': product.category,
-                    'total_sold': total_sold_of_product,
-                    'total_sales': total_sales_of_product   
-                }
-                product_list.append(data)
-            
-            result = {
-                'total_sales': total_sales,
-                'total_sold': total_sold,
-                'detail': product_list
-            }
-        
+                for log in logs:
+                    # Prepare the data
+                    data = {
+                        'name': inventory.name,
+                        'outlet': outlet.name,
+                        'date': log.created_at.strftime('%Y-%m-%d'),
+                        'time': log.created_at.strftime('%H-%M-%S'),
+                        'type': log.status,
+                        'amount': log.amount,
+                        'last_stock': log.last_stock
+                    }
+                    result.append(data)
         return result, 200
 
 class CategoryReport(Resource):
@@ -416,3 +584,5 @@ api.add_resource(ProductReport, '/product-sales')
 api.add_resource(CategoryReport, '/category')
 api.add_resource(OutletReport, '/outlet-sales')
 api.add_resource(ProfitReport, '/profit')
+api.add_resource(HistoryReport, '/history')
+api.add_resource(InventoryLogReport, '/inventory-log')

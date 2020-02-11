@@ -142,12 +142,12 @@ class EmployeeResource(Resource):
         parser.add_argument('id_outlet', location = 'json', required = True)
         parser.add_argument('fullname', location = 'json', required = True)
         parser.add_argument('username', location = 'json', required = True)
-        parser.add_argument('password', location = 'json', required = True)
+        parser.add_argument('password', location = 'json', required = False)
         parser.add_argument('position', location = 'json', required = True)
 
         args = parser.parse_args()
 
-        if args['password'] is not None:
+        if args['password'] is not None and args['password'] != '':
             validation = self.policy.test(args['password'])
             if validation:
                 errorList = []
@@ -195,6 +195,8 @@ class EmployeeGetByOne(Resource):
         claims = get_jwt_claims()
         qry = Employees.query.get(id)
         marshal_qry = (marshal(qry, Employees.response_fields))
+        outlet = Outlets.query.filter_by(id = marshal_qry['id_outlet']).filter_by(deleted = False).first()
+        marshal_qry['outlet_name'] = outlet.name
 
         if qry is not None:
             if not qry.deleted:

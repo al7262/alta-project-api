@@ -35,7 +35,7 @@ class CustomerResource(Resource):
         offset = (args['p'] * args['rp']) - args['rp']
             
         qry = Customers.query.filter_by(id_users = claims['id'])
-        if args['keyword'] is not None:
+        if args['keyword'] is not None and args['keyword'] != '':
             qry = qry.filter_by(id_users = claims['id']).filter(Customers.fullname.like("%"+args["keyword"]+"%") | Customers.phone_number.like("%"+args["keyword"]+"%") | Customers.email.like("%"+args["keyword"]+"%"))
 
         rows = []
