@@ -229,10 +229,7 @@ class Dashboard(Resource):
                             qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
                             if qry_cartdetail is not None:
                                 total_quantity = total_quantity + qry_cartdetail.quantity
-            info_another = {
-                "category_product" : "another",
-                "total" : total_quantity
-            }
+            info_another = ["another",total_quantity]
             for category in categories: 
                 qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(category = category).filter_by(deleted = False).all()
                 total_quantity = 0
@@ -245,11 +242,7 @@ class Dashboard(Resource):
                                 if qry_cartdetail is not None:
                                     total_quantity = total_quantity + qry_cartdetail.quantity
                 list_category.append(total_quantity)
-                info_category = {
-                    "category_product" : category,
-                    "total" : total_quantity
-                }
-                info_categories.append(info_category)
+                info_categories.append([category,total_quantity])
             list_category.sort(reverse = True)
             if len(list_category) < 5 :
                 tops = list_category[0::].copy()
@@ -257,7 +250,7 @@ class Dashboard(Resource):
                 tops = list_category[0:5].copy()
             for top in tops:
                 for info in info_categories:
-                    if info['total'] == top:
+                    if info[1] == top:
                         if info not in top_category:
                             top_category.append(info)
                             break
@@ -295,12 +288,14 @@ class Dashboard(Resource):
         now_month = int(time[5:7])
         end = today + relativedelta(months = (month)+1, days = -(int(time[8::]))+1)
         qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
+        if args['name_outlet'] is not None:
+            qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
         start = today + relativedelta(months = (month), days = -(int(time[8::]))+1)
         count = 1
         while start < end: 
             amount_sales = 0
-            for outlet in qry_outlet:
-                qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
+            if args['name_outlet'] is not None:
+                qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
                 if qry_cart is not None:
                     for carts in qry_cart:
                         create_at = carts.created_at
@@ -309,9 +304,23 @@ class Dashboard(Resource):
                             amount_sales = amount_sales + carts.total_payment
                 if qry_cart is None:
                     amount_sales = amount_sales + 0
-            chart[str(count)] = amount_sales
-            start = start + relativedelta(days = +1)
-            count+=1
+                chart[str(count)] = amount_sales
+                start = start + relativedelta(days = +1)
+                count+=1
+            if args['name_outlet'] is None:
+                for outlet in qry_outlet:
+                    qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
+                    if qry_cart is not None:
+                        for carts in qry_cart:
+                            create_at = carts.created_at
+                            interval = start + relativedelta(days = +1)
+                            if start <= create_at and create_at <= interval:
+                                amount_sales = amount_sales + carts.total_payment
+                    if qry_cart is None:
+                        amount_sales = amount_sales + 0
+                chart[str(count)] = amount_sales
+                start = start + relativedelta(days = +1)
+                count+=1
 
         #ini untuk member loyal
         min = 0
