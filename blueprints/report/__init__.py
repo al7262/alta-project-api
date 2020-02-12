@@ -67,6 +67,9 @@ class ProductReport(Resource):
         if args['category'] != '' and args['category'] is not None:
             products = products.filter_by(category = args['category'])
 
+        # Sort to the newest
+        products = products.order_by(desc(Products.created_at))
+
         # Search all transactions related to the products in specified outlet
         for product in products:
             # Prepare variable needed
@@ -83,7 +86,7 @@ class ProductReport(Resource):
                 end_year = int(args['end_time'][6:10])
                 end_month = int(args['end_time'][3:5])
                 end_day = int(args['end_time'][0:2])
-                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= ((datetime(end_year, end_month, end_day) + timedelta(hours = 7)) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
             for detail in detail_transaction:
                 # Check for related outlet
@@ -217,17 +220,20 @@ class HistoryReport(Resource):
             end_year = int(args['end_time'][6:10])
             end_month = int(args['end_time'][3:5])
             end_day = int(args['end_time'][0:2])
-            transactions = transactions.filter(Carts.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+            transactions = transactions.filter(Carts.created_at >= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
         # ----- Filter by Outlet -----
         if args['id_outlet'] is not None and args['id_outlet'] != '':
             transactions = transactions.filter_by(id_outlet = args['id_outlet'])
         
+        # To show newest activity
+        transactions = transactions.order_by(desc(Carts.created_at))
+
         # Looping through all transactions
         for transaction in transactions:
             detail_transaction = CartDetail.query.filter_by(id_cart = transaction.id)
             outlet = Outlets.query.filter_by(id = transaction.id_outlet).first()
-            
+
             # Search for cashier name
             if transaction.id_employee == None or transaction.id_employee == '':
                 cashier_name = owner.fullname
@@ -389,7 +395,7 @@ class InventoryLogReport(Resource):
                     end_year = int(args['end_time'][6:10])
                     end_month = int(args['end_time'][3:5])
                     end_day = int(args['end_time'][0:2])
-                    logs = logs.filter(InventoryLog.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                    logs = logs.filter(InventoryLog.created_at >= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
                 for log in logs:
                     # Prepare the data
@@ -455,15 +461,15 @@ class CategoryReport(Resource):
         args = parser.parse_args()
 
         # Setting input time
-        time = datetime.now().strftime("%d-%m-%Y")
+        time = (datetime.now() + timedelta(hours = 7)).strftime("%d-%m-%Y")
         today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
         start = today
         end = today + relativedelta(days = +1)
         if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(hours = 7)
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"message" : "Inputan Anda salah"}, 400
@@ -584,22 +590,22 @@ class OutletReport(Resource):
         args = parser.parse_args()
 
         # setting input time
-        time = datetime.now().strftime("%Y-%m-%d")
-        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
+        time = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d")
+        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2])) + timedelta(hours = 7)
         start = today
         end = today + relativedelta(days = +1)
         if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(hours = 7)
             end = end + relativedelta(days = +1)
             if end <= start :
-                return {"massage" : "inputan anda salah"}, 401
+                return {"massage" : "inputan Anda salah"}, 400
         
         # Prepare variable needed
         result = []
-        if args['name_outlet'] is None or args['name_outlet'] ==     "":
+        if args['name_outlet'] is None or args['name_outlet'] == "":
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
             while start < end: 
                 amount_sales = 0
@@ -671,19 +677,19 @@ class ProfitReport(Resource):
         args = parser.parse_args()
 
         # setting input time
-        time = datetime.now().strftime("%Y-%m-%d")
-        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
+        time = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d")
+        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2])) + timedelta(hours = 7)
         start = today
         end = today + relativedelta(days = +1)
         
         if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(days = 7)
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(days = 7)
             end = end + relativedelta(days = +1)
             if end <= start :
-                return {"massage" : "inputan anda salah"}, 401
+                return {"message" : "Inputan Anda salah"}, 401
         
         result = []
         if args['name_outlet'] is None:
