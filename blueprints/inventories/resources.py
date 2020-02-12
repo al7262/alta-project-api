@@ -53,6 +53,7 @@ class InventoryResource(Resource):
         result = []
         available = []
         warning = []
+        empty = []
         for inventory in inventories:
             inventory = marshal(inventory, Inventories.inventories_fields)
             inventory['stock'] = inventory['total_stock']
@@ -63,13 +64,17 @@ class InventoryResource(Resource):
             stock_outlet_list = StockOutlet.query.filter_by(id_inventory = id_inventory)
             for stock_outlet in stock_outlet_list:
                 stock_outlet = marshal(stock_outlet, StockOutlet.response_fields)
-                if stock_outlet['stock'] <= stock_outlet['reminder']:
+                if stock_outlet['stock'] == 0:
+                    inventory['status'] = 'Habis'
+                elif stock_outlet['stock'] <= stock_outlet['reminder']:
                     inventory['status'] = "Hampir Habis"
 
             if inventory['status'] == "Hampir Habis":
                 warning.append(inventory)
             elif inventory['status'] == "Tersedia":
                 available.append(inventory)
+            elif inventory['status'] == 'Habis':
+                empty.append(inventory)
 
             result.append(inventory)
 
@@ -78,6 +83,8 @@ class InventoryResource(Resource):
             return available, 200
         elif args['status'] == 'Hampir Habis':
             return warning, 200
+        elif args['status'] == 'Habis':
+            return empty, 200
         return result, 200
 
 class InventoryPerOutlet(Resource):
@@ -100,6 +107,7 @@ class InventoryPerOutlet(Resource):
         data_list = []
         available = []
         warning = []
+        empty = []
         below_reminder = 0
         for stock_outlet in stock_outlet_list:
             stock_outlet = marshal(stock_outlet, StockOutlet.response_fields)
@@ -124,7 +132,11 @@ class InventoryPerOutlet(Resource):
             }
 
             # Check reminder status
-            if int(stock_outlet['stock']) <= int(stock_outlet['reminder']):
+            if int(stock_outlet['stock']) == 0:
+                below_reminder = below_reminder + 1
+                data['status'] = 'Habis'
+                empty.append(data)
+            elif int(stock_outlet['stock']) <= int(stock_outlet['reminder']):
                 data['status'] = 'Hampir Habis'
                 below_reminder = below_reminder + 1
                 warning.append(data)
@@ -142,6 +154,8 @@ class InventoryPerOutlet(Resource):
             result['inventories'] = available
         elif args['status'] == 'Hampir Habis':
             result['inventories'] = warning
+        elif args['status'] == 'Habis':
+            result['inventories'] == empty:
         else:
             result['inventories'] = data_list
         return result, 200
