@@ -9,6 +9,8 @@ from blueprints.outlets.model import Outlets
 from blueprints.customers.model import Customers
 from blueprints.products.model import Products
 from blueprints.recipes.model import Recipe
+from blueprints.promo.model import Promos
+from blueprints.detail_promo.model import DetailPromo
 from blueprints.inventories.model import Inventories, InventoryLog
 from blueprints.stock_outlet.model import StockOutlet
 from blueprints.carts.model import Carts, CartDetail
@@ -269,6 +271,28 @@ def db_reset():
 
     cart_detail_4 = CartDetail(id_cart = 3, id_product = 6, quantity = 1, total_price_product = 15000)
     db.session.add(cart_detail_4)
+    db.session.commit()
+
+    # ------------- Create Promo -------------
+    promo_1 = Promos(id_users = 1, name = "Merdeka", day = "Senin, Selasa", status = False)
+    db.session.add(promo_1)
+    db.session.commit()
+
+    promo_2 = Promos(id_users = 1, name = "Valentine", day = "Minggu", status = False)
+    db.session.add(promo_2)
+    db.session.commit()
+
+    # ---------- Create Promo Detail ---------
+    detail_promo_1 = DetailPromo(id_promo = 1, id_product = 1, discount = 10)
+    db.session.add(detail_promo_1)
+    db.session.commit()
+
+    detail_promo_2 = DetailPromo(id_promo = 1, id_product = 2, discount = 20)
+    db.session.add(detail_promo_2)
+    db.session.commit()
+
+    detail_promo_3 = DetailPromo(id_promo = 2, id_product = 3, discount = 5)
+    db.session.add(detail_promo_3)
     db.session.commit()
 
 def call_client(request):

@@ -80,13 +80,9 @@ class OutletResource(Resource):
             qry.name = args['name']
         if args['phone_number'] is not None:
             qry.phone_number = args['phone_number']
-        if args['province'] is not None:
-            qry.province = args['province']
         if args['city'] is not None:
             qry.city = args['city']
-        if args['district'] is not None:
-            qry.district = args['district']
-        if args['address'] is not None:
+        if args['address'] is not None and args['district'] is not None and args['province'] is not None:
             address = args['address'] + ', ' + args['district'] + ', ' + args['city'] + ', ' + args['province']
             qry.address = address
         if args['tax'] is not None:
