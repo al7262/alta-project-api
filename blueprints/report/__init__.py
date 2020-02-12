@@ -221,6 +221,10 @@ class HistoryReport(Resource):
             end_month = int(args['end_time'][3:5])
             end_day = int(args['end_time'][0:2])
             transactions = transactions.filter(Carts.created_at >= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+        
+        # Default case
+        elif (args['start_time'] is None or args['start_time'] == '') and (args['end_time'] is None or args['end_time'] == ''):
+            pass
 
         # ----- Filter by Outlet -----
         if args['id_outlet'] is not None and args['id_outlet'] != '':
@@ -636,7 +640,7 @@ class OutletReport(Resource):
                 start = start + relativedelta(days = +1)
             return result, 200
 
-        if args['name_outlet'] is not None:
+        if args['name_outlet'] is not None and args['name_outlet'] != '':
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
             while start < end: 
                 amount_sales = 0
@@ -692,14 +696,14 @@ class ProfitReport(Resource):
             end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(days = 7)
             end = end + relativedelta(days = +1)
             if end <= start :
-                return {"message" : "Inputan Anda salah"}, 401
+                return {"message" : "Inputan Anda salah"}, 400
         
         result = []
-        if args['name_outlet'] is None:
+        if args['name_outlet'] is None or args['name_outlet'] != '':
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
             qry_product = Products.query.filter_by(id_users = claims['id']).all()
             qry_inventory = Inventories.query.filter_by(id_users = claims['id']).all()
-            while start < end: 
+            while start < end:
                 for outlet in qry_outlet:
                     amount_sales = 0
                     number_discount = 0
@@ -726,7 +730,6 @@ class ProfitReport(Resource):
                                                         price_inventory_product = price_inventory_product + (qry_recipe.amount * inventory.unit_price)
                                             price_inventory_cart = price_inventory_cart + (price_inventory_product * qry_cartdetail.quantity)
                                 total_price_inventory = total_price_inventory + price_inventory_cart
-
                                     
                     if qry_cart is None:
                         amount_sales = amount_sales + 0
