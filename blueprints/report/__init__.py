@@ -173,7 +173,7 @@ class ProductReport(Resource):
                             product_list[index + 1] = dummy
                             restart = True
 
-        # Sorting so deleted product will be placed in the bottom
+        # Sorting so deleted outlet will be placed in the bottom
         restart = True
         while restart:
             restart = False
@@ -514,8 +514,11 @@ class CategoryReport(Resource):
             total_quantity = 0
             total_product = 0
             total_price = 0
+            total_deleted = 0
             for product in qry_product:
                 total_product = total_product + 1
+                if product.deleted == True:
+                    total_deleted = total_deleted + 1
                 if qry_cart is not None:
                     for cart in qry_cart:
                         create_at = cart.created_at
@@ -528,7 +531,9 @@ class CategoryReport(Resource):
                 'category': category,
                 'total_product': total_product,
                 'total_sold': total_quantity,
-                'total_sales': total_price
+                'total_sales': total_price,
+                'total_deleted': total_deleted,
+                'difference': total_product - total_deleted
             }
             total_quantity_category = total_quantity_category + total_quantity
             total_price_category = total_price_category + total_price
@@ -582,6 +587,18 @@ class CategoryReport(Resource):
                 restart = False
                 for index in range(category_list_length - 1):
                     if category_list[index]['total_items_sold'] > category_list[index + 1]['total_items_sold']:
+                        dummy = category_list[index]
+                        category_list[index] = category_list[index + 1]
+                        category_list[index + 1] = dummy
+                        restart = True
+
+        # Sorting so deleted product will be placed in the bottom
+        restart = True
+        while restart:
+            restart = False
+            if len(category_list) > 1:
+                for index in range(len(category_list) - 1):
+                    if category_list[index]['difference'] == 0 and category_list[index + 1]['difference'] != 0:
                         dummy = category_list[index]
                         category_list[index] = category_list[index + 1]
                         category_list[index + 1] = dummy
@@ -650,10 +667,24 @@ class OutletReport(Resource):
                         "name_outlet" : outlet.name,
                         "time" : str(start),
                         "total_transaction" : number_transaction,
-                        "total_price" : amount_sales
+                        "total_price" : amount_sales,
+                        "deleted" : outlet.deleted
                     }
                     result.append(data)
                 start = start + relativedelta(days = +1)
+            
+            # Sorting so deleted product will be placed in the bottom
+            restart = True
+            while restart:
+                restart = False
+                if len(result) > 1:
+                    for index in range(len(result) - 1):
+                        if result[index]['deleted'] == True and result[index + 1]['deleted'] == False:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
+
             return result, 200
 
         if args['name_outlet'] is not None and args['name_outlet'] != '':
@@ -678,6 +709,19 @@ class OutletReport(Resource):
                 }
                 result.append(data)
                 start = start + relativedelta(days = +1)
+            
+            # Sorting so deleted outlet will be placed in the bottom
+            restart = True
+            while restart:
+                restart = False
+                if len(result) > 1:
+                    for index in range(len(result) - 1):
+                        if result[index]['deleted'] == True and result[index + 1]['deleted'] == False:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
+            
             return result, 200
 
 class ProfitReport(Resource):
