@@ -111,7 +111,8 @@ class ProductReport(Resource):
                 'name': product.name,
                 'category': product.category,
                 'total_sold': total_sold_of_product,
-                'total_sales': total_sales_of_product   
+                'total_sales': total_sales_of_product,
+                'deleted': product.deleted
             }
             product_list.append(data)
 
