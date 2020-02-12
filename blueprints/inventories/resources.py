@@ -413,7 +413,7 @@ class InventoryLogOutlet(Resource):
         args = parser.parse_args()
 
         # Filter by type
-        if args['type'] != '' or args['type'] != 'Semua':
+        if args['type'] != '' and args['type'] != 'Semua':
             logs = logs.filter_by(status = args['type'])
 
         filtered_logs = []

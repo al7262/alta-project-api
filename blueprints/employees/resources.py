@@ -190,7 +190,7 @@ class EmployeeGetByOne(Resource):
         return{'status':'ok'} , 200
 
     @jwt_required
-    @user_required
+    @apps_required
     def get(self,id=None):
         claims = get_jwt_claims()
         qry = Employees.query.get(id)
@@ -203,6 +203,25 @@ class EmployeeGetByOne(Resource):
                 return marshal_qry, 200
         return {'message' : 'Data Tidak Ditemukan'}, 404
 
+class EmployeeGetByClaims(Resource):
+    def options(self,id=None):
+        return{'status':'ok'} , 200
+
+    @jwt_required
+    @apps_required
+    def get(self,id=None):
+        claims = get_jwt_claims()
+        qry = Employees.query.filter_by(id = claims['id_employee']).first()
+        marshal_qry = (marshal(qry, Employees.response_fields))
+        outlet = Outlets.query.filter_by(id = marshal_qry['id_outlet']).filter_by(deleted = False).first()
+        marshal_qry['outlet_name'] = outlet.name
+
+        if qry is not None:
+            if not qry.deleted:
+                return marshal_qry, 200
+        return {'message' : 'Data Tidak Ditemukan'}, 404
+
 api.add_resource(CreateEmployeeResource,'/employee/create')
 api.add_resource(EmployeeResource,'/employee','/employee/<int:id>')
 api.add_resource(EmployeeGetByOne,'/employee/get/<int:id>')
+api.add_resource(EmployeeGetByClaims,'/employee/get')
