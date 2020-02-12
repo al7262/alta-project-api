@@ -155,7 +155,7 @@ class InventoryPerOutlet(Resource):
         elif args['status'] == 'Hampir Habis':
             result['inventories'] = warning
         elif args['status'] == 'Habis':
-            result['inventories'] == empty
+            result['inventories'] = empty
         else:
             result['inventories'] = data_list
         return result, 200
