@@ -40,9 +40,10 @@ class Dashboard(Resource):
 
         # Datetime related
         time = datetime.now().strftime("%Y-%m-%d")
-        today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
-        start = today
-        end = today + relativedelta(days = +1)
+        if args['start_time'] == "" and args['end_time'] == "":
+            today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
+            start = today
+            end = today + relativedelta(days = +1)
         if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
             start = datetime(int(start_time[6::]),int(start_time[3:5]),int(start_time[0:2]))
@@ -282,43 +283,26 @@ class Dashboard(Resource):
 
         # Ini untuk grafik
         chart = {}
-        if args['month'] is not None and args['month'] != "":
-            month = int(args['month'])
-        if args['month'] is None or args['month'] == "":
-            month = 0
-        now_month = int(time[5:7])
-        end = today + relativedelta(months = (month)+1, days = -(int(time[8::]))+1)
+        print(start, end)
         if args['name_outlet'] is not None and args['name_outlet'] != "":
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).filter_by(deleted = False).first()
-        if qry_outlet is None or args['name_outlet'] == "":
+            qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
+            if qry_cart is not None:
+                for carts in qry_cart:
+                    create_at = carts.created_at
+                    if start <= create_at and create_at <= end:
+                        chart[str(create_at)] = carts.total_payment
+            start = start + relativedelta(days = +1)
+        if args['name_outlet'] is None or args['name_outlet'] == "":
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(deleted = False).all()
-        start = today + relativedelta(months = (month), days = -(int(time[8::]))+1)
-        count = 1
-        while start < end: 
-            amount_sales = 0
-            if args['name_outlet'] is not None and args['name_outlet'] != "":
-                qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
+            for outlet in qry_outlet:
+                qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
                 if qry_cart is not None:
                     for carts in qry_cart:
                         create_at = carts.created_at
-                        interval = start + relativedelta(days = +1)
-                        if start <= create_at and create_at <= interval:
+                        if start <= create_at and create_at <= end:
                             chart[str(create_at)] = carts.total_payment
-        
-                start = start + relativedelta(days = +1)
-                count+=1
-            if args['name_outlet'] is None or args['name_outlet'] == "":
-                for outlet in qry_outlet:
-                    qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
-                    if qry_cart is not None:
-                        for carts in qry_cart:
-                            create_at = carts.created_at
-                            interval = start + relativedelta(days = +1)
-                            if start <= create_at and create_at <= interval:
-                                chart[str(create_at)] = carts.total_payment
-                                
-                start = start + relativedelta(days = +1)
-                count+=1
+            start = start + relativedelta(days = +1)
         
         #ini untuk member loyal
         min = 0
