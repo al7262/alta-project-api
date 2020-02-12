@@ -193,15 +193,15 @@ class EmployeeGetByOne(Resource):
     @user_required
     def get(self,id=None):
         claims = get_jwt_claims()
-        qry = Employees.query.get(id)
-        marshal_qry = (marshal(qry, Employees.response_fields))
-        outlet = Outlets.query.filter_by(id = marshal_qry['id_outlet']).filter_by(deleted = False).first()
-        marshal_qry['outlet_name'] = outlet.name
+        qry = Employees.query.filter_by(id = id).filter_by(deleted = False).first()
+        
+        if qry is None:
+            return {'message' : 'Data Tidak Ditemukan'}, 404
 
-        if qry is not None:
-            if not qry.deleted:
-                return marshal_qry, 200
-        return {'message' : 'Data Tidak Ditemukan'}, 404
+        outlet = Outlets.query.filter_by(id = qry.id_outlet).filter_by(deleted = False).first()
+        marshal_qry = marshal(qry,Employees.response_fields)
+        marshal_qry['outlet_name'] = outlet.name
+        return marshal_qry, 200
 
 api.add_resource(CreateEmployeeResource,'/employee/create')
 api.add_resource(EmployeeResource,'/employee','/employee/<int:id>')

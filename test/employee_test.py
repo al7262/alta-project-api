@@ -290,6 +290,7 @@ class TestEmployee():
         db_reset()
        
         # Test the endpoints
-        res = client.get('/employee/get/12', headers={'Authorization': 'Bearer ' + token})
+        res = client.delete('/employee/1', headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/employee/get/1', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 404
