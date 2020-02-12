@@ -208,6 +208,16 @@ class TestInventories():
             'status': 'Hampir Habis',
             'name': ''
         }
+    
+    # Get all inventories (Case 4 : Filter status habis)
+    def test_get_all_inventories_case_4(self, client):
+        # Prepare the DB and token
+        token = create_token('hedy@alterra.id')
+
+        data = {
+            'status': 'Habis',
+            'name': ''
+        }
 
         # Test the endpoints
         res = client.get('/inventory?status=' + data['status'] + '&name=' + data['name'], headers={'Authorization': 'Bearer ' + token})
@@ -251,6 +261,21 @@ class TestInventories():
 
         data = {
             'status': 'Hampir Habis',
+            'name': ''
+        }
+
+        # Test the endpoints
+        res = client.get('/inventory/1?status=' + data['status'] + '&name=' + data['name'], headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
+    # Get all inventories (Case 4 : Filter status habis)
+    def test_get_all_inventories_outlet_case_4(self, client):
+        # Prepare the DB and token
+        token = create_token('hedy@alterra.id')
+
+        data = {
+            'status': 'Habis',
             'name': ''
         }
 
