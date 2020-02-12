@@ -39,7 +39,7 @@ class ActivityResource(Resource):
         
         # Filter by order code
         if args['order_code'] != '' and args['order_code'] is not None:
-            carts = carts.filter_by(order_code = args['order_code'])
+            carts = carts.filter(Carts.order_code.like('%' + args['order_code'] + '%'))
 
         # Filter by date
         if carts.all() != []:
@@ -68,7 +68,7 @@ class ActivityResource(Resource):
             # Get detail of the cart
             cart_detail = CartDetail.query.filter_by(id_cart = cart.id)
             for detail in cart_detail:
-                product = Products.query.filter_by(id = detail.id_product).filter_by(deleted = False).first()
+                product = Products.query.filter_by(id = detail.id_product).first()
                 item_detail = {
                     'name': product.name,
                     'quantity': detail.quantity,

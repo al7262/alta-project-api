@@ -116,54 +116,58 @@ class ProductReport(Resource):
         # By total sales - desc
         if args['total_sales_sort'] == 'desc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sales'] < product_list[index + 1]['total_sales']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_sales'] < product_list[index + 1]['total_sales']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         # By total sales - asc
         if args['total_sales_sort'] == 'asc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sales'] > product_list[index + 1]['total_sales']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_sales'] > product_list[index + 1]['total_sales']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         # By total sold - desc
         if args['total_sold_sort'] == 'desc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sold'] < product_list[index + 1]['total_sold']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_sold'] < product_list[index + 1]['total_sold']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         # By total sold - asc
         if args['total_sold_sort'] == 'asc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sold'] > product_list[index + 1]['total_sold']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_sold'] > product_list[index + 1]['total_sold']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         result = {
             'total_sales': total_sales,
@@ -262,54 +266,58 @@ class HistoryReport(Resource):
         # By total sales - desc
         if args['total_sales_sort'] == 'desc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sales'] < product_list[index + 1]['total_sales']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_sales'] < product_list[index + 1]['total_sales']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         # By total sales - asc
         if args['total_sales_sort'] == 'asc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sales'] > product_list[index + 1]['total_sales']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_sales'] > product_list[index + 1]['total_sales']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         # By total sold - desc
         if args['total_sold_sort'] == 'desc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_items'] < product_list[index + 1]['total_items']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_items'] < product_list[index + 1]['total_items']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         # By total sold - asc
         if args['total_sold_sort'] == 'asc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_items'] > product_list[index + 1]['total_items']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_items'] > product_list[index + 1]['total_items']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         result = {
             'total_items_sold': total_items_sold,
@@ -400,28 +408,30 @@ class InventoryLogReport(Resource):
         # Desc
         if args['amount_sort'] == 'desc':
             result_length = len(result)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(result_length - 1):
-                    if result[index]['amount'] < result[index + 1]['amount']:
-                        dummy = result[index]
-                        result[index] = result[index + 1]
-                        result[index + 1] = dummy
-                        restart = True
+            if result_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(result_length - 1):
+                        if result[index]['amount'] < result[index + 1]['amount']:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
 
         # By total sales - asc
         if args['amount_sort'] == 'asc':
             result_length = len(result)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(result_length - 1):
-                    if result[index]['amount'] > result[index + 1]['amount']:
-                        dummy = result[index]
-                        result[index] = result[index + 1]
-                        result[index + 1] = dummy
-                        restart = True
+            if result_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(result_length - 1):
+                        if result[index]['amount'] > result[index + 1]['amount']:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
 
         return result, 200
 

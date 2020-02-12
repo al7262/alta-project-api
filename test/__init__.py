@@ -260,7 +260,7 @@ def db_reset():
     db.session.add(cart_4)
     db.session.commit()
 
-    cart_5 = Carts(id_users = 1, id_outlet = 1, id_customers = 1, order_code = 'A62BCY', name = 'Buzz Lightyear', total_item = 1, payment_method = 'Tunai', total_payment = 12000, total_discount = 0, total_tax = 1200, paid_price = 50000)
+    cart_5 = Carts(id_users = 1, id_outlet = 1, id_customers = 1, order_code = 'A62BCY', name = 'Buzz Lightyear', total_item = 1, payment_method = 'Tunai', total_payment = 24000, total_discount = 0, total_tax = 2400, paid_price = 50000)
     db.session.add(cart_5)
     db.session.commit()
 
@@ -293,7 +293,7 @@ def db_reset():
     db.session.add(cart_detail_7)
     db.session.commit()
 
-    cart_detail_8 = CartDetail(id_cart = 5, id_product = 1, quantity = 1, total_price_product = 12000)
+    cart_detail_8 = CartDetail(id_cart = 5, id_product = 1, quantity = 2, total_price_product = 24000)
     db.session.add(cart_detail_8)
     db.session.commit()
 
