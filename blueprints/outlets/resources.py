@@ -4,7 +4,7 @@ from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
 from .model import Outlets
 from blueprints import db, app, user_required
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 # Import Authentication
@@ -42,7 +42,7 @@ class OutletResource(Resource):
         for row in qry.limit(args['rp']).offset(offset).all():
             if not row.deleted:
                 rows.append(marshal(row, Outlets.response_fields))
-        return rows, 200
+        return rows[::-1], 200
 
     @jwt_required
     @user_required

@@ -1,6 +1,6 @@
 from blueprints import db
 from flask_restful import fields
-import datetime
+from datetime import datetime, timedelta
 
 class Users(db.Model):
     __tablename__ = "users"
@@ -11,8 +11,8 @@ class Users(db.Model):
     phone_number = db.Column(db.String(20), nullable = False, default = "")
     business_name = db.Column(db.String(150), nullable = False, default = "")
     image = db.Column(db.String(150), nullable = False, default = "")
-    created_at = db.Column(db.DateTime, default = datetime.datetime.now())
-    update_at = db.Column(db.DateTime, onupdate = datetime.datetime.now())
+    created_at = db.Column(db.DateTime, default = (datetime.now() + timedelta(hours = 7)))
+    update_at = db.Column(db.DateTime, onupdate = (datetime.now() + timedelta(hours = 7)))
     
     response_fields = {
         'id' : fields.Integer,

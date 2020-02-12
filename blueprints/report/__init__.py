@@ -67,6 +67,9 @@ class ProductReport(Resource):
         if args['category'] != '' and args['category'] is not None:
             products = products.filter_by(category = args['category'])
 
+        # Sort to the newest
+        products = products.order_by(desc(Products.created_at))
+
         # Search all transactions related to the products in specified outlet
         for product in products:
             # Prepare variable needed
@@ -83,7 +86,7 @@ class ProductReport(Resource):
                 end_year = int(args['end_time'][6:10])
                 end_month = int(args['end_time'][3:5])
                 end_day = int(args['end_time'][0:2])
-                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= ((datetime(end_year, end_month, end_day) + timedelta(hours = 7)) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
             for detail in detail_transaction:
                 # Check for related outlet
@@ -116,54 +119,58 @@ class ProductReport(Resource):
         # By total sales - desc
         if args['total_sales_sort'] == 'desc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sales'] < product_list[index + 1]['total_sales']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_sales'] < product_list[index + 1]['total_sales']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         # By total sales - asc
         if args['total_sales_sort'] == 'asc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sales'] > product_list[index + 1]['total_sales']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_sales'] > product_list[index + 1]['total_sales']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         # By total sold - desc
         if args['total_sold_sort'] == 'desc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sold'] < product_list[index + 1]['total_sold']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_sold'] < product_list[index + 1]['total_sold']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         # By total sold - asc
         if args['total_sold_sort'] == 'asc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sold'] > product_list[index + 1]['total_sold']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_sold'] > product_list[index + 1]['total_sold']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         result = {
             'total_sales': total_sales,
@@ -213,17 +220,24 @@ class HistoryReport(Resource):
             end_year = int(args['end_time'][6:10])
             end_month = int(args['end_time'][3:5])
             end_day = int(args['end_time'][0:2])
-            transactions = transactions.filter(Carts.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+            transactions = transactions.filter(Carts.created_at >= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+        
+        # Default case
+        elif (args['start_time'] is None or args['start_time'] == '') and (args['end_time'] is None or args['end_time'] == ''):
+            pass
 
         # ----- Filter by Outlet -----
         if args['id_outlet'] is not None and args['id_outlet'] != '':
             transactions = transactions.filter_by(id_outlet = args['id_outlet'])
         
+        # To show newest activity
+        transactions = transactions.order_by(desc(Carts.created_at))
+
         # Looping through all transactions
         for transaction in transactions:
             detail_transaction = CartDetail.query.filter_by(id_cart = transaction.id)
             outlet = Outlets.query.filter_by(id = transaction.id_outlet).first()
-            
+
             # Search for cashier name
             if transaction.id_employee == None or transaction.id_employee == '':
                 cashier_name = owner.fullname
@@ -262,54 +276,58 @@ class HistoryReport(Resource):
         # By total sales - desc
         if args['total_sales_sort'] == 'desc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sales'] < product_list[index + 1]['total_sales']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_sales'] < product_list[index + 1]['total_sales']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         # By total sales - asc
         if args['total_sales_sort'] == 'asc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_sales'] > product_list[index + 1]['total_sales']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_sales'] > product_list[index + 1]['total_sales']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         # By total sold - desc
         if args['total_sold_sort'] == 'desc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_items'] < product_list[index + 1]['total_items']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_items'] < product_list[index + 1]['total_items']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         # By total sold - asc
         if args['total_sold_sort'] == 'asc':
             product_list_length = len(product_list)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(product_list_length - 1):
-                    if product_list[index]['total_items'] > product_list[index + 1]['total_items']:
-                        dummy = product_list[index]
-                        product_list[index] = product_list[index + 1]
-                        product_list[index + 1] = dummy
-                        restart = True
+            if product_list_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(product_list_length - 1):
+                        if product_list[index]['total_items'] > product_list[index + 1]['total_items']:
+                            dummy = product_list[index]
+                            product_list[index] = product_list[index + 1]
+                            product_list[index + 1] = dummy
+                            restart = True
 
         result = {
             'total_items_sold': total_items_sold,
@@ -350,6 +368,9 @@ class InventoryLogReport(Resource):
         # Get all inventories
         inventories = Inventories.query.filter_by(id_users = id_users)
 
+        # Sort to the newest
+        inventories = inventories.order_by(desc(Inventories.created_at))
+
         # ----- Filter by name -----
         if args['name'] is not None and args['name'] != '':
             inventories = inventories.filter(Inventories.name.like('%' + args['name'] + '%'))
@@ -381,7 +402,7 @@ class InventoryLogReport(Resource):
                     end_year = int(args['end_time'][6:10])
                     end_month = int(args['end_time'][3:5])
                     end_day = int(args['end_time'][0:2])
-                    logs = logs.filter(InventoryLog.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                    logs = logs.filter(InventoryLog.created_at >= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
                 for log in logs:
                     # Prepare the data
@@ -400,28 +421,30 @@ class InventoryLogReport(Resource):
         # Desc
         if args['amount_sort'] == 'desc':
             result_length = len(result)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(result_length - 1):
-                    if result[index]['amount'] < result[index + 1]['amount']:
-                        dummy = result[index]
-                        result[index] = result[index + 1]
-                        result[index + 1] = dummy
-                        restart = True
+            if result_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(result_length - 1):
+                        if result[index]['amount'] < result[index + 1]['amount']:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
 
         # By total sales - asc
         if args['amount_sort'] == 'asc':
             result_length = len(result)
-            restart = True
-            while restart:
-                restart = False
-                for index in range(result_length - 1):
-                    if result[index]['amount'] > result[index + 1]['amount']:
-                        dummy = result[index]
-                        result[index] = result[index + 1]
-                        result[index + 1] = dummy
-                        restart = True
+            if result_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(result_length - 1):
+                        if result[index]['amount'] > result[index + 1]['amount']:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
 
         return result, 200
 
@@ -445,15 +468,15 @@ class CategoryReport(Resource):
         args = parser.parse_args()
 
         # Setting input time
-        time = datetime.now().strftime("%d-%m-%Y")
+        time = (datetime.now() + timedelta(hours = 7)).strftime("%d-%m-%Y")
         today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
         start = today
         end = today + relativedelta(days = +1)
         if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(hours = 7)
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"message" : "Inputan Anda salah"}, 400
@@ -574,22 +597,22 @@ class OutletReport(Resource):
         args = parser.parse_args()
 
         # setting input time
-        time = datetime.now().strftime("%Y-%m-%d")
-        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
+        time = (datetime.now() + timedelta(hours = 7)).strftime("%d-%m-%Y")
+        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2])) + timedelta(hours = 7)
         start = today
         end = today + relativedelta(days = +1)
-        if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
+        if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(hours = 7)
             end = end + relativedelta(days = +1)
             if end <= start :
-                return {"massage" : "inputan anda salah"}, 401
+                return {"message" : "Inputan Anda salah"}, 400
         
         # Prepare variable needed
         result = []
-        if args['name_outlet'] is None or args['name_outlet'] ==     "":
+        if args['name_outlet'] is None or args['name_outlet'] == "":
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
             while start < end: 
                 amount_sales = 0
@@ -617,7 +640,7 @@ class OutletReport(Resource):
                 start = start + relativedelta(days = +1)
             return result, 200
 
-        if args['name_outlet'] is not None:
+        if args['name_outlet'] is not None and args['name_outlet'] != '':
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
             while start < end: 
                 amount_sales = 0
@@ -661,26 +684,26 @@ class ProfitReport(Resource):
         args = parser.parse_args()
 
         # setting input time
-        time = datetime.now().strftime("%Y-%m-%d")
-        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
+        time = (datetime.now() + timedelta(hours = 7)).strftime("%d-%m-%Y")
+        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2])) + timedelta(hours = 7)
         start = today
         end = today + relativedelta(days = +1)
         
         if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(days = 7)
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(days = 7)
             end = end + relativedelta(days = +1)
             if end <= start :
-                return {"massage" : "inputan anda salah"}, 401
+                return {"message" : "Inputan Anda salah"}, 400
         
         result = []
-        if args['name_outlet'] is None:
+        if args['name_outlet'] is None or args['name_outlet'] != '':
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
             qry_product = Products.query.filter_by(id_users = claims['id']).all()
             qry_inventory = Inventories.query.filter_by(id_users = claims['id']).all()
-            while start < end: 
+            while start < end:
                 for outlet in qry_outlet:
                     amount_sales = 0
                     number_discount = 0
@@ -707,7 +730,6 @@ class ProfitReport(Resource):
                                                         price_inventory_product = price_inventory_product + (qry_recipe.amount * inventory.unit_price)
                                             price_inventory_cart = price_inventory_cart + (price_inventory_product * qry_cartdetail.quantity)
                                 total_price_inventory = total_price_inventory + price_inventory_cart
-
                                     
                     if qry_cart is None:
                         amount_sales = amount_sales + 0

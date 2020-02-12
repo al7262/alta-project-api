@@ -1,7 +1,7 @@
 # Import
 from blueprints import db
 from flask_restful import fields
-from datetime import datetime
+from datetime import datetime, timedelta
 from blueprints.users.model import Users
 from blueprints.stock_outlet.model import StockOutlet
 
@@ -15,8 +15,8 @@ class Inventories(db.Model):
     unit = db.Column(db.String(20), nullable = False, default = '')
     unit_price = db.Column(db.Integer, nullable = False, default = 0)
     times_edited = db.Column(db.Integer, nullable = False, default = 0)
-    created_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    updated_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    created_at = db.Column(db.DateTime, nullable = False, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
+    updated_at = db.Column(db.DateTime, nullable = False, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
     deleted = db.Column(db.Boolean, default = False)
 
     inventories_fields = {
@@ -44,8 +44,8 @@ class Inventories(db.Model):
         self.unit = unit
         self.unit_price = unit_price
         self.times_edited = times_edited
-        self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.created_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
+        self.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         self.deleted = False
     
     def __repr__(self):
@@ -58,7 +58,7 @@ class InventoryLog(db.Model):
     status = db.Column(db.String(10), nullable = False, default ='')
     amount = db.Column(db.Integer, nullable = False, default = 0)
     last_stock = db.Column(db.Integer, nullable = False, default = 0)
-    created_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    created_at = db.Column(db.DateTime, nullable = False, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
 
     inventory_log_fields = {
         'id': fields.Integer,
@@ -79,7 +79,7 @@ class InventoryLog(db.Model):
         self.status = status
         self.amount = amount
         self.last_stock = last_stock
-        self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.created_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
     
     def __repr__(self):
         return '<InventoryLog %r>' %self.id

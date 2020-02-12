@@ -38,8 +38,9 @@ class InventoryResource(Resource):
         parser.add_argument('status', location = 'args', required = False)
         args = parser.parse_args()
 
-        # Get all inventories
+        # Get all inventories and sort to the newest
         inventories = Inventories.query.filter_by(id_users = id_user).filter_by(deleted = False)
+        inventories = inventories.order_by(desc(Inventories.created_at))
 
         # Empty inventories
         if inventories.all() == []:
@@ -151,13 +152,13 @@ class InventoryPerOutlet(Resource):
             'below_reminder': below_reminder
         }
         if args['status'] == 'Tersedia':
-            result['inventories'] = available
+            result['inventories'] = available[::-1]
         elif args['status'] == 'Hampir Habis':
-            result['inventories'] = warning
+            result['inventories'] = warning[::-1]
         elif args['status'] == 'Habis':
-            result['inventories'] == empty
+            result['inventories'] = empty[::-1]
         else:
-            result['inventories'] = data_list
+            result['inventories'] = data_list[::-1]
         return result, 200
     
     # Add new inventory to specified outlet
@@ -217,7 +218,7 @@ class InventoryPerOutlet(Resource):
                 db.session.commit()
 
                 # Edit related inventory instance
-                inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                inventory.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
                 inventory.total_stock = inventory.total_stock + int(args['stock'])
                 inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int(args['unit_price']))/(inventory.times_edited + 1))
                 inventory.times_edited = inventory.times_edited + 1
@@ -313,7 +314,7 @@ class InventoryDetail(Resource):
         inventory.name = args['name']
         inventory.unit = args['unit']
         inventory.total_stock = total_stock
-        inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        inventory.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
 
         return {'message': 'Sukses mengubah bahan baku'}, 200
@@ -329,7 +330,7 @@ class InventoryDetail(Resource):
 
         # Edit the inventory
         inventory.total_stock = inventory.total_stock - stock_outlet.stock
-        inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        inventory.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
 
         # Delete inventory log related to this stock outlet
@@ -395,7 +396,7 @@ class AddStock(Resource):
 
         # Edit inventory
         inventory.total_stock = inventory.total_stock + int(args['stock'])
-        inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        inventory.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int(args['price']))/(inventory.times_edited + 1))
         inventory.times_edited = inventory.times_edited + 1
 
@@ -446,7 +447,7 @@ class InventoryLogOutlet(Resource):
             end_year = int(args['date_end'][0:4])
             end_month = int(args['date_end'][5:7])
             end_day = int(args['date_end'][8:10])
-            filtered_logs = logs.filter(InventoryLog.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+            filtered_logs = logs.filter(InventoryLog.created_at >= (datetime(start_year, start_month, start_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= (datetime(start_year, start_month, start_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
         # Get outlet name
         stock_outlet = StockOutlet.query.filter_by(id = id_stock_outlet).first()
@@ -518,7 +519,7 @@ class InventoryLogAll(Resource):
             end_year = int(args['date_end'][0:4])
             end_month = int(args['date_end'][5:7])
             end_day = int(args['date_end'][8:10])
-            filtered_logs = filter(lambda log: log.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) and log.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1), log_list)
+            filtered_logs = filter(lambda log: log.created_at >= (datetime(start_year, start_month, start_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) and log.created_at <= (datetime(start_year, start_month, start_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1), log_list)
 
         # Prepare the result
         result = []

@@ -256,6 +256,14 @@ def db_reset():
     db.session.add(cart_3)
     db.session.commit()
 
+    cart_4 = Carts(id_users = 1, id_outlet = 1, id_customers = 1, order_code = 'A52BCY', name = 'Buzz Lightyear', total_item = 3, payment_method = 'Tunai', total_payment = 37000, total_discount = 0, total_tax = 3700, paid_price = 45000)
+    db.session.add(cart_4)
+    db.session.commit()
+
+    cart_5 = Carts(id_users = 1, id_outlet = 1, id_customers = 1, order_code = 'A62BCY', name = 'Buzz Lightyear', total_item = 1, payment_method = 'Tunai', total_payment = 24000, total_discount = 0, total_tax = 2400, paid_price = 50000)
+    db.session.add(cart_5)
+    db.session.commit()
+
     # ---------- Create Cart Detail ----------
     cart_detail_1 = CartDetail(id_cart = 1, id_product = 1, quantity = 1, total_price_product = 10000)
     db.session.add(cart_detail_1)
@@ -271,6 +279,22 @@ def db_reset():
 
     cart_detail_4 = CartDetail(id_cart = 3, id_product = 6, quantity = 1, total_price_product = 15000)
     db.session.add(cart_detail_4)
+    db.session.commit()
+
+    cart_detail_5 = CartDetail(id_cart = 4, id_product = 1, quantity = 1, total_price_product = 12000)
+    db.session.add(cart_detail_5)
+    db.session.commit()
+
+    cart_detail_6 = CartDetail(id_cart = 4, id_product = 2, quantity = 1, total_price_product = 15000)
+    db.session.add(cart_detail_6)
+    db.session.commit()
+
+    cart_detail_7 = CartDetail(id_cart = 4, id_product = 5, quantity = 1, total_price_product = 10000)
+    db.session.add(cart_detail_7)
+    db.session.commit()
+
+    cart_detail_8 = CartDetail(id_cart = 5, id_product = 1, quantity = 2, total_price_product = 24000)
+    db.session.add(cart_detail_8)
     db.session.commit()
 
     # ------------- Create Promo -------------

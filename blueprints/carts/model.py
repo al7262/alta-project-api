@@ -1,7 +1,7 @@
 # Import
 from blueprints import db
 from flask_restful import fields
-from datetime import datetime
+from datetime import datetime, timedelta
 from blueprints.users.model import Users
 from blueprints.employees.model import Employees
 from blueprints.customers.model import Customers
@@ -24,7 +24,7 @@ class Carts(db.Model):
     total_discount = db.Column(db.Integer, nullable = False, default = 0)
     total_tax = db.Column(db.Integer, nullable = False, default = 0)
     paid_price = db.Column(db.Integer, nullable = False, default = 0)
-    created_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    created_at = db.Column(db.DateTime, nullable = False, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
     deleted = db.Column(db.Boolean, default = False)
 
     carts_fields = {
@@ -58,7 +58,7 @@ class Carts(db.Model):
         self.total_discount = total_discount
         self.total_tax = total_tax
         self.paid_price = paid_price
-        self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.created_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         self.deleted = True
     
     def __repr__(self):
@@ -71,7 +71,7 @@ class CartDetail(db.Model):
     id_product = db.Column(db.Integer, db.ForeignKey('products.id'), nullable = False)
     quantity = db.Column(db.Integer, nullable = False, default = 0)
     total_price_product = db.Column(db.Integer, nullable = False, default = 0)
-    updated_at = db.Column(db.DateTime, nullable = False, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    updated_at = db.Column(db.DateTime, nullable = False, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
 
     cart_detail_fields = {
         'id': fields.Integer,
@@ -93,7 +93,7 @@ class CartDetail(db.Model):
         self.id_product = id_product
         self.quantity = quantity
         self.total_price_product = total_price_product
-        self.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
     
     def __repr__(self):
         return '<CartDetail %r>' %self.id
