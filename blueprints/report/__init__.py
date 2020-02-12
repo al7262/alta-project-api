@@ -381,9 +381,6 @@ class InventoryLogReport(Resource):
         # Get all inventories
         inventories = Inventories.query.filter_by(id_users = id_users)
 
-        # Sort to the newest
-        inventories = inventories.order_by(desc(Inventories.created_at))
-
         # ----- Filter by name -----
         if args['name'] is not None and args['name'] != '':
             inventories = inventories.filter(Inventories.name.like('%' + args['name'] + '%'))
@@ -425,7 +422,9 @@ class InventoryLogReport(Resource):
                     # Prepare the data
                     data = {
                         'name': inventory.name,
+                        'unit': inventory.unit,
                         'outlet': outlet.name,
+                        'datetime': log.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                         'date': log.created_at.strftime('%Y-%m-%d'),
                         'time': log.created_at.strftime('%H:%M:%S'),
                         'type': log.status,
@@ -435,6 +434,19 @@ class InventoryLogReport(Resource):
                     result.append(data)
         
         # ----- Sort -----
+        # For default arrangement
+        result_length = len(result)
+        if result_length > 1:
+            restart = True
+            while restart:
+                restart = False
+                for index in range(result_length - 1):
+                    if result[index]['datetime'] < result[index + 1]['datetime']:
+                        dummy = result[index]
+                        result[index] = result[index + 1]
+                        result[index + 1] = dummy
+                        restart = True
+
         # Desc
         if args['amount_sort'] == 'desc':
             result_length = len(result)
@@ -617,7 +629,7 @@ class OutletReport(Resource):
     def options(self, id_product=None):
         return {'status': 'ok'}, 200
 
-    # Get category report
+    # Get outlet report
     @jwt_required
     @dashboard_required
     def get(self):
@@ -629,6 +641,10 @@ class OutletReport(Resource):
         parser.add_argument('end_time', location = 'args')
         parser.add_argument('name_outlet', location = 'args')
         args = parser.parse_args()
+
+        # Setup variable
+        total_transaction_all = 0
+        total_sales_all = 0
 
         # setting input time
         time = (datetime.now() + timedelta(hours = 7)).strftime("%d-%m-%Y")
@@ -665,11 +681,13 @@ class OutletReport(Resource):
                                 number_transaction = number_transaction + 1
                     data = {
                         "name_outlet" : outlet.name,
-                        "time" : str(start),
+                        "time" : str(start.strftime('%Y-%m-%d')),
                         "total_transaction" : number_transaction,
                         "total_price" : amount_sales,
                         "deleted" : outlet.deleted
                     }
+                    total_transaction_all = total_transaction_all + number_transaction
+                    total_sales_all = total_sales_all + amount_sales
                     result.append(data)
                 start = start + relativedelta(days = +1)
             
@@ -702,11 +720,13 @@ class OutletReport(Resource):
                             number_transaction = number_transaction + 1    
                 data = {
                     "name_outlet" : qry_outlet.name,
-                    "time" : str(start),
+                    "time" : str(start.strftime('%Y-%m-%d')),
                     "total_transaction" : number_transaction,
                     "total_price" : amount_sales,
                     "deleted": qry_outlet.deleted
                 }
+                total_transaction_all = total_transaction_all + number_transaction
+                total_sales_all = total_sales_all + amount_sales
                 result.append(data)
                 start = start + relativedelta(days = +1)
             
@@ -722,7 +742,13 @@ class OutletReport(Resource):
                             result[index + 1] = dummy
                             restart = True
             
-            return result, 200
+            data_shown = {
+                'outlet_list': result,
+                'total_sales': total_sales_all,
+                'total_transaction': total_transaction_all
+            }
+
+            return data_shown, 200
 
 class ProfitReport(Resource):
     # Enable CORS
@@ -805,7 +831,8 @@ class ProfitReport(Resource):
                         "time" : str(start),
                         "total_price_cart" : amount_sales,
                         "total_price_discount" : number_discount,
-                        "total_price_inventory" : profit 
+                        "total_price_inventory" : total_price_inventory,
+                        "total_profit" : profit 
                     }
                     result.append(data)
                 start = start + relativedelta(days = +1)
@@ -852,7 +879,8 @@ class ProfitReport(Resource):
                     "time" : str(start),
                     "total_price_cart" : amount_sales,
                     "total_price_discount" : number_discount,
-                    "total_price_inventory" : profit 
+                    "total_price_inventory" : total_price_inventory,
+                    "total_profit": profit
                 }
                 result.append(data)
                 start = start + relativedelta(days = +1)
