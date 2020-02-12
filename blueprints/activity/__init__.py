@@ -48,6 +48,9 @@ class ActivityResource(Resource):
             elif args['date'] == 'Kemarin':
                 carts = carts.filter(Carts.created_at >= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0) - timedelta(days = 1)).filter(Carts.created_at <= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0))
 
+        # To show the newest activity
+        carts = carts.order_by(desc(Carts.created_at))
+
         # Loop through all carts
         transaction_detail = []
         total_sales = 0
