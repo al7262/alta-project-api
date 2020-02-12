@@ -36,8 +36,8 @@ class PromoResource(Resource):
         offset = (args['p'] * args['rp']) - args['rp']
 
         if args['keyword'] is not None:
-            qry = Promos.query.filter_by(id_users = claims['id']).filter_by(deleted = False).filter(Outlets.name.like("%"+args["keyword"]+"%") | Outlets.day.like("%"+args["keyword"]+"%"))
-        elif args['keyword'] is None:
+            qry = Promos.query.filter_by(id_users = claims['id']).filter_by(deleted = False).filter(Promos.name.like("%"+args["keyword"]+"%") | Promos.day.like("%"+args["keyword"]+"%"))
+        if args['keyword'] is None:
             qry = Promos.query.filter_by(id_users = claims['id']).filter_by(deleted = False)
             
         rows = []
@@ -90,16 +90,17 @@ class PromoResource(Resource):
             qry.status = args['status']
         if args['day'] is not None:
             qry.day = days
+        db.session.commit()
 
         qry_detail_promo = DetailPromo.query.filter_by(id_promo = qry.id).all()
         for detail in qry_detail_promo:
             data.append(detail.id_product)
         for product in args['product'] :
             qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(name = product).filter_by(deleted = False).first()
-            changes.append(qry_product.id)
-        db.session.commit()
+            if qry_product is not None:
+                changes.append(qry_product.id)
+        # print(changes)
         count = 0
-        print(changes)
         for change in changes:
             if change in data:
                 detail_promo = DetailPromo.query.filter_by(id_product = change).filter_by(id_promo = qry.id).first()
@@ -108,16 +109,16 @@ class PromoResource(Resource):
                 detail_promo.discount = args['discount'][count]
                 db.session.commit()
                 app.logger.debug('DEBUG : %s', detail_promo)
+                count+=1
                 continue
             if change not in data:
                 promodetail = DetailPromo(change, qry.id, args['discount'][count])
                 db.session.add(promodetail)
                 db.session.commit()
                 app.logger.debug('DEBUG : %s', promodetail)
+                count+=1
                 continue
-            count+=1
         
-        print(data)
         for datum in data:
             if datum not in changes:
                 qry_detail_promo = DetailPromo.query.filter_by(id_product = datum).filter_by(id_promo = qry.id).first()
@@ -198,14 +199,16 @@ class PromoGetByOne(Resource):
             if not qry.deleted:
                 qry_detail_promo = DetailPromo.query.filter_by(id_promo = qry.id).all()
                 for detail in qry_detail_promo:
+                    # print("detail = ", detail)
                     qry_product = Products.query.filter_by(id = detail.id_product).first()
                     dict_product = {
                         "name_product" : qry_product.name,
                         "discount" : detail.discount
                     }
                     data_product.append(dict_product)
+                marshal_qry = marshal(qry, Promos.response_fields)
                 result = {
-                    "promo" : marshal(qry, Promos.response_fields),
+                    "promo" : marshal_qry,
                     "product" :  data_product
                 }
                 return result, 200

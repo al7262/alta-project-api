@@ -64,6 +64,8 @@ class TestOutlet():
         data = {
             "name": "Hedy Gading",
             "phone_number": "081411231009",
+            "province" : "Jawa. Timur",
+            "district" : "Tegalsari",
             "address": "Jl. kupang",
             "city": "Surabaya",
             "tax": 15
@@ -110,6 +112,8 @@ class TestOutlet():
             "name": "Bandung",
             "phone_number": "081411231009",
             "address": "Jl. kupang",
+            "province" : "Jawa. Timur",
+            "district" : "Tegalsari",
             "city": "Surabaya",
             "tax": 15
         }
@@ -118,6 +122,30 @@ class TestOutlet():
         res = client.post('/outlet/create', json = data, headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
+
+    # testing create outlet invalid
+    def test_create_outlet_invalid(self, client):
+        # get token 
+        token = create_token('hedy@alterra.id')
+        # Prepare the DB
+        db_reset()
+
+        #data input
+        data = {
+            "name": "Bandung",
+            "phone_number": "081411231009",
+            "address": "Jl. kupang",
+            "province" : "Jawa. Timur",
+            "district" : "Tegalsari",
+            "city": "Surabaya",
+            "tax": 15
+        }
+
+        # Test the endpoints
+        res = client.post('/outlet/create', json = data, headers={'Authorization': 'Bearer ' + token})
+        res = client.post('/outlet/create', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 409
     
     # testing display outlet by one valid
     def test_display_outlet_by_one_valid(self, client):
@@ -125,9 +153,22 @@ class TestOutlet():
         token = create_token('hedy@alterra.id')
         # Prepare the DB
         db_reset()
+        
+        data = {
+            "name": "Bandung",
+            "phone_number": "081411231009",
+            "address": "Jl. kupang",
+            "province" : "Jawa. Timur",
+            "district" : "Tegalsari",
+            "city": "Surabaya",
+            "tax": 15
+        }
+
+        # add outlet
+        res = client.post('/outlet/create', json = data, headers={'Authorization': 'Bearer ' + token})
 
         # Test the endpoints
-        res = client.get('/outlet/get/1', headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/outlet/get/4', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
 
@@ -138,8 +179,21 @@ class TestOutlet():
         # Prepare the DB
         db_reset()
 
+        data = {
+            "name": "Bandung",
+            "phone_number": "081411231009",
+            "address": "Jl. kupang",
+            "province" : "Jawa. Timur",
+            "district" : "Tegalsari",
+            "city": "Surabaya",
+            "tax": 15
+        }
+
+        # add outlet
+        res = client.post('/outlet/create', json = data, headers={'Authorization': 'Bearer ' + token})
+
         # Test the endpoints
-        res = client.delete('/outlet/1', headers={'Authorization': 'Bearer ' + token})
-        res = client.get('/outlet/get/1', headers={'Authorization': 'Bearer ' + token})
+        res = client.delete('/outlet/4', headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/outlet/get/4', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 404

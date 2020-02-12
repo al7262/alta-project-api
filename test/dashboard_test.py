@@ -82,7 +82,7 @@ class TestDashboard():
         db_reset()
 
         # Test the endpoints
-        res = client.get('/dashboard?start_time=2020-02-04&end_time=2020-02-05', headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/dashboard?start_time=04-02-2020&end_time=05-02-2020', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
@@ -94,7 +94,7 @@ class TestDashboard():
         db_reset()
 
         # Test the endpoints
-        res = client.get('/dashboard?start_time=2020-02-05&end_time=2020-02-04', headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/dashboard?start_time=05-02-2020&end_time=04-02-2020', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 401
 

@@ -48,7 +48,6 @@ class Dashboard(Resource):
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"massage" : "inputan anda salah"}, 401
-        print(start, "dan", end)
         # variabel untuk jumlah pemasukan
         number_transaction = 0
 
@@ -80,7 +79,6 @@ class Dashboard(Resource):
                     for cart in qry_cart:
                         create_at = cart.created_at
                         if start <= create_at and create_at <= end:
-                            print("AKU MASUK")
                             sales_amount = sales_amount + cart.total_payment
                             number_transaction = number_transaction + 1
             
