@@ -446,7 +446,7 @@ class InventoryLogOutlet(Resource):
             end_year = int(args['date_end'][0:4])
             end_month = int(args['date_end'][5:7])
             end_day = int(args['date_end'][8:10])
-            filtered_logs = logs.filter(InventoryLog.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+            filtered_logs = logs.filter(InventoryLog.created_at >= (datetime(start_year, start_month, start_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= (datetime(start_year, start_month, start_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
         # Get outlet name
         stock_outlet = StockOutlet.query.filter_by(id = id_stock_outlet).first()
@@ -518,7 +518,7 @@ class InventoryLogAll(Resource):
             end_year = int(args['date_end'][0:4])
             end_month = int(args['date_end'][5:7])
             end_day = int(args['date_end'][8:10])
-            filtered_logs = filter(lambda log: log.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) and log.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1), log_list)
+            filtered_logs = filter(lambda log: log.created_at >= (datetime(start_year, start_month, start_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) and log.created_at <= (datetime(start_year, start_month, start_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1), log_list)
 
         # Prepare the result
         result = []

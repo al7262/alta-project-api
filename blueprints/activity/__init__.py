@@ -44,9 +44,9 @@ class ActivityResource(Resource):
         # Filter by date
         if carts.all() != []:
             if args['date'] == 'Hari Ini':
-                carts = carts.filter(Carts.created_at >= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                carts = carts.filter(Carts.created_at >= (datetime.today() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= (datetime.today() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
             elif args['date'] == 'Kemarin':
-                carts = carts.filter(Carts.created_at >= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0) - timedelta(days = 1)).filter(Carts.created_at <= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0))
+                carts = carts.filter(Carts.created_at >= (datetime.today() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) - timedelta(days = 1)).filter(Carts.created_at <= (datetime.today() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0))
 
         # To show the newest activity
         carts = carts.order_by(desc(Carts.created_at))
