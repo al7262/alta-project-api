@@ -526,7 +526,7 @@ class CategoryReport(Resource):
                             qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
                             if qry_cartdetail is not None:
                                 total_quantity = total_quantity + qry_cartdetail.quantity
-                    total_price = total_price + (product.price * total_quantity)
+                                total_price = total_price + (product.price * qry_cartdetail.quantity)
             data = {
                 'category': category,
                 'total_product': total_product,
