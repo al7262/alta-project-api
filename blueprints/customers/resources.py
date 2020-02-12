@@ -49,7 +49,7 @@ class CustomerResource(Resource):
         new_customer = 0
         total_costumer = 0
         time = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d")
-        today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::])) + timedelta(hours = 7)
+        today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
         start = today + relativedelta(days = -(int(time[8::]))+1)
         end = today + relativedelta(days = +1)
         custumer_id = ''

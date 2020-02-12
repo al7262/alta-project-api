@@ -86,7 +86,7 @@ class ProductReport(Resource):
                 end_year = int(args['end_time'][6:10])
                 end_month = int(args['end_time'][3:5])
                 end_day = int(args['end_time'][0:2])
-                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= ((datetime(end_year, end_month, end_day) + timedelta(hours = 7)) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
             for detail in detail_transaction:
                 # Check for related outlet
@@ -233,7 +233,7 @@ class HistoryReport(Resource):
             end_year = int(args['end_time'][6:10])
             end_month = int(args['end_time'][3:5])
             end_day = int(args['end_time'][0:2])
-            transactions = transactions.filter(Carts.created_at >= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+            transactions = transactions.filter(Carts.created_at >= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
         
         # Default case
         elif (args['start_time'] is None or args['start_time'] == '') and (args['end_time'] is None or args['end_time'] == ''):
@@ -415,7 +415,7 @@ class InventoryLogReport(Resource):
                     end_year = int(args['end_time'][6:10])
                     end_month = int(args['end_time'][3:5])
                     end_day = int(args['end_time'][0:2])
-                    logs = logs.filter(InventoryLog.created_at >= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                    logs = logs.filter(InventoryLog.created_at >= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
                 for log in logs:
                     # Prepare the data
@@ -487,9 +487,9 @@ class CategoryReport(Resource):
         end = today + relativedelta(days = +1)
         if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(hours = 7)
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"message" : "Inputan Anda salah"}, 400
@@ -612,15 +612,14 @@ class OutletReport(Resource):
         # setting input time
         time = (datetime.now() + timedelta(hours = 7)).strftime("%d-%m-%Y")
         if args['start_time'] == "" or args['end_time'] == "":
-            today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2])) + timedelta(hours = 7)
+            today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
             start = today
             end = today + relativedelta(days = +1)
-        if args['start_time'] is not None and args['end_time'] is not None or args['start_time'] != "" or args['end_time'] != "":
-            print("SAYA DISINI")
+        if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(hours = 7)
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"message" : "Inputan Anda salah"}, 400
@@ -700,7 +699,7 @@ class ProfitReport(Resource):
 
         # setting input time
         time = (datetime.now() + timedelta(hours = 7)).strftime("%d-%m-%Y")
-        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2])) + timedelta(hours = 7)
+        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
         start = today
         end = today + relativedelta(days = +1)
         
@@ -708,9 +707,9 @@ class ProfitReport(Resource):
             print("SAYA DISINI")
             start_time = args['start_time']
             print(start_time)
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(hours = 7)
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"message" : "Inputan Anda salah"}, 400
