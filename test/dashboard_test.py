@@ -85,18 +85,6 @@ class TestDashboard():
         res = client.get('/dashboard?start_time=04-02-2020&end_time=05-02-2020', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
-    
-    # testing display dashboard invalid (start_time. end_time)
-    def test_display_outlet_invalid_inteval_start_end_time(self, client):
-        # get token 
-        token = create_token('hedy@alterra.id')
-        # Prepare the DB
-        db_reset()
-
-        # Test the endpoints
-        res = client.get('/dashboard?start_time=05-02-2020&end_time=04-02-2020', headers={'Authorization': 'Bearer ' + token})
-        res_json = json.loads(res.data)
-        assert res.status_code == 401
 
     # testing display dashboard valid (month)
     def test_display_outlet_valid_month(self, client):

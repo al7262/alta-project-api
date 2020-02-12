@@ -303,10 +303,8 @@ class Dashboard(Resource):
                         create_at = carts.created_at
                         interval = start + relativedelta(days = +1)
                         if start <= create_at and create_at <= interval:
-                            amount_sales = amount_sales + carts.total_payment
-                if qry_cart is None:
-                    amount_sales = amount_sales + 0
-                chart[str(count)] = amount_sales
+                            chart[str(create_at)] = carts.total_payment
+        
                 start = start + relativedelta(days = +1)
                 count+=1
             if args['name_outlet'] is None or args['name_outlet'] == "":
@@ -317,10 +315,8 @@ class Dashboard(Resource):
                             create_at = carts.created_at
                             interval = start + relativedelta(days = +1)
                             if start <= create_at and create_at <= interval:
-                                amount_sales = amount_sales + carts.total_payment
-                    if qry_cart is None:
-                        amount_sales = amount_sales + 0
-                chart[str(count)] = amount_sales
+                                chart[str(create_at)] = carts.total_payment
+                                
                 start = start + relativedelta(days = +1)
                 count+=1
         
