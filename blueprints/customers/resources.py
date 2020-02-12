@@ -34,7 +34,10 @@ class CustomerResource(Resource):
         args = parser.parse_args()
         offset = (args['p'] * args['rp']) - args['rp']
             
+        # Get all customers and sort it from the newest
         qry = Customers.query.filter_by(id_users = claims['id'])
+        qry = qry.order_by(desc(Customers.created_at))
+
         if args['keyword'] is not None and args['keyword'] != '':
             qry = qry.filter_by(id_users = claims['id']).filter(Customers.fullname.like("%"+args["keyword"]+"%") | Customers.phone_number.like("%"+args["keyword"]+"%") | Customers.email.like("%"+args["keyword"]+"%"))
 
@@ -45,8 +48,8 @@ class CustomerResource(Resource):
         min = 0
         new_customer = 0
         total_costumer = 0
-        time = datetime.now().strftime("%Y-%m-%d")
-        today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
+        time = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d")
+        today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::])) + timedelta(hours = 7)
         start = today + relativedelta(days = -(int(time[8::]))+1)
         end = today + relativedelta(days = +1)
         custumer_id = ''

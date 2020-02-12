@@ -39,14 +39,17 @@ class ActivityResource(Resource):
         
         # Filter by order code
         if args['order_code'] != '' and args['order_code'] is not None:
-            carts = carts.filter_by(order_code = args['order_code'])
+            carts = carts.filter(Carts.order_code.like('%' + args['order_code'] + '%'))
 
         # Filter by date
         if carts.all() != []:
             if args['date'] == 'Hari Ini':
-                carts = carts.filter(Carts.created_at >= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                carts = carts.filter(Carts.created_at >= (datetime.today() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= (datetime.today() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
             elif args['date'] == 'Kemarin':
-                carts = carts.filter(Carts.created_at >= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0) - timedelta(days = 1)).filter(Carts.created_at <= datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0))
+                carts = carts.filter(Carts.created_at >= (datetime.today() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) - timedelta(days = 1)).filter(Carts.created_at <= (datetime.today() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0))
+
+        # To show the newest activity
+        carts = carts.order_by(desc(Carts.created_at))
 
         # Loop through all carts
         transaction_detail = []
@@ -68,7 +71,7 @@ class ActivityResource(Resource):
             # Get detail of the cart
             cart_detail = CartDetail.query.filter_by(id_cart = cart.id)
             for detail in cart_detail:
-                product = Products.query.filter_by(id = detail.id_product).filter_by(deleted = False).first()
+                product = Products.query.filter_by(id = detail.id_product).first()
                 item_detail = {
                     'name': product.name,
                     'quantity': detail.quantity,

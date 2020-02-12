@@ -107,7 +107,7 @@ class EmployeeResource(Resource):
                                     marshal_employee = marshal(employee, Employees.response_fields)
                                     marshal_employee['name_outlet'] = outlet.name
                                     rows.append(marshal_employee)        
-                return rows, 200
+                return rows[::-1], 200
 
         rows = []
         qry = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
@@ -129,7 +129,7 @@ class EmployeeResource(Resource):
                             marshal_employee = marshal(employee, Employees.response_fields)
                             marshal_employee['name_outlet'] = args['name_outlet']
                             rows.append(marshal_employee)        
-                    return rows, 200
+                    return rows[::-1], 200
         return {'message' : "Data Tidak Ditemukan"},404
     
     @jwt_required
@@ -168,7 +168,7 @@ class EmployeeResource(Resource):
             qry.username = args['username']
         if args['position'] is not None:
             qry.position = args['position']
-        qry.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        qry.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
         return marshal(qry, Employees.response_fields), 200
 

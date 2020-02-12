@@ -1,7 +1,7 @@
 # Import
 from blueprints import db
 from flask_restful import fields
-import datetime
+from datetime import datetime, timedelta
 from blueprints.users.model import Users
 
 # Create Model
@@ -16,8 +16,8 @@ class Products (db.Model):
     stock = db.Column(db.Integer, nullable = False, default = 0)
     image = db.Column(db.String(255), nullable = False, default = "")
     deleted = db.Column(db.Boolean, nullable = False, default = False)
-    created_at = db.Column(db.DateTime, default = datetime.datetime.now())
-    updated_at = db.Column(db.DateTime, onupdate = datetime.datetime.now())
+    created_at = db.Column(db.DateTime, default = (datetime.now() + timedelta(hours = 7)))
+    updated_at = db.Column(db.DateTime, onupdate = (datetime.now() + timedelta(hours = 7)))
 
     response_fields = {
         'id' : fields.Integer,
