@@ -21,21 +21,24 @@ bp_dashboard = Blueprint('dashboard', __name__)
 api = Api(bp_dashboard)
 
 class Dashboard(Resource):
-
+    # Enable CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
 
+    # Get all information needed to be shown in the dashboard
     @jwt_required
     @dashboard_required
     def get(self):
+        # Tak input from users
         claims = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument('name_outlet', location = 'args')
         parser.add_argument('start_time', location = 'args')
         parser.add_argument('end_time', location = 'args')
         parser.add_argument('month', location = 'args')
-
         args = parser.parse_args()
+
+        # Datetime related
         time = datetime.now().strftime("%Y-%m-%d")
         today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
         start = today
@@ -47,30 +50,25 @@ class Dashboard(Resource):
             end = datetime(int(end_time[6::]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
             if end <= start :
-                return {"massage" : "inputan anda salah"}, 401
-        # variabel untuk jumlah pemasukan
+                return {"message" : "Inputan Anda salah"}, 400
+        
+        # ---------- Setting some variables needed ----------
         number_transaction = 0
-
-        # variabel untuk jumlah pemasukan
         sales_amount = 0
-
-        # variabel untuk produk terlaris
         total_quantity = 0
         list_product = []
         info_products = []
 
-        # variabel untuk kategori terlaris
+        # Popular Category and Products
         categories = []
         list_category = []
         info_categories = []
         info_another = []
-
-        # variable untuk produk terlaris dan kategori terlaris
         tops = []
         top_product = []
         top_category = []
         
-        # ini untuk jumlah penjualan dan jumlah pemasukkan
+        # Calculate total items and total sales
         if args['name_outlet'] is None or args['name_outlet'] == "":
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
             for outlet in qry_outlet:
@@ -82,7 +80,7 @@ class Dashboard(Resource):
                             sales_amount = sales_amount + cart.total_payment
                             number_transaction = number_transaction + 1
             
-            # ini untuk produk terlaris
+            # For popular category
             qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
             for product in qry_product:
                 if product.category not in categories:
@@ -112,7 +110,7 @@ class Dashboard(Resource):
                             top_product.append(info)
                             break
     
-            # ini untuk kategori terlaris
+            # For popular categories
             total_quantity = 0
             for product in qry_product:
                 if qry_cart is not None:

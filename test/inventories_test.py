@@ -1,10 +1,12 @@
 import json
 from . import app, client, create_token, db_reset, cache
+from datetime import datetime
 
 class TestInventories():
     # Add new inventory (Case 1 : Empty field)
     def test_add_new_inventory_case_1(self, client):
         # Prepare the DB and token
+        db_reset()
         token = create_token('stevejobs')
 
         data = {
@@ -23,10 +25,11 @@ class TestInventories():
     # Add new inventory (Case 2 : Positivity constraint 1)
     def test_add_new_inventory_case_2(self, client):
         # Prepare the DB and token
+        db_reset()
         token = create_token('stevejobs')
 
         data = {
-            'name': '',
+            'name': 'Telur',
             'stock': -1,
             'unit': 'gram',
             'unit_price': 10,
@@ -41,10 +44,11 @@ class TestInventories():
     # Add new inventory (Case 3 : Positivity constraint 2)
     def test_add_new_inventory_case_3(self, client):
         # Prepare the DB and token
-        token = create_token('stevejobs')
+        db_reset()
+        token = create_token('administrator02')
 
         data = {
-            'name': '',
+            'name': 'Telur',
             'stock': 2000,
             'unit': 'gram',
             'unit_price': -1,
@@ -59,10 +63,11 @@ class TestInventories():
     # Add new inventory (Case 4 : Positivity constraint 3)
     def test_add_new_inventory_case_4(self, client):
         # Prepare the DB and token
+        db_reset()
         token = create_token('hedy@alterra.id')
 
         data = {
-            'name': '',
+            'name': 'Telur',
             'stock': 2000,
             'unit': 'gram',
             'unit_price': 10,
@@ -113,7 +118,7 @@ class TestInventories():
     # Add new inventory (Case 7 : Inventory exist but unit is wrong)
     def test_add_new_inventory_case_7(self, client):
         # Prepare the DB and token
-        token = create_token('hedy@alterra.id')
+        token = create_token('administrator04')
 
         data = {
             'name': 'Cabe Keriting',
@@ -338,8 +343,7 @@ class TestInventories():
         token = create_token('hedy@alterra.id')
 
         # Test the endpoints
-        res = client.delete('/inventory/detail/1', headers={'Authorization': 'Bearer ' + token})
-        res = client.delete('/inventory/detail/2', headers={'Authorization': 'Bearer ' + token})
+        res = client.delete('/inventory/detail/9', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
@@ -418,7 +422,7 @@ class TestInventories():
         token = create_token('stevejobs')
 
         # Test the endpoints
-        res = client.get('/inventory/reminder/3', headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/inventory/reminder/1', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
 
@@ -427,13 +431,19 @@ class TestInventories():
         # Prepare the DB and token
         token = create_token('hedy@alterra.id')
 
-        data = {
+        add_stock_data = {
+            'stock': 20,
+            'price': 30000
+        }
+
+        args = {
             'type': 'Masuk',
-            'date': '2020-02-09',
+            'date': datetime.now().strftime('%Y-%m-%d'),
         }
 
         # Test the endpoints
-        res = client.get('/inventory/log/3', json = data, headers={'Authorization': 'Bearer ' + token})
+        res = client.put('/inventory/add-stock/1', json = add_stock_data, headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/inventory/log/1?type=' + args['type'] + '&date=' + args['date'], headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
 
@@ -442,7 +452,7 @@ class TestInventories():
         # Prepare the DB and token
         token = create_token('stevejobs')
 
-        data = {
+        args = {
             'type': 'Masuk',
             'date': '',
             'date_start': '2020-02-01',
@@ -450,7 +460,7 @@ class TestInventories():
         }
 
         # Test the endpoints
-        res = client.get('/inventory/log/3', json = data, headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/inventory/log/1?type=' + args['type'] + '&date=' + args['date'] + '&date_start=' + args['date_start'] + '&date_end=' + args['date_end'], headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
 
@@ -465,7 +475,7 @@ class TestInventories():
         }
 
         # Test the endpoints
-        res = client.get('/inventory/log/all/1', json = data, headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/inventory/log/all/1?type=' + data['type'] + '&date=' + data['date'], headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
@@ -482,7 +492,7 @@ class TestInventories():
         }
 
         # Test the endpoints
-        res = client.get('/inventory/log/all/1', json = data, headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/inventory/log/all/1?type=Masuk&date_start=2020-02-01&date_end=2020-03-10', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
 

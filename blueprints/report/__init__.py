@@ -51,6 +51,8 @@ class ProductReport(Resource):
         parser.add_argument('id_outlet', location = 'args', required = False)
         parser.add_argument('start_time', location = 'args', required = False)
         parser.add_argument('end_time', location = 'args', required = False)
+        parser.add_argument('total_sold_sort', location = 'args', required = False)
+        parser.add_argument('total_sales_sort', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all products from specific owner
@@ -68,7 +70,6 @@ class ProductReport(Resource):
         # Search all transactions related to the products in specified outlet
         for product in products:
             # Prepare variable needed
-            add_status = True
             total_sales_of_product = 0
             total_sold_of_product = 0
             detail_transaction = CartDetail.query.filter_by(id_product = product.id)
@@ -85,17 +86,21 @@ class ProductReport(Resource):
                 detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
             for detail in detail_transaction:
+                # Check for related outlet
+                related_cart = Carts.query.filter_by(deleted = True).filter_by(id = detail.id_cart).first()
+                related_outlet = Outlets.query.filter_by(deleted = False).filter_by(id = related_cart.id_outlet).first()
+                if related_outlet is None:
+                    continue
+                
                 # ----- Third Filter -----
-                # By outlet id
+                # By outlet ID
                 if args['id_outlet'] != '' and args['id_outlet'] is not None:
-                    transaction = Carts.query.filter_by(deleted = True).filter_by(id = detail.id_cart).first()
-                    if transaction.id_outlet != int(args['id_outlet']):
-                        add_status = False
+                    if related_outlet.id != int(args['id_outlet']):
+                        continue
                 
                 # Calculate some values
-                if add_status == True:
-                    total_sold_of_product = total_sold_of_product + detail.quantity
-                    total_sales_of_product = total_sales_of_product + detail.total_price_product
+                total_sold_of_product = total_sold_of_product + detail.quantity
+                total_sales_of_product = total_sales_of_product + detail.total_price_product
 
             total_sales = total_sales + total_sales_of_product
             total_sold = total_sold + total_sold_of_product
@@ -106,7 +111,60 @@ class ProductReport(Resource):
                 'total_sales': total_sales_of_product   
             }
             product_list.append(data)
-            
+
+        # ----- Sort -----
+        # By total sales - desc
+        if args['total_sales_sort'] == 'desc':
+            product_list_length = len(product_list)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(product_list_length - 1):
+                    if product_list[index]['total_sales'] < product_list[index + 1]['total_sales']:
+                        dummy = product_list[index]
+                        product_list[index] = product_list[index + 1]
+                        product_list[index + 1] = dummy
+                        restart = True
+
+        # By total sales - asc
+        if args['total_sales_sort'] == 'asc':
+            product_list_length = len(product_list)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(product_list_length - 1):
+                    if product_list[index]['total_sales'] > product_list[index + 1]['total_sales']:
+                        dummy = product_list[index]
+                        product_list[index] = product_list[index + 1]
+                        product_list[index + 1] = dummy
+                        restart = True
+
+        # By total sold - desc
+        if args['total_sold_sort'] == 'desc':
+            product_list_length = len(product_list)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(product_list_length - 1):
+                    if product_list[index]['total_sold'] < product_list[index + 1]['total_sold']:
+                        dummy = product_list[index]
+                        product_list[index] = product_list[index + 1]
+                        product_list[index + 1] = dummy
+                        restart = True
+
+        # By total sold - asc
+        if args['total_sold_sort'] == 'asc':
+            product_list_length = len(product_list)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(product_list_length - 1):
+                    if product_list[index]['total_sold'] > product_list[index + 1]['total_sold']:
+                        dummy = product_list[index]
+                        product_list[index] = product_list[index + 1]
+                        product_list[index + 1] = dummy
+                        restart = True
+
         result = {
             'total_sales': total_sales,
             'total_sold': total_sold,
@@ -140,6 +198,8 @@ class HistoryReport(Resource):
         parser.add_argument('id_outlet', location = 'args', required = False)
         parser.add_argument('start_time', location = 'args', required = False)
         parser.add_argument('end_time', location = 'args', required = False)
+        parser.add_argument('total_sold_sort', location = 'args', required = False)
+        parser.add_argument('total_sales_sort', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all transactions history from specific owner
@@ -198,6 +258,59 @@ class HistoryReport(Resource):
                     }
                     product_list.append(data)
 
+        # ----- Sort -----
+        # By total sales - desc
+        if args['total_sales_sort'] == 'desc':
+            product_list_length = len(product_list)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(product_list_length - 1):
+                    if product_list[index]['total_sales'] < product_list[index + 1]['total_sales']:
+                        dummy = product_list[index]
+                        product_list[index] = product_list[index + 1]
+                        product_list[index + 1] = dummy
+                        restart = True
+
+        # By total sales - asc
+        if args['total_sales_sort'] == 'asc':
+            product_list_length = len(product_list)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(product_list_length - 1):
+                    if product_list[index]['total_sales'] > product_list[index + 1]['total_sales']:
+                        dummy = product_list[index]
+                        product_list[index] = product_list[index + 1]
+                        product_list[index + 1] = dummy
+                        restart = True
+
+        # By total sold - desc
+        if args['total_sold_sort'] == 'desc':
+            product_list_length = len(product_list)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(product_list_length - 1):
+                    if product_list[index]['total_items'] < product_list[index + 1]['total_items']:
+                        dummy = product_list[index]
+                        product_list[index] = product_list[index + 1]
+                        product_list[index + 1] = dummy
+                        restart = True
+
+        # By total sold - asc
+        if args['total_sold_sort'] == 'asc':
+            product_list_length = len(product_list)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(product_list_length - 1):
+                    if product_list[index]['total_items'] > product_list[index + 1]['total_items']:
+                        dummy = product_list[index]
+                        product_list[index] = product_list[index + 1]
+                        product_list[index + 1] = dummy
+                        restart = True
+
         result = {
             'total_items_sold': total_items_sold,
             'total_sales': total_sales,
@@ -231,6 +344,7 @@ class InventoryLogReport(Resource):
         parser.add_argument('type', location = 'args', required = False)
         parser.add_argument('start_time', location = 'args', required = False)
         parser.add_argument('end_time', location = 'args', required = False)
+        parser.add_argument('amount_sort', location = 'args', required = False)
         args = parser.parse_args()
 
         # Get all inventories
@@ -281,6 +395,34 @@ class InventoryLogReport(Resource):
                         'last_stock': log.last_stock
                     }
                     result.append(data)
+        
+        # ----- Sort -----
+        # Desc
+        if args['amount_sort'] == 'desc':
+            result_length = len(result)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(result_length - 1):
+                    if result[index]['amount'] < result[index + 1]['amount']:
+                        dummy = result[index]
+                        result[index] = result[index + 1]
+                        result[index + 1] = dummy
+                        restart = True
+
+        # By total sales - asc
+        if args['amount_sort'] == 'asc':
+            result_length = len(result)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(result_length - 1):
+                    if result[index]['amount'] > result[index + 1]['amount']:
+                        dummy = result[index]
+                        result[index] = result[index + 1]
+                        result[index + 1] = dummy
+                        restart = True
+
         return result, 200
 
 class CategoryReport(Resource):
@@ -298,10 +440,12 @@ class CategoryReport(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('start_time', location = 'args')
         parser.add_argument('end_time', location = 'args')
+        parser.add_argument('total_sold_sort', location = 'args', required = False)
+        parser.add_argument('total_sales_sort', location = 'args', required = False)
         args = parser.parse_args()
 
-        # setting input time
-        time = datetime.now().strftime("%Y-%m-%d")
+        # Setting input time
+        time = datetime.now().strftime("%d-%m-%Y")
         today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
         start = today
         end = today + relativedelta(days = +1)
@@ -312,13 +456,13 @@ class CategoryReport(Resource):
             end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
             if end <= start :
-                return {"massage" : "inputan anda salah"}, 401
-        print(start," ~ ", end)
+                return {"message" : "Inputan Anda salah"}, 400
+
         # Prepare variable needed
         categories = []
-        product_categories = []
-        quantity_categories = []
-        price_categories = []
+        category_list = []
+        total_quantity_category = 0
+        total_price_category = 0
 
         qry_product = Products.query.filter_by(id_users = claims['id']).all()
         for product in qry_product:
@@ -335,26 +479,80 @@ class CategoryReport(Resource):
                 if qry_cart is not None:
                     for cart in qry_cart:
                         create_at = cart.created_at
-                        print(create_at)
                         if start <= create_at and create_at <= end:
                             qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
                             if qry_cartdetail is not None:
                                 total_quantity = total_quantity + qry_cartdetail.quantity
                     total_price = total_price + (product.price * total_quantity)
-            product_categories.append(total_product)
-            quantity_categories.append(total_quantity)
-            price_categories.append(total_price)
-        total_quantity_category = sum(quantity_categories)
-        total_price_category = sum(price_categories)
+            data = {
+                'category': category,
+                'total_product': total_product,
+                'total_sold': total_quantity,
+                'total_sales': total_price
+            }
+            total_quantity_category = total_quantity_category + total_quantity
+            total_price_category = total_price_category + total_price
+            category_list.append(data)
+
+        # ----- Sort -----
+        # By total sales - desc
+        if args['total_sales_sort'] == 'desc':
+            category_list_length = len(category_list)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(category_list_length - 1):
+                    if category_list[index]['total_sales'] < category_list[index + 1]['total_sales']:
+                        dummy = category_list[index]
+                        category_list[index] = category_list[index + 1]
+                        category_list[index + 1] = dummy
+                        restart = True
+
+        # By total sales - asc
+        if args['total_sales_sort'] == 'asc':
+            category_list_length = len(category_list)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(category_list_length - 1):
+                    if category_list[index]['total_sales'] > category_list[index + 1]['total_sales']:
+                        dummy = category_list[index]
+                        category_list[index] = category_list[index + 1]
+                        category_list[index + 1] = dummy
+                        restart = True
+
+        # By total sold - desc
+        if args['total_sold_sort'] == 'desc':
+            category_list_length = len(category_list)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(category_list_length - 1):
+                    if category_list[index]['total_items_sold'] < category_list[index + 1]['total_items_sold']:
+                        dummy = category_list[index]
+                        category_list[index] = category_list[index + 1]
+                        category_list[index + 1] = dummy
+                        restart = True
+
+        # By total sold - asc
+        if args['total_sold_sort'] == 'asc':
+            category_list_length = len(category_list)
+            restart = True
+            while restart:
+                restart = False
+                for index in range(category_list_length - 1):
+                    if category_list[index]['total_items_sold'] > category_list[index + 1]['total_items_sold']:
+                        dummy = category_list[index]
+                        category_list[index] = category_list[index + 1]
+                        category_list[index + 1] = dummy
+                        restart = True
 
         result = {
-            "category" : categories,
-            "total_product" : product_categories,
-            "total quantity" : quantity_categories,
-            "total_price" : price_categories,
-            "total_product_sale" : total_quantity_category,
-            "total_price_sale" : total_price_category
+            'category_list': category_list,
+            "total_items_sold" : total_quantity_category,
+            "total_sales" : total_price_category
         }
+
         return result, 200
 
 class OutletReport(Resource):

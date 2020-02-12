@@ -38,7 +38,7 @@ class ActivityResource(Resource):
         carts = Carts.query.filter_by(id_outlet = id_outlet)
         
         # Filter by order code
-        if args['order_code'] != '' or args['order_code'] is not None:
+        if args['order_code'] != '' and args['order_code'] is not None:
             carts = carts.filter_by(order_code = args['order_code'])
 
         # Filter by date
