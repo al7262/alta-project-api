@@ -224,7 +224,7 @@ class HistoryReport(Resource):
         
         # Default case
         elif (args['start_time'] is None or args['start_time'] == '') and (args['end_time'] is None or args['end_time'] == ''):
-            pass
+            transactions = transactions.filter(Carts.created_at >= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
         # ----- Filter by Outlet -----
         if args['id_outlet'] is not None and args['id_outlet'] != '':
@@ -699,7 +699,7 @@ class ProfitReport(Resource):
                 return {"message" : "Inputan Anda salah"}, 400
         
         result = []
-        if args['name_outlet'] is None or args['name_outlet'] != '':
+        if args['name_outlet'] is None or args['name_outlet'] == '':
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
             qry_product = Products.query.filter_by(id_users = claims['id']).all()
             qry_inventory = Inventories.query.filter_by(id_users = claims['id']).all()
@@ -747,7 +747,6 @@ class ProfitReport(Resource):
                     result.append(data)
                 start = start + relativedelta(days = +1)
             return result, 200
-
 
 api.add_resource(ProductReport, '/product-sales')
 api.add_resource(CategoryReport, '/category')
