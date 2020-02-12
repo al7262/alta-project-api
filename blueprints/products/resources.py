@@ -12,7 +12,7 @@ from blueprints.recipes.model import Recipe
 from blueprints.users.model import Users
 from blueprints.outlets.model import Outlets
 from blueprints import db, app
-from datetime import datetime
+from datetime import datetime, timedelta
 from twilio.rest import Client as twilio_client
 from io import BytesIO
 from PIL import Image, ImageDraw
@@ -257,7 +257,7 @@ class SpecificProductResource(Resource):
         product.price = args['price']
         product.show = show
         product.image = args['image']
-        product.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        product.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
 
         # Come in recipe
@@ -318,7 +318,7 @@ class SpecificProductResource(Resource):
         # Soft delete the product
         product = Products.query.filter_by(id = id_product).filter_by(deleted = False).first()
         product.deleted = True
-        product.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        product.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
 
         # Delete related recipe
@@ -620,7 +620,7 @@ class SendOrder(Resource):
                 stock_outlet = StockOutlet.query.filter_by(id_outlet = args['id_outlet']).filter_by(id_inventory = id_inventory).first()
                 stock_outlet.stock = stock_outlet.stock - (recipe.amount * int(item['unit']))
                 inventory.total_stock = inventory.total_stock - (recipe.amount * int(item['unit']))
-                inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                inventory.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
                 new_log = InventoryLog(
                     id_stock_outlet = stock_outlet.id,
                     amount = recipe.amount * int(item['unit']),

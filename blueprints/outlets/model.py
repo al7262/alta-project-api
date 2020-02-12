@@ -1,7 +1,7 @@
 # Import
 from blueprints import db
 from flask_restful import fields
-from datetime import datetime
+from datetime import datetime, timedelta
 from blueprints.users.model import Users
 
 # Create Model
@@ -14,8 +14,8 @@ class Outlets(db.Model):
     address = db.Column(db.String(150), nullable = False, default = '')
     city = db.Column(db.String(150), nullable = False, default = '')
     tax = db.Column(db.Integer, nullable = False, default = 0)
-    created_at = db.Column(db.DateTime, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    updated_at = db.Column(db.DateTime, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    created_at = db.Column(db.DateTime, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
+    updated_at = db.Column(db.DateTime, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
     deleted = db.Column(db.Boolean, default = False)
 
     response_fields = {
@@ -43,8 +43,8 @@ class Outlets(db.Model):
         self.address = address
         self.city = city
         self.tax = tax
-        self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.created_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
+        self.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         self.deleted = False
     
     def __repr__(self):

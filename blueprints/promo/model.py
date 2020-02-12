@@ -1,7 +1,7 @@
 # Import
 from blueprints import db
 from flask_restful import fields
-import datetime
+from datetime import datetime, timedelta
 from blueprints.users.model import Users
 
 # Create Model
@@ -13,8 +13,8 @@ class Promos (db.Model):
     status = db.Column(db.Boolean, nullable = False, default = False)
     day = db.Column(db.String(150), nullable = False, default = "")
     deleted = db.Column(db.Boolean, nullable = False, default = False)
-    created_at = db.Column(db.DateTime, default = datetime.datetime.now())
-    update_at = db.Column(db.DateTime, onupdate = datetime.datetime.now())
+    created_at = db.Column(db.DateTime, default = (datetime.now() + timedelta(hours = 7)))
+    update_at = db.Column(db.DateTime, onupdate = (datetime.now() + timedelta(hours = 7)))
 
     response_fields = {
         'id' : fields.Integer,

@@ -217,7 +217,7 @@ class InventoryPerOutlet(Resource):
                 db.session.commit()
 
                 # Edit related inventory instance
-                inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                inventory.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
                 inventory.total_stock = inventory.total_stock + int(args['stock'])
                 inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int(args['unit_price']))/(inventory.times_edited + 1))
                 inventory.times_edited = inventory.times_edited + 1
@@ -313,7 +313,7 @@ class InventoryDetail(Resource):
         inventory.name = args['name']
         inventory.unit = args['unit']
         inventory.total_stock = total_stock
-        inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        inventory.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
 
         return {'message': 'Sukses mengubah bahan baku'}, 200
@@ -329,7 +329,7 @@ class InventoryDetail(Resource):
 
         # Edit the inventory
         inventory.total_stock = inventory.total_stock - stock_outlet.stock
-        inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        inventory.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
 
         # Delete inventory log related to this stock outlet
@@ -395,7 +395,7 @@ class AddStock(Resource):
 
         # Edit inventory
         inventory.total_stock = inventory.total_stock + int(args['stock'])
-        inventory.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        inventory.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int(args['price']))/(inventory.times_edited + 1))
         inventory.times_edited = inventory.times_edited + 1
 

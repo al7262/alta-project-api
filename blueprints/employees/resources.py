@@ -168,7 +168,7 @@ class EmployeeResource(Resource):
             qry.username = args['username']
         if args['position'] is not None:
             qry.position = args['position']
-        qry.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        qry.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
         return marshal(qry, Employees.response_fields), 200
 
