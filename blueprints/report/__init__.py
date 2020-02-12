@@ -593,18 +593,18 @@ class OutletReport(Resource):
         args = parser.parse_args()
 
         # setting input time
-        time = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d")
+        time = (datetime.now() + timedelta(hours = 7)).strftime("%d-%m-%Y")
         today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2])) + timedelta(hours = 7)
         start = today
         end = today + relativedelta(days = +1)
-        if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
+        if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
             start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
             end_time = args['end_time']
             end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(hours = 7)
             end = end + relativedelta(days = +1)
             if end <= start :
-                return {"massage" : "inputan Anda salah"}, 400
+                return {"message" : "Inputan Anda salah"}, 400
         
         # Prepare variable needed
         result = []
@@ -680,7 +680,7 @@ class ProfitReport(Resource):
         args = parser.parse_args()
 
         # setting input time
-        time = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d")
+        time = (datetime.now() + timedelta(hours = 7)).strftime("%d-%m-%Y")
         today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2])) + timedelta(hours = 7)
         start = today
         end = today + relativedelta(days = +1)
