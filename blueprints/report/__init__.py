@@ -598,10 +598,12 @@ class OutletReport(Resource):
 
         # setting input time
         time = (datetime.now() + timedelta(hours = 7)).strftime("%d-%m-%Y")
-        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2])) + timedelta(hours = 7)
-        start = today
-        end = today + relativedelta(days = +1)
-        if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
+        if args['start_time'] == "" or args['end_time'] == "":
+            today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2])) + timedelta(hours = 7)
+            start = today
+            end = today + relativedelta(days = +1)
+        if args['start_time'] is not None and args['end_time'] is not None or args['start_time'] != "" or args['end_time'] != "":
+            print("SAYA DISINI")
             start_time = args['start_time']
             start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
             end_time = args['end_time']
@@ -689,17 +691,20 @@ class ProfitReport(Resource):
         start = today
         end = today + relativedelta(days = +1)
         
-        if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
+        if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
+            print("SAYA DISINI")
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(days = 7)
+            print(start_time)
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(days = 7)
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(hours = 7)
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"message" : "Inputan Anda salah"}, 400
         
+        print(start, end)
         result = []
-        if args['name_outlet'] is None or args['name_outlet'] != '':
+        if args['name_outlet'] is None or args['name_outlet'] == '':
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
             qry_product = Products.query.filter_by(id_users = claims['id']).all()
             qry_inventory = Inventories.query.filter_by(id_users = claims['id']).all()
@@ -710,14 +715,18 @@ class ProfitReport(Resource):
                     total_price_inventory = 0
                     profit = 0
                     qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
+                    # print(qry_cart)
                     if qry_cart is not None:
                         for carts in qry_cart:
+                            # print(carts)
                             price_inventory_cart = 0
                             create_at = carts.created_at
+                            # print(create_at, start, end)
                             interval = start + relativedelta(days = +1)
                             if start <= create_at and create_at <= interval:
                                 amount_sales = amount_sales + carts.total_payment
                                 number_discount = number_discount + carts.total_discount
+                                # print("amount = ", amount_sales, "number = ", number_discount)
                                 if qry_product is not None :
                                     for product in qry_product:
                                         price_inventory_product = 0
@@ -728,6 +737,7 @@ class ProfitReport(Resource):
                                                     qry_recipe = Recipe.query.filter_by(id_product = product.id).filter_by(id_inventory = inventory.id).first()
                                                     if qry_recipe is not None:
                                                         price_inventory_product = price_inventory_product + (qry_recipe.amount * inventory.unit_price)
+                                                        # print(price_inventory_product)
                                             price_inventory_cart = price_inventory_cart + (price_inventory_product * qry_cartdetail.quantity)
                                 total_price_inventory = total_price_inventory + price_inventory_cart
                                     
@@ -745,6 +755,54 @@ class ProfitReport(Resource):
                         "total_price_inventory" : profit 
                     }
                     result.append(data)
+                start = start + relativedelta(days = +1)
+
+        if args['name_outlet'] is not None or args['name_outlet'] != '':
+            qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
+            qry_product = Products.query.filter_by(id_users = claims['id']).all()
+            qry_inventory = Inventories.query.filter_by(id_users = claims['id']).all()
+            while start < end:
+                amount_sales = 0
+                number_discount = 0
+                total_price_inventory = 0
+                profit = 0
+                qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
+                if qry_cart is not None:
+                    for carts in qry_cart:
+                        price_inventory_cart = 0
+                        create_at = carts.created_at
+                        interval = start + relativedelta(days = +1)
+                        if start <= create_at and create_at <= interval:
+                            amount_sales = amount_sales + carts.total_payment
+                            number_discount = number_discount + carts.total_discount
+                            if qry_product is not None :
+                                for product in qry_product:
+                                    price_inventory_product = 0
+                                    qry_cartdetail = CartDetail.query.filter_by(id_cart = carts.id).filter_by(id_product = product.id).first()
+                                    if qry_cartdetail is not None:
+                                        if qry_inventory is not None:
+                                            for inventory in qry_inventory:
+                                                qry_recipe = Recipe.query.filter_by(id_product = product.id).filter_by(id_inventory = inventory.id).first()
+                                                if qry_recipe is not None:
+                                                    price_inventory_product = price_inventory_product + (qry_recipe.amount * inventory.unit_price)
+                                        price_inventory_cart = price_inventory_cart + (price_inventory_product * qry_cartdetail.quantity)
+                            total_price_inventory = total_price_inventory + price_inventory_cart
+                                    
+                if qry_cart is None:
+                    amount_sales = amount_sales + 0
+                    number_discount = number_discount + 0
+                    total_price_inventory = total_price_inventory + 0
+
+                profit = amount_sales - (number_discount + total_price_inventory)
+                data = {
+                    "name_outlet" : outlet.name,
+                    "time" : str(start),
+                    "total_price_cart" : amount_sales,
+                    "total_price_discount" : number_discount,
+                    "total_price_inventory" : profit 
+                }
+                result.append(data)
+                print("AKU DISINI")
                 start = start + relativedelta(days = +1)
             return result, 200
 
