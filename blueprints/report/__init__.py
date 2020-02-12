@@ -56,7 +56,7 @@ class ProductReport(Resource):
         args = parser.parse_args()
 
         # Get all products from specific owner
-        products = Products.query.filter_by(deleted = False).filter_by(id_users = id_users)
+        products = Products.query.filter_by(id_users = id_users)
 
         # ----- First Filter -----
         # By name
@@ -91,7 +91,7 @@ class ProductReport(Resource):
             for detail in detail_transaction:
                 # Check for related outlet
                 related_cart = Carts.query.filter_by(deleted = True).filter_by(id = detail.id_cart).first()
-                related_outlet = Outlets.query.filter_by(deleted = False).filter_by(id = related_cart.id_outlet).first()
+                related_outlet = Outlets.query.filter_by(id = related_cart.id_outlet).first()
                 if related_outlet is None:
                     continue
                 
@@ -172,6 +172,18 @@ class ProductReport(Resource):
                             product_list[index] = product_list[index + 1]
                             product_list[index + 1] = dummy
                             restart = True
+
+        # Sorting so deleted product will be placed in the bottom
+        restart = True
+        while restart:
+            restart = False
+            if len(product_list) > 1:
+                for index in range(len(product_list) - 1):
+                    if product_list[index]['deleted'] == True and product_list[index + 1]['deleted'] == False:
+                        dummy = product_list[index]
+                        product_list[index] = product_list[index + 1]
+                        product_list[index + 1] = dummy
+                        restart = True
 
         result = {
             'total_sales': total_sales,
