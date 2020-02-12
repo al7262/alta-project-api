@@ -86,7 +86,7 @@ class ProductReport(Resource):
                 end_year = int(args['end_time'][6:10])
                 end_month = int(args['end_time'][3:5])
                 end_day = int(args['end_time'][0:2])
-                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
             for detail in detail_transaction:
                 # Check for related outlet
@@ -233,7 +233,7 @@ class HistoryReport(Resource):
             end_year = int(args['end_time'][6:10])
             end_month = int(args['end_time'][3:5])
             end_day = int(args['end_time'][0:2])
-            transactions = transactions.filter(Carts.created_at >= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+            transactions = transactions.filter(Carts.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
         
         # Default case
         elif (args['start_time'] is None or args['start_time'] == '') and (args['end_time'] is None or args['end_time'] == ''):
@@ -415,7 +415,11 @@ class InventoryLogReport(Resource):
                     end_year = int(args['end_time'][6:10])
                     end_month = int(args['end_time'][3:5])
                     end_day = int(args['end_time'][0:2])
-                    logs = logs.filter(InventoryLog.created_at >= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                    logs = logs.filter(InventoryLog.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+
+                # Default case
+                elif (args['start_time'] is None or args['start_time'] == '') and (args['end_time'] is None or args['end_time'] == ''):
+                    logs = logs.filter(InventoryLog.created_at >= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
                 for log in logs:
                     # Prepare the data
@@ -674,7 +678,8 @@ class OutletReport(Resource):
                     "name_outlet" : qry_outlet.name,
                     "time" : str(start),
                     "total_transaction" : number_transaction,
-                    "total_price" : amount_sales
+                    "total_price" : amount_sales,
+                    "deleted": qry_outlet.deleted
                 }
                 result.append(data)
                 start = start + relativedelta(days = +1)
