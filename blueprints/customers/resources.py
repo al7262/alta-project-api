@@ -34,7 +34,10 @@ class CustomerResource(Resource):
         args = parser.parse_args()
         offset = (args['p'] * args['rp']) - args['rp']
             
+        # Get all customers and sort it from the newest
         qry = Customers.query.filter_by(id_users = claims['id'])
+        qry = qry.order_by(desc(Customers.created_at))
+
         if args['keyword'] is not None and args['keyword'] != '':
             qry = qry.filter_by(id_users = claims['id']).filter(Customers.fullname.like("%"+args["keyword"]+"%") | Customers.phone_number.like("%"+args["keyword"]+"%") | Customers.email.like("%"+args["keyword"]+"%"))
 

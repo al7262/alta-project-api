@@ -38,8 +38,9 @@ class InventoryResource(Resource):
         parser.add_argument('status', location = 'args', required = False)
         args = parser.parse_args()
 
-        # Get all inventories
+        # Get all inventories and sort to the newest
         inventories = Inventories.query.filter_by(id_users = id_user).filter_by(deleted = False)
+        inventories = inventories.order_by(desc(Inventories.created_at))
 
         # Empty inventories
         if inventories.all() == []:
@@ -151,13 +152,13 @@ class InventoryPerOutlet(Resource):
             'below_reminder': below_reminder
         }
         if args['status'] == 'Tersedia':
-            result['inventories'] = available
+            result['inventories'] = available[::-1]
         elif args['status'] == 'Hampir Habis':
-            result['inventories'] = warning
+            result['inventories'] = warning[::-1]
         elif args['status'] == 'Habis':
-            result['inventories'] = empty
+            result['inventories'] = empty[::-1]
         else:
-            result['inventories'] = data_list
+            result['inventories'] = data_list[::-1]
         return result, 200
     
     # Add new inventory to specified outlet

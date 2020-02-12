@@ -94,7 +94,7 @@ class ProductResource(Resource):
                     product['stock'] = min(max_stock)
             
             result.append(product)
-        return result, 200
+        return result[::-1], 200
     
     # Add new product to database
     @jwt_required
@@ -352,7 +352,7 @@ class CategoryResource(Resource):
         for product in products:
             if product.category not in result:
                 result.append(product.category)
-        return result, 200
+        return result[::-1], 200
 
 class ItemsPerCategory(Resource):
     # Enable CORS
@@ -409,7 +409,7 @@ class ItemsPerCategory(Resource):
                     product['stock'] = min(max_stock)
 
             result.append(product)
-        return result, 200
+        return result[::-1], 200
 
 class CheckoutResource(Resource):
     # Enable CORS

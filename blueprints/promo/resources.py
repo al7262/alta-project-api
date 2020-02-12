@@ -44,7 +44,7 @@ class PromoResource(Resource):
         for row in qry.limit(args['rp']).offset(offset).all():
             if not row.deleted:
                 rows.append(marshal(row, Promos.response_fields))
-        return rows, 200
+        return rows[::-1], 200
 
     @jwt_required
     @user_required

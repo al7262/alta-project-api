@@ -364,6 +364,9 @@ class InventoryLogReport(Resource):
         # Get all inventories
         inventories = Inventories.query.filter_by(id_users = id_users)
 
+        # Sort to the newest
+        inventories = inventories.order_by(desc(Inventories.created_at))
+
         # ----- Filter by name -----
         if args['name'] is not None and args['name'] != '':
             inventories = inventories.filter(Inventories.name.like('%' + args['name'] + '%'))
