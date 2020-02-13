@@ -290,3 +290,102 @@ class TestReport():
         res = client.get(endpoint, headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
+
+    # get report category
+    def test_report_category(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/category?start_time=01-02-2020&end_time=02-02-2020", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # get report category with correct input 
+    def test_report_category_fix_time(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/category?start_time=13-02-2020&end_time=14-02-2020", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # get report outlet valid
+    def test_report_outlet_valid(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/outlet-sales?start_time=13-02-2020&end_time=14-02-2020&name_outlet=", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
+    # get report outlet invalid
+    def test_report_outlet_invalid(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/outlet-sales?start_time=14-02-2020&end_time=13-02-2020&name_outlet=", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 400
+    
+    # get report outlet valid no param
+    def test_report_outlet_valid_no_param(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/outlet-sales?start_time=&end_time=&name_outlet=", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # get report outlet valid with otlet
+    def test_report_outlet_valid_outlet(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/outlet-sales?start_time=13-02-2020&end_time=14-02-2020&name_outlet=Surabaya", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # get report profit valid no param
+    def test_report_profit_valid_no_param(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/profit?start_time=&end_time=&name_outlet=", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # get report profit invalid time
+    def test_report_profit_invalid_time(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/profit?start_time=14-02-2020&end_time=13-02-2020&name_outlet=", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 400
+    
+    # get report profit valid with outlet
+    def test_report_profit_valid_outlet(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/profit?start_time=13-02-2020&end_time=14-02-2020&name_outlet=Surabaya", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
