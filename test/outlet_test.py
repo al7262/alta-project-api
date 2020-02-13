@@ -197,3 +197,11 @@ class TestOutlet():
         res = client.get('/outlet/get/4', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 404
+    
+    # testing option
+    def test_option(self, client):
+        # Test the endpoints
+        res = client.options('/outlet')
+        res = client.options('/outlet/create')
+        res = client.options('/outlet/get/1')
+        assert res.status_code == 200

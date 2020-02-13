@@ -389,3 +389,14 @@ class TestReport():
         res = client.get("/report/profit?start_time=13-02-2020&end_time=14-02-2020&name_outlet=Surabaya", headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
+    
+    # testing option
+    def test_option(self, client):
+        # Test the endpoints
+        res = client.options('/report/product-sales')
+        res = client.options('/report/category')
+        res = client.options('/report/outlet-sales')
+        res = client.options('/report/profit')
+        res = client.options('/report/history')
+        res = client.options('/report/inventory-log')
+        assert res.status_code == 200

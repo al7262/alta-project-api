@@ -176,3 +176,11 @@ class TestAuth():
         res = client.get('/login/dashboard', json = data, headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
+    
+    # options
+    def test_options(self, client):
+        res = client.options('/login/dashboard')
+        res = client.options('/login/apps')
+        assert res.status_code == 200
+    
+    

@@ -319,3 +319,12 @@ class TestEmployee():
         res = client.get('/employee/get', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 404
+    
+    # testing option
+    def test_option(self, client):
+        # Test the endpoints
+        res = client.options('/employee/get/1')
+        res = client.options('/employee/create')
+        res = client.options('/employee/get')
+        res = client.options('/employee')
+        assert res.status_code == 200

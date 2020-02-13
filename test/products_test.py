@@ -457,3 +457,15 @@ class TestProducts():
         res = client.post('/product/checkout/send-email', json = data, headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
+    
+    # testing option
+    def test_option(self, client):
+        # Test the endpoints
+        res = client.options('/product')
+        res = client.options('/product/1')
+        res = client.options('/product/category')
+        res = client.options('/product/category/items')
+        res = client.options('/product/checkout/1')
+        res = client.options('/product/checkout/send-whatsapp')
+        res = client.options('/product/checkout/send-email')
+        assert res.status_code == 200
