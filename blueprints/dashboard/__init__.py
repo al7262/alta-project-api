@@ -288,9 +288,7 @@ class Dashboard(Resource):
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(deleted = False).all()
         count = 0
         limit = start + relativedelta(days = +1)
-        print(start, end, limit)
         if limit == end:
-            print("AKU DISINI")
             while start < end: 
                 amount_sales = 0
                 if args['name_outlet'] is not None and args['name_outlet'] != "":
@@ -322,7 +320,6 @@ class Dashboard(Resource):
                     count+=1
 
         if limit != end:
-            print("AKU TIDAK DISINI")
             while start < end: 
                 amount_sales = 0
                 if args['name_outlet'] is not None and args['name_outlet'] != "":
@@ -335,7 +332,9 @@ class Dashboard(Resource):
                                 amount_sales = amount_sales + carts.total_payment
                     if qry_cart is None:
                         amount_sales = amount_sales + 0
-                    chart[str(count)] = amount_sales
+                    the_time = str(start)
+                    my_time = the_time[0:10]
+                    chart[str(my_time)] = amount_sales
                     start = start + relativedelta(days = +1)
                     count+=1
                 if args['name_outlet'] is None or args['name_outlet'] == "":
@@ -349,7 +348,9 @@ class Dashboard(Resource):
                                     amount_sales = amount_sales + carts.total_payment
                         if qry_cart is None:
                             amount_sales = amount_sales + 0
-                    chart[str(count)] = amount_sales
+                    the_time = str(start)
+                    my_time = the_time[0:10]
+                    chart[str(my_time)] = amount_sales
                     start = start + relativedelta(days = +1)
                     count+=1
             

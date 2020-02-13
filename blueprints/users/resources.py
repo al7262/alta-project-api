@@ -2,6 +2,7 @@
 from flask import Blueprint
 from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, get_jwt_claims
 from .model import Users
 from blueprints import db, app, user_required
 from datetime import datetime, timedelta
@@ -88,7 +89,15 @@ class RegisterUserResource(Resource):
             if 'FLASK_ENV' not in os.environ: os.environ['FLASK_ENV'] = 'development'
             if os.environ['FLASK_ENV'] == 'development': mailjet.send.create(data=data)
 
-            return {'message' : "Registrasi Berhasil"}, 200,{'Content-Type': 'application/json'}
+        encrypted = hashlib.md5(args['password'].encode()).hexdigest()
+        qry_user = Users.query.filter_by(email = args['email']).filter_by(password = encrypted)
+        userData = qry_user.first()
+
+        if userData is not None:
+            userData = marshal(userData,Users.jwt_claims_fields)
+            token = create_access_token(identity = userData['email'], user_claims = userData)
+
+            return {'token' : token}, 200,{'Content-Type': 'application/json'}
         return {'message' : "Registrasi Gagal"}, 401
 
 class UserResource(Resource):
