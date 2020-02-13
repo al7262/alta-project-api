@@ -119,7 +119,7 @@ class InventoryPerOutlet(Resource):
             inventory = marshal(inventory, Inventories.inventories_fields)
 
             # Filter by name
-            if args['name'] != '' and not re.search(args['name'].lower(), inventory['name'].lower()):
+            if args['name'] != '' and args['name'] is not None and not re.search(args['name'].lower(), inventory['name'].lower()):
                 continue
 
             # Prepare the data to be shown

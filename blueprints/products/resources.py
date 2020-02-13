@@ -721,7 +721,7 @@ class SendEmail(Resource):
         'Messages': [
             {
             "From": {
-                "Email": required_data["owner_email"],
+                "Email": easykachin@gmail.com,
                 "Name": required_data["business_name"]
             },
             "To": [
