@@ -781,7 +781,7 @@ class ProfitReport(Resource):
         
         if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
             end_time = args['end_time']
             end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
@@ -820,7 +820,7 @@ class ProfitReport(Resource):
                                                     qry_inventory = Inventories.query.filter_by(id = recipe.id_inventory).first()
                                                     if qry_inventory is not None:
                                                         count_inventory = count_inventory + (recipe.amount * qry_inventory.unit_price)
-                                        count_cart_detail = count_cart_detail + (count_inventory * cartdetail.quantity)
+                                                        count_cart_detail = count_cart_detail + (recipe.amount * qry_inventory.unit_price * cartdetail.quantity)
                                         count_price_product = count_price_product + (qry_product.price * cartdetail.quantity)
                             count_cart = count_cart + count_cart_detail
                             count_product = count_product + count_price_product
@@ -866,7 +866,7 @@ class ProfitReport(Resource):
                                                 qry_inventory = Inventories.query.filter_by(id = recipe.id_inventory).first()
                                                 if qry_inventory is not None:
                                                     count_inventory = count_inventory + (recipe.amount * qry_inventory.unit_price)
-                                    count_cart_detail = count_cart_detail + (count_inventory * cartdetail.quantity)
+                                                    count_cart_detail = count_cart_detail + (recipe.amount * qry_inventory.unit_price * cartdetail.quantity)
                                     count_price_product = count_price_product + (qry_product.price * cartdetail.quantity)
                         count_cart = count_cart + count_cart_detail
                         count_product = count_product + count_price_product
