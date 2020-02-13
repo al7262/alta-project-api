@@ -787,7 +787,22 @@ class ProfitReport(Resource):
                 }
                 result.append(data)
                 start = start + relativedelta(days = +1)
-            return result, 200
+
+            grand_price_sale = 0
+            grand_price_inventory = 0
+            grand_price_profit = 0     
+                   
+            for datum in result:
+                grand_price_sale = grand_price_sale + datum["total_price_sale"]
+                grand_price_inventory = grand_price_inventory + datum["total_price_inventory"]
+            grand_price_profit = grand_price_sale - grand_price_inventory
+            grand_result = {
+                "grand_price_sale" : grand_price_sale,
+                "grand_price_inventory" : grand_price_inventory,
+                "grand_price_profit" : grand_price_profit,
+                "result" : result
+            }    
+            return grand_result, 200
 
 
 api.add_resource(ProductReport, '/product-sales')
