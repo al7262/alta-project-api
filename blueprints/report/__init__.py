@@ -88,6 +88,10 @@ class ProductReport(Resource):
                 end_day = int(args['end_time'][0:2])
                 detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
+            # Default case
+            elif (args['start_time'] is None or args['start_time'] == '') and (args['end_time'] is None or args['end_time'] == ''):
+                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.updated_at <= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+
             for detail in detail_transaction:
                 # Check for related outlet
                 related_cart = Carts.query.filter_by(deleted = True).filter_by(id = detail.id_cart).first()
