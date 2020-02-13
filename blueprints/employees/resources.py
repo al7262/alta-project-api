@@ -5,7 +5,8 @@ from sqlalchemy import desc
 from .model import Employees
 from blueprints.outlets.model import Outlets
 from blueprints import db, app, user_required, dashboard_required, apps_required
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from dateutil.relativedelta import *
 from password_strength import PasswordPolicy
 import json, hashlib
 
@@ -168,7 +169,7 @@ class EmployeeResource(Resource):
             qry.username = args['username']
         if args['position'] is not None:
             qry.position = args['position']
-        qry.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
+        qry.updated_at = (datetime.now() + relativedelta(hours = +7)).strftime("%Y-%m-%d %H:%M:%S")
         db.session.commit()
         return marshal(qry, Employees.response_fields), 200
 

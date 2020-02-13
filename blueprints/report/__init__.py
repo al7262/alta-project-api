@@ -674,10 +674,8 @@ class OutletReport(Resource):
                     amount_sales = 0
                     number_transaction = 0
                     qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
-                    print(qry_cart)
                     if qry_cart is not None:
                         for carts in qry_cart:
-                            # print(carts.id_outlet)
                             create_at = carts.created_at
                             interval = start + relativedelta(days = +1)
                             if start <= create_at and create_at <= interval:
@@ -894,7 +892,7 @@ class ProfitReport(Resource):
             grand_price_sale = 0
             grand_price_inventory = 0
             grand_price_profit = 0     
-                   
+
             for datum in result:
                 grand_price_sale = grand_price_sale + datum["total_price_sale"]
                 grand_price_inventory = grand_price_inventory + datum["total_price_inventory"]

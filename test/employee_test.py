@@ -294,3 +294,28 @@ class TestEmployee():
         res = client.get('/employee/get/1', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 404
+    
+    # testing display employee data by claims valid
+    def test_delete_employee_data_by_claims_valid(self, client):
+        # get token 
+        token = create_token('stevejobs')
+        # Prepare the DB
+        db_reset()
+       
+        # Test the endpoints
+        res = client.get('/employee/get', headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # testing display employee data by claims valid
+    def test_delete_employee_data_by_claims_valid(self, client):
+        # get token 
+        token = create_token('budisetiawan')
+        # Prepare the DB
+        db_reset()
+       
+        # Test the endpoints
+        res = client.delete('/employee/1', headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/employee/get', headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 404
