@@ -220,7 +220,7 @@ class InventoryPerOutlet(Resource):
                 # Edit related inventory instance
                 inventory.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
                 inventory.total_stock = inventory.total_stock + int(args['stock'])
-                inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int(args['unit_price']))/(inventory.times_edited + 1))
+                inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int((int(args['unit_price']) / int(args['stock']))))/(inventory.times_edited + 1))
                 inventory.times_edited = inventory.times_edited + 1
                 db.session.commit()
 
@@ -397,7 +397,7 @@ class AddStock(Resource):
         # Edit inventory
         inventory.total_stock = inventory.total_stock + int(args['stock'])
         inventory.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
-        inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int(args['price']))/(inventory.times_edited + 1))
+        inventory.unit_price = int(((inventory.unit_price * inventory.times_edited) + int((int(args['unit_price']) / int(args['stock']))))/(inventory.times_edited + 1))
         inventory.times_edited = inventory.times_edited + 1
 
         # Add inventory log instance
