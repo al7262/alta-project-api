@@ -20,7 +20,7 @@ from flask_jwt_extended import jwt_required, get_jwt_claims
 bp_dashboard = Blueprint('dashboard', __name__)
 api = Api(bp_dashboard)
 
-class Dashboard_case1(Resource):
+class Dashboard(Resource):
     # Enable CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
@@ -40,10 +40,9 @@ class Dashboard_case1(Resource):
 
         # Datetime related
         time = datetime.now().strftime("%Y-%m-%d")
-        if args['start_time'] == "" and args['end_time'] == "":
-            today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
-            start = today
-            end = today + relativedelta(days = +1)
+        today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
+        start = today
+        end = today + relativedelta(days = +1)
         if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
             start = datetime(int(start_time[6::]),int(start_time[3:5]),int(start_time[0:2]))
@@ -283,27 +282,47 @@ class Dashboard_case1(Resource):
 
         # Ini untuk grafik
         chart = {}
+        if args['month'] is not None and args['month'] != "":
+            month = int(args['month'])
+        if args['month'] is None or args['month'] == "":
+            month = 0
+        now_month = int(time[5:7])
+        end = today + relativedelta(months = (month)+1, days = -(int(time[8::]))+1)
         if args['name_outlet'] is not None and args['name_outlet'] != "":
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).filter_by(deleted = False).first()
-            qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
-            if qry_cart is not None:
-                for carts in qry_cart:
-                    create_at = carts.created_at
-                    print(create_at)
-                    if start <= create_at and create_at <= end:
-                        chart[str(create_at)] = carts.total_payment
-            start = start + relativedelta(days = +1)
-        if args['name_outlet'] is None or args['name_outlet'] == "":
+        if qry_outlet is None or args['name_outlet'] == "":
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(deleted = False).all()
-            for outlet in qry_outlet:
-                qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
+        start = today + relativedelta(months = (month), days = -(int(time[8::]))+1)
+        count = 1
+        while start < end: 
+            amount_sales = 0
+            if args['name_outlet'] is not None and args['name_outlet'] != "":
+                qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
                 if qry_cart is not None:
                     for carts in qry_cart:
                         create_at = carts.created_at
-                        print(create_at)
-                        if start <= create_at and create_at <= end:
-                            chart[str(create_at)] = carts.total_payment
-            start = start + relativedelta(days = +1)
+                        interval = start + relativedelta(days = +1)
+                        if start <= create_at and create_at <= interval:
+                            amount_sales = amount_sales + carts.total_payment
+                if qry_cart is None:
+                    amount_sales = amount_sales + 0
+                chart[str(count)] = amount_sales
+                start = start + relativedelta(days = +1)
+                count+=1
+            if args['name_outlet'] is None or args['name_outlet'] == "":
+                for outlet in qry_outlet:
+                    qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
+                    if qry_cart is not None:
+                        for carts in qry_cart:
+                            create_at = carts.created_at
+                            interval = start + relativedelta(days = +1)
+                            if start <= create_at and create_at <= interval:
+                                amount_sales = amount_sales + carts.total_payment
+                    if qry_cart is None:
+                        amount_sales = amount_sales + 0
+                chart[str(count)] = amount_sales
+                start = start + relativedelta(days = +1)
+                count+=1
         
         #ini untuk member loyal
         min = 0
@@ -334,324 +353,4 @@ class Dashboard_case1(Resource):
         }
         return result, 200
 
-
-class Dashboard_case2(Resource):
-    # Enable CORS
-    def options(self,id=None):
-        return{'status':'ok'} , 200
-
-    # Get all information needed to be shown in the dashboard
-    @jwt_required
-    @dashboard_required
-    def get(self):
-        # Tak input from users
-        claims = get_jwt_claims()
-        parser = reqparse.RequestParser()
-        parser.add_argument('name_outlet', location = 'args')
-        parser.add_argument('start_time', location = 'args')
-        parser.add_argument('end_time', location = 'args')
-        parser.add_argument('month', location = 'args')
-        args = parser.parse_args()
-
-        # Datetime related
-        time = datetime.now().strftime("%Y-%m-%d")
-        if args['start_time'] == "" and args['end_time'] == "":
-            today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
-            start = today
-            end = today + relativedelta(days = +1)
-        if args['start_time'] is not None and args['end_time'] is not None and  args['start_time'] != "" and args['end_time'] != "":
-            start_time = args['start_time']
-            start = datetime(int(start_time[6::]),int(start_time[3:5]),int(start_time[0:2]))
-            end_time = args['end_time']
-            end = datetime(int(end_time[6::]),int(end_time[3:5]),int(end_time[0:2]))
-            end = end + relativedelta(days = +1)
-            if end <= start :
-                return {"message" : "Inputan Anda salah"}, 400
-        
-        # ---------- Setting some variables needed ----------
-        number_transaction = 0
-        sales_amount = 0
-        total_quantity = 0
-        list_product = []
-        info_products = []
-
-        # Popular Category and Products
-        categories = []
-        list_category = []
-        info_categories = []
-        info_another = []
-        tops = []
-        top_product = []
-        top_category = []
-        
-        # Calculate total items and total sales
-        if args['name_outlet'] is None or args['name_outlet'] == "":
-            qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
-            for outlet in qry_outlet:
-                qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
-                if qry_cart is not None:
-                    for cart in qry_cart:
-                        create_at = cart.created_at
-                        if start <= create_at and create_at <= end:
-                            sales_amount = sales_amount + cart.total_payment
-                            number_transaction = number_transaction + 1
-            
-            # For popular category
-            qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
-            for product in qry_product:
-                if product.category not in categories:
-                    categories.append(product.category)
-
-            qry_cart = Carts.query.filter_by(id_users = claims['id']).all()
-            for product in qry_product:
-                total_quantity = 0
-                if qry_cart is not None:
-                    for cart in qry_cart:
-                        create_at = cart.created_at
-                        if start <= create_at and create_at <= end:
-                            qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
-                            if qry_cartdetail is not None:
-                                total_quantity = total_quantity + qry_cartdetail.quantity
-                    list_product.append(total_quantity)
-                    info_products.append([product.name,total_quantity])
-            list_product.sort(reverse = True)
-            if len(list_product) < 5:
-                tops = list_product[0::].copy()
-            else:
-                tops = list_product[0:5].copy()
-            for top in tops:
-                for info in info_products:
-                    if info[1] == top:
-                        if info not in top_product:
-                            top_product.append(info)
-                            break
-    
-            # For popular categories
-            total_quantity = 0
-            for product in qry_product:
-                if qry_cart is not None:
-                    for cart in qry_cart:
-                        create_at = cart.created_at
-                        if start <= create_at and create_at <= end:
-                            qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
-                            if qry_cartdetail is not None:
-                                total_quantity = total_quantity + qry_cartdetail.quantity
-            info_another = ["another",total_quantity]
-            for category in categories:
-                qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(category = category).filter_by(deleted = False).all()
-                total_quantity = 0
-                for product in qry_product:
-                    if qry_cart is not None:
-                        for cart in qry_cart:
-                            create_at = cart.created_at
-                            if start <= create_at and create_at <= end:
-                                qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
-                                if qry_cartdetail is not None:
-                                    total_quantity = total_quantity + qry_cartdetail.quantity
-                list_category.append(total_quantity)
-                info_categories.append([category,total_quantity])
-            list_category.sort(reverse = True)
-            if len(list_category) < 5 :
-                tops = list_category[0::].copy()
-            else:
-                tops = list_category[0:5].copy()
-            for top in tops:
-                for info in info_categories:
-                    if info[1] == top:
-                        if info not in top_category:
-                            top_category.append(info)
-                            break
-            top_category.append(info_another)
-
-            # ini untuk pengingat stock
-            inventories = Inventories.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
-            stock_outlet_list = []
-            if inventories is not None:
-                for inventory in inventories:
-                    inventory_id = inventory.id
-                    related_stock_outlet = StockOutlet.query.filter_by(id_inventory = inventory_id).all()
-                    for stock_outlet in related_stock_outlet:
-                        stock_outlet_list.append(stock_outlet)
-            stock_outlet_filtered = filter(lambda stock_outlet: stock_outlet.stock <= stock_outlet.reminder, stock_outlet_list)
-            if stock_outlet_filtered is not None:
-                inventories_data = []
-                for stock_outlet in stock_outlet_filtered:
-                    stock_outlet = marshal(stock_outlet, StockOutlet.response_fields)
-                    id_inventory = stock_outlet['id_inventory']
-                    inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
-                    if inventory is not None:
-                        inventory_name = inventory.name
-                        inventory_unit = inventory.unit
-                        outlet = Outlets.query.filter_by(deleted = False).filter_by(id = stock_outlet['id_outlet']).first()
-                        if outlet is not None:
-                            outlet_name = outlet.name
-                            
-
-                            data = {
-                            'name': inventory_name,
-                            'stock': stock_outlet['stock'],
-                            'outlet': outlet_name,
-                            'unit' : inventory_unit
-                            }
-                            inventories_data.append(data)
-             
-        elif args['name_outlet'] is not None:
-            qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
-            qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
-            if qry_cart is not None:
-                for cart in qry_cart:
-                    create_at = cart.created_at
-                    if start <= create_at and create_at <= end:
-                        sales_amount = sales_amount + cart.total_payment
-                        number_transaction = number_transaction + 1
-                
-            # ini untuk produk terlaris
-            qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
-            for product in qry_product:
-                if product.category not in categories:
-                    categories.append(product.category)
-            qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
-            if qry_cart is not None:
-                for product in qry_product:
-                    total_quantity = 0
-                    for cart in qry_cart:
-                        create_at = cart.created_at
-                        if start <= create_at and create_at <= end:
-                            qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
-                            if qry_cartdetail is not None:
-                                total_quantity = total_quantity + qry_cartdetail.total_price_product
-                    list_product.append(total_quantity)
-                    info_products.append([product.name,total_quantity])
-            list_product.sort(reverse = True)
-            if len(list_product) < 5 :
-                tops = list_product[0::].copy()
-            else:
-                tops = list_product[0:5].copy()
-            for top in tops:
-                for info in info_products:
-                    if info[1] == top:
-                        if info not in top_product:
-                            top_product.append(info)
-                            break
-            
-            # ini untuk kategori terlaris
-            total_quantity = 0
-            for product in qry_product:
-                if qry_cart is not None:
-                    for cart in qry_cart:
-                        create_at = cart.created_at
-                        if start <= create_at and create_at <= end:
-                            qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
-                            if qry_cartdetail is not None:
-                                total_quantity = total_quantity + qry_cartdetail.quantity
-            info_another = ["another",total_quantity]
-            for category in categories: 
-                qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(category = category).filter_by(deleted = False).all()
-                total_quantity = 0
-                for product in qry_product:
-                    if qry_cart is not None:
-                        for cart in qry_cart:
-                            create_at = cart.created_at
-                            if start <= create_at and create_at <= end:
-                                qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
-                                if qry_cartdetail is not None:
-                                    total_quantity = total_quantity + qry_cartdetail.quantity
-                list_category.append(total_quantity)
-                info_categories.append([category,total_quantity])
-            list_category.sort(reverse = True)
-            if len(list_category) < 5 :
-                tops = list_category[0::].copy()
-            else:
-                tops = list_category[0:5].copy()
-            for top in tops:
-                for info in info_categories:
-                    if info[1] == top:
-                        if info not in top_category:
-                            top_category.append(info)
-                            break
-            top_category.append(info_another)
-            
-            #ini untuk pengingat stock
-            stock_outlet_list = StockOutlet.query.filter_by(id_outlet = qry_outlet.id)
-            stock_outlet_filtered = filter(lambda stock_outlet: stock_outlet.stock <= stock_outlet.reminder, stock_outlet_list)
-            if stock_outlet_filtered is not None:
-                outlet_name = qry_outlet.name
-                   
-                inventories_data = []
-                for stock_outlet in stock_outlet_filtered:
-                    stock_outlet = marshal(stock_outlet, StockOutlet.response_fields)
-
-                    id_inventory = stock_outlet['id_inventory']
-                    inventory = Inventories.query.filter_by(deleted = False).filter_by(id = id_inventory).first()
-                    if inventory is not None:
-                        inventory_name = inventory.name
-                        inventory_unit = inventory.unit
-
-                        data = {
-                            'name': inventory_name,
-                            'stock': stock_outlet['stock'],
-                            'outlet': outlet_name,
-                            'unit' : inventory_unit
-                        }
-                        inventories_data.append(data)
-
-
-        # Ini untuk grafik
-        chart = {}
-        if args['name_outlet'] is not None and args['name_outlet'] != "":
-            qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).filter_by(deleted = False).first()
-            qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
-            if qry_cart is not None:
-                for carts in qry_cart:
-                    create_at = carts.created_at
-                    this_time = str(create_at)
-                    my_time = datetime(int(this_time[0:4]),int(this_time[5:7]),int(this_time[8:10]),int(this_time[11:13]),0,0)
-                    if start <= create_at and create_at <= end:
-                        chart[str(my_time)] = chart[str(my_time)] + carts.total_payment
-
-            start = start + relativedelta(days = +1)
-        if args['name_outlet'] is None or args['name_outlet'] == "":
-            qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(deleted = False).all()
-            for outlet in qry_outlet:
-                qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
-                if qry_cart is not None:
-                    for carts in qry_cart:
-                        create_at = carts.created_at
-                        this_time = str(create_at)
-                        my_time = this_time[0:4]+"-"+this_time[5:7]+"-"+this_time[8:10]+" "+this_time[11:13]+":00:00"
-                        print(my_time)
-                        if start <= create_at and create_at <= end:
-                            chart[my_time] = chart[my_time] + carts.total_payment
-            start = start + relativedelta(days = +1)
-        
-        #ini untuk member loyal
-        min = 0
-        new_customer = 0
-        total_costumer = 0
-        qry = Customers.query.filter_by(id_users = claims['id']) 
-        time = datetime.now().strftime("%Y-%m-%d")
-        today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
-        start = today + relativedelta(days = -(int(time[8::]))+1)
-        end = today + relativedelta(days = +1)
-        for costumer in qry:
-            total_costumer = total_costumer + 1
-        for costumer in qry:
-            create_at = costumer.created_at
-            if start <= create_at and create_at <= end:
-                new_customer = new_customer + 1
-
-        result = {
-            "sales_amount" : sales_amount,
-            "number_transaction" : number_transaction,
-            "chart" : chart,
-            "top_product" : top_product,
-            "top_category" : top_category,
-            "new_customer" : new_customer,
-            "total_costumer" : total_costumer,
-            'below_reminder': len(inventories_data),
-            'reminder': inventories_data
-        }
-        return result, 200
-
-api.add_resource(Dashboard_case1,'/dashboard1')
-api.add_resource(Dashboard_case2,'/dashboard2')
+api.add_resource(Dashboard,'/dashboard')
