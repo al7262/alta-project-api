@@ -62,3 +62,9 @@ class TestActivity():
         res = client.get('/activity/1?order_code=' + data['order_code'] + '&date=' + data['date'], headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
+    
+    # testing option
+    def test_option(self, client):
+        # Test the endpoints
+        res = client.options('/activity/1')
+        assert res.status_code == 200

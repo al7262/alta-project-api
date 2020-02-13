@@ -73,4 +73,9 @@ class TestDashboard():
         res = client.get('/dashboard?name_outlet=&start_time=01-02-2020&end_time=02-02-2020', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
-    
+
+    # testing option
+    def test_option(self, client):
+        # Test the endpoints
+        res = client.options('/dashboard')
+        assert res.status_code == 200

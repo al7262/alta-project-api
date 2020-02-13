@@ -122,3 +122,11 @@ class TestCustomers():
         res = client.get('/customer/get/1917', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 404
+    
+    # testing option
+    def test_option(self, client):
+        # Test the endpoints
+        res = client.options('/customer')
+        res = client.options('/customer/create')
+        res = client.options('/customer/get/1')
+        assert res.status_code == 200

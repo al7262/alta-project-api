@@ -530,3 +530,16 @@ class TestInventories():
         res = client.get('/inventory/reminder', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
+    
+    # testing option
+    def test_option(self, client):
+        # Test the endpoints
+        res = client.options('/inventory')
+        res = client.options('/inventory/1')
+        res = client.options('/inventory/detail/1')
+        res = client.options('/inventory/add-stock/1')
+        res = client.options('/inventory/log/1')
+        res = client.options('/inventory/log/all/1')
+        res = client.options('/inventory/reminder/1')
+        res = client.options('/inventory/reminder')
+        assert res.status_code == 200

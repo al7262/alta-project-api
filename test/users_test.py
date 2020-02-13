@@ -155,3 +155,11 @@ class TestUsers():
         res = client.put('/user/change-password', json = data, headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
+    
+    # testing option
+    def test_option(self, client):
+        # Test the endpoints
+        res = client.options('/user/register')
+        res = client.options('/user/profile')
+        res = client.options('/user/change-password')
+        assert res.status_code == 200
