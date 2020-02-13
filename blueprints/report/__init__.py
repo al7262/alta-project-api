@@ -90,7 +90,7 @@ class ProductReport(Resource):
 
             # Default case
             elif (args['start_time'] is None or args['start_time'] == '') and (args['end_time'] is None or args['end_time'] == ''):
-                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.updated_at <= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
             for detail in detail_transaction:
                 # Check for related outlet
@@ -278,8 +278,8 @@ class HistoryReport(Resource):
                     total_sales = total_sales + detail.total_price_product
                     tax_summary = int(tax_summary + ((outlet.tax * detail.total_price_product) / 100))
                     data = {
-                        'date_time': transaction.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                        'date': transaction.created_at.strftime("%Y-%m-%d"),
+                        'date_time': transaction.created_at.strftime("%d-%m-%Y %H:%M:%S"),
+                        'date': transaction.created_at.strftime("%d-%m-%Y"),
                         'time': transaction.created_at.strftime('%H:%M:%S'),
                         'outlet': outlet.name,
                         'cashier_name': cashier_name,
@@ -428,8 +428,8 @@ class InventoryLogReport(Resource):
                         'name': inventory.name,
                         'unit': inventory.unit,
                         'outlet': outlet.name,
-                        'datetime': log.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                        'date': log.created_at.strftime('%Y-%m-%d'),
+                        'datetime': log.created_at.strftime('%d-%m-%Y %H:%M:%S'),
+                        'date': log.created_at.strftime('%d-%m-%Y'),
                         'time': log.created_at.strftime('%H:%M:%S'),
                         'type': log.status,
                         'amount': log.amount,
@@ -685,7 +685,7 @@ class OutletReport(Resource):
                                 number_transaction = number_transaction + 1
                     data = {
                         "name_outlet" : outlet.name,
-                        "time" : str(start.strftime('%Y-%m-%d')),
+                        "time" : str(start.strftime('%d-%m-%Y')),
                         "total_transaction" : number_transaction,
                         "total_price" : amount_sales,
                         "deleted" : outlet.deleted
@@ -730,7 +730,7 @@ class OutletReport(Resource):
                             number_transaction = number_transaction + 1    
                 data = {
                     "name_outlet" : qry_outlet.name,
-                    "time" : str(start.strftime('%Y-%m-%d')),
+                    "time" : str(start.strftime('%d-%m-%Y')),
                     "total_transaction" : number_transaction,
                     "total_price" : amount_sales,
                     "deleted": qry_outlet.deleted
@@ -775,6 +775,9 @@ class ProfitReport(Resource):
         parser.add_argument('start_time', location = 'args')
         parser.add_argument('end_time', location = 'args')
         parser.add_argument('name_outlet', location = 'args')
+        parser.add_argument('total_sales_sort', location = 'args')
+        parser.add_argument('total_inventory_sort', location = 'args')
+        parser.add_argument('profit_sort', location = 'args')
         args = parser.parse_args()
 
         # setting input time
@@ -832,7 +835,7 @@ class ProfitReport(Resource):
                     profit = (count_product - count_cart)
                     data = {
                         "name_outlet" : outlet.name,
-                        "time" : str(start),
+                        "time" : str(start.strftime('%d-%m-%Y')),
                         "total_price_sale" : count_product,
                         "total_price_inventory" : count_cart,
                         "profit" : profit
@@ -878,7 +881,7 @@ class ProfitReport(Resource):
                 profit = (count_product - count_cart)
                 data = {
                     "name_outlet" : qry_outlet.name,
-                    "time" : str(start),
+                    "time" : str(start.strftime('%d-%m-%Y')),
                     "total_price_sale" : count_product,
                     "total_price_inventory" : count_cart,
                     "profit" : profit
@@ -894,13 +897,100 @@ class ProfitReport(Resource):
                 grand_price_sale = grand_price_sale + datum["total_price_sale"]
                 grand_price_inventory = grand_price_inventory + datum["total_price_inventory"]
             grand_price_profit = grand_price_sale - grand_price_inventory
-            grand_result = {
+            
+        # ----- Sort -----
+        # By total sales - desc
+        if args['total_sales_sort'] == 'desc':
+            result_length = len(result)
+            if result_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(result_length - 1):
+                        if result[index]['total_price_sale'] < result[index + 1]['total_price_sale']:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
+
+        # By total sales - asc
+        if args['total_sales_sort'] == 'asc':
+            result_length = len(result)
+            if result_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(result_length - 1):
+                        if result[index]['total_price_sale'] > result[index + 1]['total_price_sale']:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
+        
+        # By total inventory - desc
+        if args['total_inventory_sort'] == 'desc':
+            result_length = len(result)
+            if result_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(result_length - 1):
+                        if result[index]['total_price_inventory'] < result[index + 1]['total_price_inventory']:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
+
+        # By total inventory - asc
+        if args['total_inventory_sort'] == 'asc':
+            result_length = len(result)
+            if result_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(result_length - 1):
+                        if result[index]['total_price_inventory'] > result[index + 1]['total_price_inventory']:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
+
+        # By profit - desc
+        if args['profit_sort'] == 'desc':
+            result_length = len(result)
+            if result_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(result_length - 1):
+                        if result[index]['profit'] < result[index + 1]['profit']:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
+
+        # By profit - asc
+        if args['profit_sort'] == 'asc':
+            result_length = len(result)
+            if result_length > 1:
+                restart = True
+                while restart:
+                    restart = False
+                    for index in range(result_length - 1):
+                        if result[index]['profit'] > result[index + 1]['profit']:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
+
+        grand_result = {
                 "grand_price_sale" : grand_price_sale,
                 "grand_price_inventory" : grand_price_inventory,
                 "grand_price_profit" : grand_price_profit,
                 "result" : result
-            }    
-            return grand_result, 200
+            }
+            
+        return grand_result, 200
 
 api.add_resource(ProductReport, '/product-sales')
 api.add_resource(CategoryReport, '/category')
