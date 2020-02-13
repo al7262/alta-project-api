@@ -38,7 +38,7 @@ class Dashboard(Resource):
         args = parser.parse_args()
 
         # Datetime related
-        time = datetime.now().strftime("%Y-%m-%d")
+        time = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d")
         if args['start_time'] == "" and args['end_time'] == "":
             today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
             start = today
@@ -359,7 +359,7 @@ class Dashboard(Resource):
         new_customer = 0
         total_costumer = 0
         qry = Customers.query.filter_by(id_users = claims['id']) 
-        time = datetime.now().strftime("%Y-%m-%d")
+        time = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d")
         today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
         start = today + relativedelta(days = -(int(time[8::]))+1)
         end = today + relativedelta(days = +1)

@@ -56,7 +56,7 @@ class ProductReport(Resource):
         args = parser.parse_args()
 
         # Get all products from specific owner
-        products = Products.query.filter_by(deleted = False).filter_by(id_users = id_users)
+        products = Products.query.filter_by(id_users = id_users)
 
         # ----- First Filter -----
         # By name
@@ -86,12 +86,16 @@ class ProductReport(Resource):
                 end_year = int(args['end_time'][6:10])
                 end_month = int(args['end_time'][3:5])
                 end_day = int(args['end_time'][0:2])
-                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= ((datetime(end_year, end_month, end_day) + timedelta(hours = 7)) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(CartDetail.updated_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+
+            # Default case
+            elif (args['start_time'] is None or args['start_time'] == '') and (args['end_time'] is None or args['end_time'] == ''):
+                detail_transaction = detail_transaction.filter(CartDetail.updated_at >= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.updated_at <= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
             for detail in detail_transaction:
                 # Check for related outlet
                 related_cart = Carts.query.filter_by(deleted = True).filter_by(id = detail.id_cart).first()
-                related_outlet = Outlets.query.filter_by(deleted = False).filter_by(id = related_cart.id_outlet).first()
+                related_outlet = Outlets.query.filter_by(id = related_cart.id_outlet).first()
                 if related_outlet is None:
                     continue
                 
@@ -111,7 +115,8 @@ class ProductReport(Resource):
                 'name': product.name,
                 'category': product.category,
                 'total_sold': total_sold_of_product,
-                'total_sales': total_sales_of_product   
+                'total_sales': total_sales_of_product,
+                'deleted': product.deleted
             }
             product_list.append(data)
 
@@ -172,6 +177,18 @@ class ProductReport(Resource):
                             product_list[index + 1] = dummy
                             restart = True
 
+        # Sorting so deleted outlet will be placed in the bottom
+        restart = True
+        while restart:
+            restart = False
+            if len(product_list) > 1:
+                for index in range(len(product_list) - 1):
+                    if product_list[index]['deleted'] == True and product_list[index + 1]['deleted'] == False:
+                        dummy = product_list[index]
+                        product_list[index] = product_list[index + 1]
+                        product_list[index + 1] = dummy
+                        restart = True
+
         result = {
             'total_sales': total_sales,
             'total_sold': total_sold,
@@ -220,11 +237,11 @@ class HistoryReport(Resource):
             end_year = int(args['end_time'][6:10])
             end_month = int(args['end_time'][3:5])
             end_day = int(args['end_time'][0:2])
-            transactions = transactions.filter(Carts.created_at >= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+            transactions = transactions.filter(Carts.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
         
         # Default case
         elif (args['start_time'] is None or args['start_time'] == '') and (args['end_time'] is None or args['end_time'] == ''):
-            pass
+            transactions = transactions.filter(Carts.created_at >= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(Carts.created_at <= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
         # ----- Filter by Outlet -----
         if args['id_outlet'] is not None and args['id_outlet'] != '':
@@ -368,9 +385,6 @@ class InventoryLogReport(Resource):
         # Get all inventories
         inventories = Inventories.query.filter_by(id_users = id_users)
 
-        # Sort to the newest
-        inventories = inventories.order_by(desc(Inventories.created_at))
-
         # ----- Filter by name -----
         if args['name'] is not None and args['name'] != '':
             inventories = inventories.filter(Inventories.name.like('%' + args['name'] + '%'))
@@ -402,13 +416,19 @@ class InventoryLogReport(Resource):
                     end_year = int(args['end_time'][6:10])
                     end_month = int(args['end_time'][3:5])
                     end_day = int(args['end_time'][0:2])
-                    logs = logs.filter(InventoryLog.created_at >= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= (datetime(end_year, end_month, end_day) + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+                    logs = logs.filter(InventoryLog.created_at >= datetime(start_year, start_month, start_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= datetime(end_year, end_month, end_day).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
+
+                # Default case
+                elif (args['start_time'] is None or args['start_time'] == '') and (args['end_time'] is None or args['end_time'] == ''):
+                    logs = logs.filter(InventoryLog.created_at >= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0)).filter(InventoryLog.created_at <= (datetime.now() + timedelta(hours = 7)).replace(hour = 0, minute = 0, second = 0, microsecond = 0) + timedelta(days = 1))
 
                 for log in logs:
                     # Prepare the data
                     data = {
                         'name': inventory.name,
+                        'unit': inventory.unit,
                         'outlet': outlet.name,
+                        'datetime': log.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                         'date': log.created_at.strftime('%Y-%m-%d'),
                         'time': log.created_at.strftime('%H:%M:%S'),
                         'type': log.status,
@@ -418,6 +438,19 @@ class InventoryLogReport(Resource):
                     result.append(data)
         
         # ----- Sort -----
+        # For default arrangement
+        result_length = len(result)
+        if result_length > 1:
+            restart = True
+            while restart:
+                restart = False
+                for index in range(result_length - 1):
+                    if result[index]['datetime'] < result[index + 1]['datetime']:
+                        dummy = result[index]
+                        result[index] = result[index + 1]
+                        result[index + 1] = dummy
+                        restart = True
+
         # Desc
         if args['amount_sort'] == 'desc':
             result_length = len(result)
@@ -474,9 +507,9 @@ class CategoryReport(Resource):
         end = today + relativedelta(days = +1)
         if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(hours = 7)
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"message" : "Inputan Anda salah"}, 400
@@ -497,8 +530,11 @@ class CategoryReport(Resource):
             total_quantity = 0
             total_product = 0
             total_price = 0
+            total_deleted = 0
             for product in qry_product:
                 total_product = total_product + 1
+                if product.deleted == True:
+                    total_deleted = total_deleted + 1
                 if qry_cart is not None:
                     for cart in qry_cart:
                         create_at = cart.created_at
@@ -506,12 +542,14 @@ class CategoryReport(Resource):
                             qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
                             if qry_cartdetail is not None:
                                 total_quantity = total_quantity + qry_cartdetail.quantity
-                    total_price = total_price + (product.price * total_quantity)
+                                total_price = total_price + (product.price * qry_cartdetail.quantity)
             data = {
                 'category': category,
                 'total_product': total_product,
                 'total_sold': total_quantity,
-                'total_sales': total_price
+                'total_sales': total_price,
+                'total_deleted': total_deleted,
+                'difference': total_product - total_deleted
             }
             total_quantity_category = total_quantity_category + total_quantity
             total_price_category = total_price_category + total_price
@@ -570,6 +608,18 @@ class CategoryReport(Resource):
                         category_list[index + 1] = dummy
                         restart = True
 
+        # Sorting so deleted product will be placed in the bottom
+        restart = True
+        while restart:
+            restart = False
+            if len(category_list) > 1:
+                for index in range(len(category_list) - 1):
+                    if category_list[index]['difference'] == 0 and category_list[index + 1]['difference'] != 0:
+                        dummy = category_list[index]
+                        category_list[index] = category_list[index + 1]
+                        category_list[index + 1] = dummy
+                        restart = True
+
         result = {
             'category_list': category_list,
             "total_items_sold" : total_quantity_category,
@@ -583,7 +633,7 @@ class OutletReport(Resource):
     def options(self, id_product=None):
         return {'status': 'ok'}, 200
 
-    # Get category report
+    # Get outlet report
     @jwt_required
     @dashboard_required
     def get(self):
@@ -596,17 +646,21 @@ class OutletReport(Resource):
         parser.add_argument('name_outlet', location = 'args')
         args = parser.parse_args()
 
+        # Setup variable
+        total_transaction_all = 0
+        total_sales_all = 0
+
         # setting input time
         time = (datetime.now() + timedelta(hours = 7)).strftime("%d-%m-%Y")
         if args['start_time'] == "" or args['end_time'] == "":
-            today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2])) + timedelta(hours = 7)
+            today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
             start = today
             end = today + relativedelta(days = +1)
         if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(hours = 7)
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"message" : "Inputan Anda salah"}, 400
@@ -629,13 +683,35 @@ class OutletReport(Resource):
                                 number_transaction = number_transaction + 1
                     data = {
                         "name_outlet" : outlet.name,
-                        "time" : str(start),
+                        "time" : str(start.strftime('%Y-%m-%d')),
                         "total_transaction" : number_transaction,
-                        "total_price" : amount_sales
+                        "total_price" : amount_sales,
+                        "deleted" : outlet.deleted
                     }
+                    total_transaction_all = total_transaction_all + number_transaction
+                    total_sales_all = total_sales_all + amount_sales
                     result.append(data)
                 start = start + relativedelta(days = +1)
-            return result, 200
+            
+            # Sorting so deleted product will be placed in the bottom
+            restart = True
+            while restart:
+                restart = False
+                if len(result) > 1:
+                    for index in range(len(result) - 1):
+                        if result[index]['deleted'] == True and result[index + 1]['deleted'] == False:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
+
+            data_shown = {
+                'outlet_list': result,
+                'total_sales': total_sales_all,
+                'total_transaction': total_transaction_all
+            }
+
+            return data_shown, 200
 
         if args['name_outlet'] is not None and args['name_outlet'] != '':
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
@@ -652,13 +728,35 @@ class OutletReport(Resource):
                             number_transaction = number_transaction + 1    
                 data = {
                     "name_outlet" : qry_outlet.name,
-                    "time" : str(start),
+                    "time" : str(start.strftime('%Y-%m-%d')),
                     "total_transaction" : number_transaction,
-                    "total_price" : amount_sales
+                    "total_price" : amount_sales,
+                    "deleted": qry_outlet.deleted
                 }
+                total_transaction_all = total_transaction_all + number_transaction
+                total_sales_all = total_sales_all + amount_sales
                 result.append(data)
                 start = start + relativedelta(days = +1)
-            return result, 200
+            
+            # Sorting so deleted outlet will be placed in the bottom
+            restart = True
+            while restart:
+                restart = False
+                if len(result) > 1:
+                    for index in range(len(result) - 1):
+                        if result[index]['deleted'] == True and result[index + 1]['deleted'] == False:
+                            dummy = result[index]
+                            result[index] = result[index + 1]
+                            result[index + 1] = dummy
+                            restart = True
+            
+            data_shown = {
+                'outlet_list': result,
+                'total_sales': total_sales_all,
+                'total_transaction': total_transaction_all
+            }
+
+            return data_shown, 200
 
 class ProfitReport(Resource):
     # Enable CORS
@@ -679,15 +777,15 @@ class ProfitReport(Resource):
 
         # setting input time
         time = (datetime.now() + timedelta(hours = 7)).strftime("%d-%m-%Y")
-        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2])) + timedelta(hours = 7)
+        today = datetime(int(time[6:10]),int(time[3:5]),int(time[0:2]))
         start = today
         end = today + relativedelta(days = +1)
         
         if args['start_time'] is not None and args['end_time'] is not None and args['start_time'] != "" and args['end_time'] != "":
             start_time = args['start_time']
-            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2])) + timedelta(hours = 7)
+            start = datetime(int(start_time[6:10]),int(start_time[3:5]),int(start_time[0:2]))
             end_time = args['end_time']
-            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2])) + timedelta(hours = 7)
+            end = datetime(int(end_time[6:10]),int(end_time[3:5]),int(end_time[0:2]))
             end = end + relativedelta(days = +1)
             if end <= start :
                 return {"message" : "Inputan Anda salah"}, 400
@@ -724,7 +822,7 @@ class ProfitReport(Resource):
                                                     qry_inventory = Inventories.query.filter_by(id = recipe.id_inventory).first()
                                                     if qry_inventory is not None:
                                                         count_inventory = count_inventory + (recipe.amount * qry_inventory.unit_price)
-                                        count_cart_detail = count_cart_detail + (count_inventory * cartdetail.quantity)
+                                                        count_cart_detail = count_cart_detail + (recipe.amount * qry_inventory.unit_price * cartdetail.quantity)
                                         count_price_product = count_price_product + (qry_product.price * cartdetail.quantity)
                             count_cart = count_cart + count_cart_detail
                             count_product = count_product + count_price_product
@@ -770,7 +868,7 @@ class ProfitReport(Resource):
                                                 qry_inventory = Inventories.query.filter_by(id = recipe.id_inventory).first()
                                                 if qry_inventory is not None:
                                                     count_inventory = count_inventory + (recipe.amount * qry_inventory.unit_price)
-                                    count_cart_detail = count_cart_detail + (count_inventory * cartdetail.quantity)
+                                                    count_cart_detail = count_cart_detail + (recipe.amount * qry_inventory.unit_price * cartdetail.quantity)
                                     count_price_product = count_price_product + (qry_product.price * cartdetail.quantity)
                         count_cart = count_cart + count_cart_detail
                         count_product = count_product + count_price_product
@@ -801,7 +899,6 @@ class ProfitReport(Resource):
                 "result" : result
             }    
             return grand_result, 200
-
 
 api.add_resource(ProductReport, '/product-sales')
 api.add_resource(CategoryReport, '/category')

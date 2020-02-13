@@ -8,6 +8,7 @@ from blueprints import db, app, user_required
 from datetime import datetime, timedelta
 from password_strength import PasswordPolicy
 import json,hashlib
+from mailjet_rest import Client
 
 # Import Authentication
 from flask_jwt_extended import jwt_required, get_jwt_claims
@@ -17,7 +18,7 @@ Bp_user = Blueprint('user',__name__)
 api = Api(Bp_user)
 
 class RegisterUserResource(Resource):
-    #enalble CORS
+    #Enable CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
 
@@ -52,8 +53,42 @@ class RegisterUserResource(Resource):
             db.session.add(user)
             db.session.commit()
             app.logger.debug('DEBUG : %s', user)
+            
+            # Send email
+            # API configuration
+            api_key = 'bb6a7959ba912ff930bfffac2036b568'
+            api_secret = '0173c13cba0c2d75a2f1ac26e6adf2da'
+            mailjet = Client(auth=(api_key, api_secret), version='v3.1')
 
-        
+            # Preparing the body of the email
+            first_greeting = "<h3>Selamat! Akunmu sudah terdaftar di EasyKachin.</h3>"
+            greeting_content = "Terimakasih telah memilih kami untuk menjadi bagian menuju kesuksesanmu."
+
+            # Prepare the email to be sent
+            data = {
+            'Messages': [
+                {
+                "From": {
+                    "Email": easykachin2020@gmail.com,
+                    "Name": EasyKachin
+                },
+                "To": [
+                    {
+                    "Email": args['email'],
+                    "Name": ""
+                    }
+                ],
+                "Subject": "Selamat Datang",
+                "HTMLPart": first_greeting + greeting_content,
+                "CustomID": "AppGettingStartedTest"
+                }
+            ]
+            }
+            
+            # Send the email
+            if 'FLASK_ENV' not in os.environ: os.environ['FLASK_ENV'] = 'development'
+            if os.environ['FLASK_ENV'] == 'development': mailjet.send.create(data=data)
+
         encrypted = hashlib.md5(args['password'].encode()).hexdigest()
         qry_user = Users.query.filter_by(email = args['email']).filter_by(password = encrypted)
         userData = qry_user.first()
@@ -61,8 +96,9 @@ class RegisterUserResource(Resource):
         if userData is not None:
             userData = marshal(userData,Users.jwt_claims_fields)
             token = create_access_token(identity = userData['email'], user_claims = userData)
-            return {'token' : token}, 200
-        return {'message' : "Registrasi Gagal"},401
+
+            return {'token' : token}, 200,{'Content-Type': 'application/json'}
+        return {'message' : "Registrasi Gagal"}, 401
 
 class UserResource(Resource):
     # Enable CORS    
