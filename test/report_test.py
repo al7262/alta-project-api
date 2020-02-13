@@ -289,7 +289,6 @@ class TestReport():
         # Test the endpoints
         res = client.get(endpoint, headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
-<<<<<<< HEAD
         assert res.status_code == 200
 
     # get report category
@@ -389,6 +388,4 @@ class TestReport():
         # Test the endpoints
         res = client.get("/report/profit?start_time=13-02-2020&end_time=14-02-2020&name_outlet=Surabaya", headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
-=======
->>>>>>> 236734e365e9146ae6332f955fe2c7f3faf38881
         assert res.status_code == 200
