@@ -651,7 +651,17 @@ class SendWhatsapp(Resource):
         # Take input from user
         parser = reqparse.RequestParser()
         parser.add_argument('image', location = 'json', required = True)
+        parser.add_argument('id_cart', location = 'json', required = True)
         args = parser.parse_args()
+
+        # Search user, transaction and related customer
+        owner = Users.query.filter_by(id = id_users).first()
+        transaction = Carts.query.filter_by(deleted = True).filter_by(id = args['id_cart']).first()
+        customer = Customers.query.filter_by(id = transaction.id_customers).first()
+
+        # Formatting phone
+        customer_phone = customer.phone_number
+        customer_phone = '+62' + customer_phone[1:]
 
         # Send the receipt
         account_sid = 'AC74c51f7d88218337455c1aba6fb8e45c'
@@ -662,7 +672,7 @@ class SendWhatsapp(Resource):
                 media_url = [args['image']],
                 from_ = 'whatsapp:+14155238886',
                 body = "Terima kasih atas kunjungannya. Berikut ini kami kirimkan struk transaksimu. Kami tunggu kedatanganmu kembali.",
-                to = 'whatsapp:+6289514845202'
+                to = 'whatsapp:' + customer_phone
             )
         
         return {'message': 'Sukses mengirim struk transaksi'}, 200
@@ -679,12 +689,22 @@ class SendEmail(Resource):
         # Take input from user
         parser = reqparse.RequestParser()
         parser.add_argument('image', location = 'json', required = True)
+        parser.add_argument('id_cart', location = 'json', required = True)
         args = parser.parse_args()
+        claims = get_jwt_claims()
+        id_users = claims['id']
+
+        # Search user, transaction and related customer
+        owner = Users.query.filter_by(id = id_users).first()
+        transaction = Carts.query.filter_by(deleted = True).filter_by(id = args['id_cart']).first()
+        customer = Customers.query.filter_by(id = transaction.id_customers).first()
 
         # ---------- Prepare the data needed ----------
         required_data = {
-            'email': 'garry@alterra.id',
-            'name': 'Garry Ariel'
+            'customer_email': customer.email,
+            'customer_name': transaction.name,
+            'owner_email': owner.email,
+            'business_name': owner.business_name
         }
 
         # API configuration
@@ -701,13 +721,13 @@ class SendEmail(Resource):
         'Messages': [
             {
             "From": {
-                "Email": "serbabuku96@gmail.com",
-                "Name": "SerbaBuku"
+                "Email": required_data["owner_email"],
+                "Name": required_data["business_name"]
             },
             "To": [
                 {
-                "Email": required_data["email"],
-                "Name": required_data["name"]
+                "Email": required_data["customer_email"],
+                "Name": required_data["customer_name"]
                 }
             ],
             "Subject": "Transaksi",

@@ -146,7 +146,7 @@ class CreateCustomerResource(Resource):
             db.session.commit()
             app.logger.debug('DEBUG : %s', customer)
             
-            return {'message' : "Masukkan pelanggan berhasil"}, 200, {'Content-Type': 'application/json'}
+            return {'message' : "Masukkan pelanggan berhasil", "id" : customer.id}, 200, {'Content-Type': 'application/json'}
         return {'message' : "Masukkan pelanggan gagal"}, 409
 
 class CustomerGetByOne(Resource):

@@ -5,7 +5,7 @@ from sqlalchemy import desc
 from .model import Employees
 from blueprints.outlets.model import Outlets
 from blueprints import db, app, user_required, dashboard_required, apps_required
-from datetime import datetime
+from datetime import datetime, timedelta
 from password_strength import PasswordPolicy
 import json, hashlib
 

@@ -703,7 +703,13 @@ class OutletReport(Resource):
                             result[index + 1] = dummy
                             restart = True
 
-            return result, 200
+            data_shown = {
+                'outlet_list': result,
+                'total_sales': total_sales_all,
+                'total_transaction': total_transaction_all
+            }
+
+            return data_shown, 200
 
         if args['name_outlet'] is not None and args['name_outlet'] != '':
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
