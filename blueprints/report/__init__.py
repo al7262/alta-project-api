@@ -838,6 +838,7 @@ class ProfitReport(Resource):
                         "time" : str(start.strftime('%d-%m-%Y')),
                         "total_price_sale" : count_product,
                         "total_price_inventory" : count_cart,
+                        "deleted" : outlet.deleted,
                         "profit" : profit
                     }
                     result.append(data)
@@ -884,6 +885,7 @@ class ProfitReport(Resource):
                     "time" : str(start.strftime('%d-%m-%Y')),
                     "total_price_sale" : count_product,
                     "total_price_inventory" : count_cart,
+                    "deleted" : outlet.deleted,
                     "profit" : profit
                 }
                 result.append(data)
@@ -983,13 +985,25 @@ class ProfitReport(Resource):
                             result[index + 1] = dummy
                             restart = True
 
+        # Sorting so deleted outlet will be placed in the bottom
+        restart = True
+        while restart:
+            restart = False
+            if len(result) > 1:
+                for index in range(len(result) - 1):
+                    if result[index]['deleted'] == True and result[index + 1]['deleted'] == False:
+                        dummy = result[index]
+                        result[index] = result[index + 1]
+                        result[index + 1] = dummy
+                        restart = True
+
         grand_result = {
                 "grand_price_sale" : grand_price_sale,
                 "grand_price_inventory" : grand_price_inventory,
                 "grand_price_profit" : grand_price_profit,
                 "result" : result
             }
-            
+
         return grand_result, 200
 
 api.add_resource(ProductReport, '/product-sales')
