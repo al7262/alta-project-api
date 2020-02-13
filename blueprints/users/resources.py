@@ -68,7 +68,7 @@ class RegisterUserResource(Resource):
             'Messages': [
                 {
                 "From": {
-                    "Email": easykachin@gmail.com,
+                    "Email": easykachin2020@gmail.com,
                     "Name": EasyKachin
                 },
                 "To": [
