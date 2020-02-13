@@ -791,102 +791,93 @@ class ProfitReport(Resource):
         result = []
         if args['name_outlet'] is None or args['name_outlet'] == '':
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
-            qry_product = Products.query.filter_by(id_users = claims['id']).all()
-            qry_inventory = Inventories.query.filter_by(id_users = claims['id']).all()
             while start < end:
                 for outlet in qry_outlet:
                     amount_sales = 0
-                    number_discount = 0
                     total_price_inventory = 0
                     profit = 0
+                    count_cart = 0
+                    count_product = 0
                     qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
-                    # print(qry_cart)
                     if qry_cart is not None:
                         for carts in qry_cart:
-                            # print(carts)
                             price_inventory_cart = 0
+                            count_price_product = 0
                             create_at = carts.created_at
-                            # print(create_at, start, end)
                             interval = start + relativedelta(days = +1)
+                            count_cart_detail = 0
                             if start <= create_at and create_at <= interval:
                                 amount_sales = amount_sales + carts.total_payment
-                                number_discount = number_discount + carts.total_discount
-                                # print("amount = ", amount_sales, "number = ", number_discount)
-                                if qry_product is not None :
-                                    for product in qry_product:
-                                        price_inventory_product = 0
-                                        qry_cartdetail = CartDetail.query.filter_by(id_cart = carts.id).filter_by(id_product = product.id).first()
-                                        if qry_cartdetail is not None:
-                                            if qry_inventory is not None:
-                                                for inventory in qry_inventory:
-                                                    qry_recipe = Recipe.query.filter_by(id_product = product.id).filter_by(id_inventory = inventory.id).first()
-                                                    if qry_recipe is not None:
-                                                        price_inventory_product = price_inventory_product + (qry_recipe.amount * inventory.unit_price)
-                                                        # print(price_inventory_product)
-                                            price_inventory_cart = price_inventory_cart + (price_inventory_product * qry_cartdetail.quantity)
-                                total_price_inventory = total_price_inventory + price_inventory_cart
-                                    
-                    if qry_cart is None:
-                        amount_sales = amount_sales + 0
-                        number_discount = number_discount + 0
-                        total_price_inventory = total_price_inventory + 0
+                                qry_cartdetail = CartDetail.query.filter_by(id_cart = carts.id).all()
+                                if qry_cartdetail is not None :
+                                    for cartdetail in qry_cartdetail:
+                                        count_inventory = 0
+                                        qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(id = cartdetail.id_product).first()
+                                        if qry_product is not None:
+                                            qry_recipe = Recipe.query.filter_by(id_product = qry_product.id).all()
+                                            if qry_recipe is not None:
+                                                for recipe in qry_recipe:
+                                                    qry_inventory = Inventories.query.filter_by(id = recipe.id_inventory).first()
+                                                    if qry_inventory is not None:
+                                                        count_inventory = count_inventory + (recipe.amount * qry_inventory.unit_price)
+                                        count_cart_detail = count_cart_detail + (count_inventory * cartdetail.quantity)
+                                        count_price_product = count_price_product + (qry_product.price * cartdetail.quantity)
+                            count_cart = count_cart + count_cart_detail
+                            count_product = count_product + count_price_product
 
-                    profit = amount_sales - (number_discount + total_price_inventory)
+                    profit = (count_product - count_cart)
                     data = {
                         "name_outlet" : outlet.name,
                         "time" : str(start),
-                        "total_price_cart" : amount_sales,
-                        "total_price_discount" : number_discount,
-                        "total_price_inventory" : total_price_inventory,
-                        "total_profit" : profit 
+                        "total_price_sale" : count_product,
+                        "total_price_inventory" : count_cart,
+                        "profit" : profit
                     }
                     result.append(data)
                 start = start + relativedelta(days = +1)
 
         if args['name_outlet'] is not None or args['name_outlet'] != '':
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
-            qry_product = Products.query.filter_by(id_users = claims['id']).all()
-            qry_inventory = Inventories.query.filter_by(id_users = claims['id']).all()
             while start < end:
                 amount_sales = 0
-                number_discount = 0
                 total_price_inventory = 0
                 profit = 0
-                qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = outlet.id).all()
+                count_cart = 0
+                count_product = 0
+                qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
                 if qry_cart is not None:
                     for carts in qry_cart:
                         price_inventory_cart = 0
+                        count_price_product = 0
                         create_at = carts.created_at
                         interval = start + relativedelta(days = +1)
+                        count_cart_detail = 0
                         if start <= create_at and create_at <= interval:
                             amount_sales = amount_sales + carts.total_payment
-                            number_discount = number_discount + carts.total_discount
-                            if qry_product is not None :
-                                for product in qry_product:
-                                    price_inventory_product = 0
-                                    qry_cartdetail = CartDetail.query.filter_by(id_cart = carts.id).filter_by(id_product = product.id).first()
-                                    if qry_cartdetail is not None:
-                                        if qry_inventory is not None:
-                                            for inventory in qry_inventory:
-                                                qry_recipe = Recipe.query.filter_by(id_product = product.id).filter_by(id_inventory = inventory.id).first()
-                                                if qry_recipe is not None:
-                                                    price_inventory_product = price_inventory_product + (qry_recipe.amount * inventory.unit_price)
-                                        price_inventory_cart = price_inventory_cart + (price_inventory_product * qry_cartdetail.quantity)
-                            total_price_inventory = total_price_inventory + price_inventory_cart
-                                    
-                if qry_cart is None:
-                    amount_sales = amount_sales + 0
-                    number_discount = number_discount + 0
-                    total_price_inventory = total_price_inventory + 0
+                            qry_cartdetail = CartDetail.query.filter_by(id_cart = carts.id).all()
+                            if qry_cartdetail is not None :
+                                for cartdetail in qry_cartdetail:
+                                    count_inventory = 0
+                                    qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(id = cartdetail.id_product).first()
+                                    if qry_product is not None:
+                                        qry_recipe = Recipe.query.filter_by(id_product = qry_product.id).all()
+                                        if qry_recipe is not None:
+                                            for recipe in qry_recipe:
+                                                qry_inventory = Inventories.query.filter_by(id = recipe.id_inventory).first()
+                                                if qry_inventory is not None:
+                                                    count_inventory = count_inventory + (recipe.amount * qry_inventory.unit_price)
+                                    count_cart_detail = count_cart_detail + (count_inventory * cartdetail.quantity)
+                                    count_price_product = count_price_product + (qry_product.price * cartdetail.quantity)
+                        count_cart = count_cart + count_cart_detail
+                        count_product = count_product + count_price_product
 
-                profit = amount_sales - (number_discount + total_price_inventory)
+                profit = (count_product - count_cart)
                 data = {
-                    "name_outlet" : outlet.name,
+                    "name_outlet" : qry_outlet.name,
                     "time" : str(start),
-                    "total_price_cart" : amount_sales,
-                    "total_price_discount" : number_discount,
-                    "total_price_inventory" : total_price_inventory,
-                    "total_profit": profit
+                    "total_price_sale" : count_product,
+                    "total_price_inventory" : count_cart,
+                    "profit" : profit
                 }
                 result.append(data)
                 start = start + relativedelta(days = +1)
