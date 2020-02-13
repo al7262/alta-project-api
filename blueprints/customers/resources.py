@@ -87,9 +87,11 @@ class CustomerResource(Resource):
     # Delete a customer
     def delete(self, id=None):
         # Get customer and delete it
-        customer = Customers.filter_by(id = id)
+        customer = Customers.query.filter_by(id = id).first()
         db.session.delete(customer)
         db.session.commit()
+
+        return {'message': 'Sukses menghapus pelanggan'}, 200
 
     @jwt_required
     @apps_required

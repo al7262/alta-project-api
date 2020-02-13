@@ -708,12 +708,12 @@ class SendEmail(Resource):
         }
 
         # API configuration
-        api_key = 'bb6a7959ba912ff930bfffac2036b568'
-        api_secret = '0173c13cba0c2d75a2f1ac26e6adf2da'
+        api_key = '2d98ebcc594d78589595e138f7f9d9c5'
+        api_secret = 'fae993d3128a94fa5eb119c90afb5ece'
         mailjet = Client(auth=(api_key, api_secret), version='v3.1')
 
         # Preparing the body of the email
-        first_greeting = "<h3>Terima kasih atas kunjungannya. Berikut ini kami kirimkan struk transaksimu. Kami tunggu kedatanganmu kembali.</h3>"
+        first_greeting = "<h3>Terima kasih atas kunjungannya. Berikut ini kami kirimkan struk transaksimu. Kami tunggu kedatanganmu kembali di " + required_data["business_name"] + "</h3>"
         receipt_image = '<br /><br /><img src="' + args['image'] + '" />'
 
         # Prepare the email to be sent
@@ -721,7 +721,7 @@ class SendEmail(Resource):
         'Messages': [
             {
             "From": {
-                "Email": easykachin2020@gmail.com,
+                "Email": "easykachin2020@gmail.com",
                 "Name": required_data["business_name"]
             },
             "To": [
