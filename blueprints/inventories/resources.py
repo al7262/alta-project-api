@@ -95,7 +95,6 @@ class InventoryPerOutlet(Resource):
 
     # Get all inventories in an outlet
     @jwt_required
-    @dashboard_required
     def get(self, id_outlet):
         # Take input from users
         parser = reqparse.RequestParser()

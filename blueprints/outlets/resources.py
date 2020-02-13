@@ -20,7 +20,6 @@ class OutletResource(Resource):
         return{'status':'ok'} , 200
 
     @jwt_required
-    @user_required
     # show outlet
     def get(self):
         claims = get_jwt_claims()
@@ -58,7 +57,6 @@ class OutletResource(Resource):
         return {"message": "Data Telah Dihapus"},200
 
     @jwt_required
-    @user_required
     # edit outlet
     def put(self,id=None):
         claims = get_jwt_claims()
@@ -130,7 +128,6 @@ class OutletGetByOne(Resource):
         return{'status':'ok'} , 200
 
     @jwt_required
-    @user_required
     # showing product
     def get(self,id=None):
         claims = get_jwt_claims()
