@@ -318,7 +318,7 @@ class TestEmployee():
         res = client.delete('/employee/1', headers={'Authorization': 'Bearer ' + token})
         res = client.get('/employee/get', headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
-        assert res.status_code == 404
+        assert res.status_code == 200
     
     # testing option
     def test_option(self, client):

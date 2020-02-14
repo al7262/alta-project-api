@@ -17,7 +17,6 @@ class TestAuth():
         res = client.post('/user/register', json = data)
         res_json = json.loads(res.data)
         assert res.status_code == 200
-        assert res_json['message'] == 'Registrasi Berhasil'
 
     # Register session for duplicate email
     def test_register_duplicate_email(self, client):

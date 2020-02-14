@@ -21,7 +21,6 @@ class CustomerResource(Resource):
         return{'status':'ok'} , 200
 
     @jwt_required
-    @dashboard_required
     # Get all customers
     def get(self):
         claims = get_jwt_claims()
@@ -83,6 +82,16 @@ class CustomerResource(Resource):
                 "new_customer" : new_customer
             }
         return result, 200
+
+    @jwt_required
+    # Delete a customer
+    def delete(self, id=None):
+        # Get customer and delete it
+        customer = Customers.query.filter_by(id = id).first()
+        db.session.delete(customer)
+        db.session.commit()
+
+        return {'message': 'Sukses menghapus pelanggan'}, 200
 
     @jwt_required
     @apps_required

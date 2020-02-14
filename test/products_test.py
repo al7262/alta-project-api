@@ -428,14 +428,15 @@ class TestProducts():
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
-    # Sending whatsapp
+    # Sending whatsapp success
     def test_send_whatsapp(self, client):
         # Prepare the DB and token
         token = create_token('budisetiawan')
 
         # Prepare the data to be shown
         data = {
-            'image': 'https://dummy.jpg'
+            'image': 'https://dummy.jpg',
+            'id_cart': 3
         }
 
         # Test the endpoints
@@ -443,21 +444,38 @@ class TestProducts():
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
-    # Sending whatsapp
-    def test_send_email(self, client):
+    # Sending email failed
+    def test_send_email_failed(self, client):
         # Prepare the DB and token
         token = create_token('budisetiawan')
 
         # Prepare the data to be shown
         data = {
-            'image': 'https://dummy.jpg'
+            'image': 'https://dummy.jpg',
+            'id_cart': 1
+        }
+
+        # Test the endpoints
+        res = client.post('/product/checkout/send-email', json = data, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 404
+    
+    # Sending email success
+    def test_send_email_success(self, client):
+        # Prepare the DB and token
+        token = create_token('budisetiawan')
+
+        # Prepare the data to be shown
+        data = {
+            'image': 'https://dummy.jpg',
+            'id_cart': 3
         }
 
         # Test the endpoints
         res = client.post('/product/checkout/send-email', json = data, headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
-    
+
     # testing option
     def test_option(self, client):
         # Test the endpoints

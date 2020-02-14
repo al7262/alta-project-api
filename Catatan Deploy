@@ -41,3 +41,40 @@ DUMP SQL
 mysqldump -u username -p dbname > dbexport.sql (EXPORT)
 mysql -u username -p dbname < dbexport.sql (IMPORT)
 mysql -h portofolio.ce1fym8eoinv.ap-southeast-1.rds.amazonaws.com -u admin -p (PUNYA AGUNG)
+
+
+
+
+
+CATATAN DEPLOYMENT
+1. CNAME WWW target ke domain utama
+2. Konten selalu domain (pada CF), atau pihak ketiga (seperti netlify)
+3. Proxy = detect nya IP cloudflare
+4. Tanpa proxy = langsung ke server
+
+SSL/TLS
+5. Proxy = Type harus full
+6. Tanpa proxy = Pake letsencrypt (set fleksibel)
+7. letsencrypt itu single SSL
+
+FRONTEND:
+/etc/nginx/sites-available
+mirip kayak backendnya
+proxy_pass ganti ke port FRONTEND
+HTTP server default 80, jangan diganti
+HTTPS 443
+DNS record dengan server name harus sama
+ssl_certificate
+tail -10 certificate_path(cek error logs)
+proxy_redirect off
+proxy_pass yg akan dituju 
+sites-available dipisahin (rename sesuai nama server aja)
+sites-enabled yang kebaca dari luar
+Setiap abis buat di sites-available, pindah ke enabled (jadiin satu disini frontend dan backend)
+    ln -s etc/nginx/sites-available/default etc/nginx/sites-enabled/default (default nya ganti nama server aja)
+Cek dulu
+    nginx -t
+
+NETLIFY
+DNS only
+CNAME mydomain.netlify.com

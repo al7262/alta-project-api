@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from password_strength import PasswordPolicy
 import json,hashlib
 from mailjet_rest import Client
+import os
 
 # Import Authentication
 from flask_jwt_extended import jwt_required, get_jwt_claims
@@ -56,9 +57,11 @@ class RegisterUserResource(Resource):
             
             # Send email
             # API configuration
-            api_key = 'bb6a7959ba912ff930bfffac2036b568'
-            api_secret = '0173c13cba0c2d75a2f1ac26e6adf2da'
-            mailjet = Client(auth=(api_key, api_secret), version='v3.1')
+            api_key = '2d98ebcc594d78589595e138f7f9d9c5'
+            api_secret = 'fae993d3128a94fa5eb119c90afb5ece'
+            
+            if 'FLASK_ENV' not in os.environ: os.environ['FLASK_ENV'] = 'development'
+            if os.environ['FLASK_ENV'] == 'development': mailjet = Client(auth=(api_key, api_secret), version='v3.1')
 
             # Preparing the body of the email
             first_greeting = "<h3>Selamat! Akunmu sudah terdaftar di EasyKachin.</h3>"
@@ -69,8 +72,8 @@ class RegisterUserResource(Resource):
             'Messages': [
                 {
                 "From": {
-                    "Email": easykachin2020@gmail.com,
-                    "Name": EasyKachin
+                    "Email": "easykachin2020@gmail.com",
+                    "Name": "EasyKachin"
                 },
                 "To": [
                     {
@@ -97,7 +100,7 @@ class RegisterUserResource(Resource):
             userData = marshal(userData,Users.jwt_claims_fields)
             token = create_access_token(identity = userData['email'], user_claims = userData)
 
-            return {'token' : token}, 200,{'Content-Type': 'application/json'}
+            return {'token' : token, 'message': 'Registrasi Berhasil'}, 200,{'Content-Type': 'application/json'}
         return {'message' : "Registrasi Gagal"}, 401
 
 class UserResource(Resource):
@@ -137,7 +140,7 @@ class UserResource(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if args['fullname'] == '' or args['password'] == '' or args['phone_number'] == '' or args['business_name'] == '' or args['image'] == '' or args['fullname'] is None or args['password'] is None or args['phone_number'] is None or args['business_name'] is None or args['image'] is None:
+        if args['fullname'] == '' or args['password'] == '' or args['phone_number'] == '' or args['business_name'] == '' or args['image'] == '' or args['fullname'] is None or args['phone_number'] is None or args['business_name'] is None or args['image'] is None:
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         if args['password'] is not None or args['password'] != '':
@@ -153,10 +156,10 @@ class UserResource(Resource):
             encrypted = hashlib.md5(args['password'].encode()).hexdigest()
             qry.password = encrypted
 
-            qry.fullname = args['fullname']
-            qry.phone_number = args['phone_number']
-            qry.business_name = args['business_name']
-            qry.image = args['image']
+        qry.phone_number = args['phone_number']
+        qry.fullname = args['fullname']
+        qry.business_name = args['business_name']
+        qry.image = args['image']
 
         db.session.commit()
         return marshal(qry, Users.response_fields), 200
