@@ -65,7 +65,7 @@ class RegisterUserResource(Resource):
 
             # Preparing the body of the email
             first_greeting = "<h3>Selamat! Akunmu sudah terdaftar di EasyKachin.</h3>"
-            greeting_content = "Terimakasih telah memilih kami untuk menjadi bagian menuju kesuksesanmu."
+            greeting_content = "Terimakasih telah memilih kami untuk menjadi bagian dalam perjalanan menuju kesuksesanmu."
 
             # Prepare the email to be sent
             data = {
@@ -143,7 +143,11 @@ class UserResource(Resource):
         if args['fullname'] == '' or args['password'] == '' or args['phone_number'] == '' or args['business_name'] == '' or args['image'] == '' or args['fullname'] is None or args['phone_number'] is None or args['business_name'] is None or args['image'] is None:
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
-        if args['password'] is not None or args['password'] != '':
+        # This is the case when post register
+        if args['password'] is None: pass
+
+        # Normal case
+        elif args['password'] is not None or args['password'] != '':
             validation = self.policy.test(args['password'])
             if validation:
                 errorList = []
