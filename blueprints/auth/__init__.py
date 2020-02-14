@@ -10,31 +10,38 @@ bp_auth = Blueprint('auth',__name__)
 api = Api(bp_auth)
 
 class LoginApps(Resource):
+    # Enable CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
 
+    # Login to apps
     def post(self):
+        # Take input from users
         parser = reqparse.RequestParser()
         parser.add_argument('username', location = 'json', required = True)
         parser.add_argument('password', location = 'json', required = True)
-
         args = parser.parse_args()
 
+        # Encrypt password
         encrypted = hashlib.md5(args['password'].encode()).hexdigest()
+        
+        # Find who is login
         qry_user = Users.query.filter_by(email = args['username']).filter_by(password = encrypted)
         qry_employee = Employees.query.filter_by(username = args['username']).filter_by(password = encrypted)
         userData = qry_user.first()
         employeeData = qry_employee.first()
 
+        # Handle case when owner login
         if userData is not None:
             userData = marshal(userData,Users.jwt_claims_fields)
             token = create_access_token(identity = userData['email'], user_claims = userData)
             return {'token' : token}, 200
 
+        # Handle case when employee login
         if employeeData is not None:
             employeeData = marshal(employeeData,Employees.jwt_claim_fields)
             
-            if employeeData['deleted']==False:
+            if employeeData['deleted'] == False:
             # Get ID users
                 if employeeData['position'] == 'Kasir':
                     qry_employee = qry_employee.first()
