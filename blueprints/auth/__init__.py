@@ -73,7 +73,7 @@ class LoginDashboard(Resource):
         if userData is not None:
             userData = marshal(userData,Users.jwt_claims_fields)
             post_register = False
-            if userData['fullname'] == '': post_register = True
+            if 'fulname' not in userData: post_register = True
             token = create_access_token(identity = userData['email'], user_claims = userData)
             return {'token' : token, 'post_register': post_register}, 200
 

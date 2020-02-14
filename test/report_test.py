@@ -569,6 +569,18 @@ class TestReport():
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
+    # get report outlet valid sort deleted
+    def test_report_outlet_valid_sort_deleted(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.delete("/outlet/1", headers={'Authorization': 'Bearer ' + token})
+        res = client.get("/report/outlet-sales?start_time=13-02-2020&end_time=14-02-2020&name_outlet=Surabaya", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
     # get report all outlet valid sort deleted
     def test_report_all_outlet_valid_sort_deleted(self, client):
         # Prepare the DB and token
@@ -576,7 +588,8 @@ class TestReport():
         token = create_token('hedy@alterra.id')
 
         # Test the endpoints
-        res = client.get("/report/outlet-sales?start_time=13-02-2020&end_time=14-02-2020&name_outlet=Surabaya", headers={'Authorization': 'Bearer ' + token})
+        res = client.delete("/outlet/1", headers={'Authorization': 'Bearer ' + token})
+        res = client.get("/report/outlet-sales?start_time=13-02-2020&end_time=14-02-2020", headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
 
@@ -612,7 +625,76 @@ class TestReport():
         res = client.get("/report/profit?start_time=13-02-2020&end_time=14-02-2020&name_outlet=Surabaya", headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
+
+    # get report profit valid (sort 1)
+    def test_report_profit_sort_1(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/profit?start_time=01-02-2020&end_time=14-02-2021&total_sales_sort=asc&total_inventory_sort=desc&profit_sort=desc", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
     
+    # get report profit valid (sort 2)
+    def test_report_profit_sort_2(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        cart = {
+            'id_outlet': 1,
+            'id_customers': 1,
+            'item_list': [
+                {'id': 1, 'unit': 2, 'price': 12000},
+                {'id': 2, 'unit': 1, 'price': 16000},
+                {'id': 3, 'unit': 3, 'price': 15000}
+            ],
+            'promo': '',
+            'payment_method': 'Tunai',
+            'paid_price': 100000,
+            'name': 'Lelianto Eko Pradana',
+            'phone': '',
+            'email': ''
+        }
+
+        second_cart = {
+            'id_outlet': 2,
+            'id_customers': 1,
+            'item_list': [
+                {'id': 1, 'unit': 1, 'price': 8000}
+            ],
+            'promo': '',
+            'payment_method': 'Tunai',
+            'paid_price': 10000,
+            'name': 'Lelianto Eko Pradana',
+            'phone': '',
+            'email': ''
+        }
+    
+        third_cart = {
+            'id_outlet': 3,
+            'id_customers': 1,
+            'item_list': [
+                {'id': 1, 'unit': 1, 'price': 5000}
+            ],
+            'promo': '',
+            'payment_method': 'Tunai',
+            'paid_price': 10000,
+            'name': 'Lelianto Eko Pradana',
+            'phone': '',
+            'email': ''
+        }
+
+        # Test the endpoints
+        res = client.post('/product/checkout', json = cart, headers={'Authorization': 'Bearer ' + token})
+        res = client.post('/product/checkout', json = second_cart, headers={'Authorization': 'Bearer ' + token})
+        res = client.post('/product/checkout', json = third_cart, headers={'Authorization': 'Bearer ' + token})
+        res = client.get("/report/profit?start_time=01-02-2020&end_time=14-02-2021&total_sales_sort=desc&total_inventory_sort=asc&profit_sort=asc", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
     # testing option
     def test_option(self, client):
         # Test the endpoints
