@@ -589,7 +589,7 @@ class CategoryReport(Resource):
             while restart:
                 restart = False
                 for index in range(category_list_length - 1):
-                    if category_list[index]['total_items_sold'] < category_list[index + 1]['total_items_sold']:
+                    if category_list[index]['total_sold'] < category_list[index + 1]['total_sold']:
                         dummy = category_list[index]
                         category_list[index] = category_list[index + 1]
                         category_list[index + 1] = dummy
@@ -602,7 +602,7 @@ class CategoryReport(Resource):
             while restart:
                 restart = False
                 for index in range(category_list_length - 1):
-                    if category_list[index]['total_items_sold'] > category_list[index + 1]['total_items_sold']:
+                    if category_list[index]['total_sold'] > category_list[index + 1]['total_sold']:
                         dummy = category_list[index]
                         category_list[index] = category_list[index + 1]
                         category_list[index + 1] = dummy

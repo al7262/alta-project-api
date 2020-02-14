@@ -487,6 +487,44 @@ class TestReport():
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
+    # get report category fix (sort 1)
+    def test_report_category_sort_1(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/category?total_sold_sort=desc&total_sales_sort=asc&start_time=13-02-2020&end_time=14-02-2020", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+    
+    # get report category fix (sort 2)
+    def test_report_category_sort_2(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/category?total_sold_sort=asc&total_sales_sort=desc&start_time=13-02-2020&end_time=14-02-2020", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
+    # get report category fix (sort deleted)
+    def test_report_category_sort_deleted(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.delete("/product/1", headers={'Authorization': 'Bearer ' + token})
+        res = client.delete("/product/2", headers={'Authorization': 'Bearer ' + token})
+        res = client.delete("/product/3", headers={'Authorization': 'Bearer ' + token})
+        res = client.delete("/product/4", headers={'Authorization': 'Bearer ' + token})
+        res = client.delete("/product/5", headers={'Authorization': 'Bearer ' + token})
+        res = client.get("/report/category?total_sold_sort=asc&total_sales_sort=desc&start_time=13-02-2020&end_time=14-02-2020", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
     # get report outlet valid
     def test_report_outlet_valid(self, client):
         # Prepare the DB and token
@@ -531,6 +569,17 @@ class TestReport():
         res_json = json.loads(res.data)
         assert res.status_code == 200
     
+    # get report all outlet valid sort deleted
+    def test_report_all_outlet_valid_sort_deleted(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        # Test the endpoints
+        res = client.get("/report/outlet-sales?start_time=13-02-2020&end_time=14-02-2020&name_outlet=Surabaya", headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
     # get report profit valid no param
     def test_report_profit_valid_no_param(self, client):
         # Prepare the DB and token

@@ -72,8 +72,10 @@ class LoginDashboard(Resource):
 
         if userData is not None:
             userData = marshal(userData,Users.jwt_claims_fields)
+            post_register = False
+            if userData['fullname'] == '': post_register = True
             token = create_access_token(identity = userData['email'], user_claims = userData)
-            return {'token' : token}, 200
+            return {'token' : token, 'post_register': post_register}, 200
 
         if employeeData is not None:
             employeeData = marshal(employeeData,Employees.jwt_claim_fields)
@@ -87,7 +89,7 @@ class LoginDashboard(Resource):
                     employeeData['id'] = id_user
 
                     token = create_access_token(identity = employeeData['username'], user_claims = employeeData)
-                    return {'token' : token}, 200
+                    return {'token' : token, 'post_register': False}, 200
             
         return{'status' : 'UNATUTHORIZED' , 'message' : 'Username atau Password Tidak Valid'}, 401
     

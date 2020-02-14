@@ -140,7 +140,7 @@ class UserResource(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if args['fullname'] == '' or args['password'] == '' or args['phone_number'] == '' or args['business_name'] == '' or args['image'] == '' or args['fullname'] is None or args['password'] is None or args['phone_number'] is None or args['business_name'] is None or args['image'] is None:
+        if args['fullname'] == '' or args['password'] == '' or args['phone_number'] == '' or args['business_name'] == '' or args['image'] == '' or args['fullname'] is None or args['phone_number'] is None or args['business_name'] is None or args['image'] is None:
             return {'message': 'Tidak boleh ada kolom yang dikosongkan'}, 400
 
         if args['password'] is not None or args['password'] != '':
@@ -156,10 +156,10 @@ class UserResource(Resource):
             encrypted = hashlib.md5(args['password'].encode()).hexdigest()
             qry.password = encrypted
 
-            qry.fullname = args['fullname']
-            qry.phone_number = args['phone_number']
-            qry.business_name = args['business_name']
-            qry.image = args['image']
+        qry.phone_number = args['phone_number']
+        qry.fullname = args['fullname']
+        qry.business_name = args['business_name']
+        qry.image = args['image']
 
         db.session.commit()
         return marshal(qry, Users.response_fields), 200
