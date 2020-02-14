@@ -883,7 +883,7 @@ class ProfitReport(Resource):
                     "time" : str(start.strftime('%d-%m-%Y')),
                     "total_price_sale" : count_product,
                     "total_price_inventory" : count_cart,
-                    "deleted" : outlet.deleted,
+                    "deleted" : qry_outlet.deleted,
                     "profit" : profit
                 }
                 result.append(data)

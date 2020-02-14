@@ -654,10 +654,16 @@ class SendWhatsapp(Resource):
         parser.add_argument('id_cart', location = 'json', required = True)
         args = parser.parse_args()
 
+        claims = get_jwt_claims()
+        id_users = claims['id']
+
         # Search user, transaction and related customer
         owner = Users.query.filter_by(id = id_users).first()
         transaction = Carts.query.filter_by(deleted = True).filter_by(id = args['id_cart']).first()
         customer = Customers.query.filter_by(id = transaction.id_customers).first()
+
+        # Check customer
+        if customer is None: return {'message': 'Data pelanggan tidak ditemukan'}, 404
 
         # Formatting phone
         customer_phone = customer.phone_number
@@ -698,6 +704,9 @@ class SendEmail(Resource):
         owner = Users.query.filter_by(id = id_users).first()
         transaction = Carts.query.filter_by(deleted = True).filter_by(id = args['id_cart']).first()
         customer = Customers.query.filter_by(id = transaction.id_customers).first()
+
+        # Check email
+        if customer is None: return {'message': 'Email tidak ditemukan'}, 404
 
         # ---------- Prepare the data needed ----------
         required_data = {

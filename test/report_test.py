@@ -118,10 +118,10 @@ class TestReport():
         endpoint = endpoint + '&total_sales_sort=' + data['total_sales_sort']
 
         # Test the endpoints
+        res = client.delete('/product/1', headers={'Authorization': 'Bearer ' + token})
         res = client.get(endpoint, headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
-    
 
     # History Report (Case 1 - No filter)
     def test_history_report_case_1(self, client):
@@ -287,6 +287,180 @@ class TestReport():
         endpoint = endpoint + '&total_sales_sort=' + data['total_sales_sort']
 
         # Test the endpoints
+        res = client.get(endpoint, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
+    # Inventory Log (Case 1)
+    def test_inventory_log_report_case_1(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        data = {
+            'name': 'mie',
+            'id_outlet': '1',
+            'type': 'Masuk',
+            'start_time': '01-01-2019',
+            'end_time': '01-01-2099',
+            'amount_sort': 'desc',
+        }
+
+        endpoint = '/report/inventory-log'
+        endpoint = endpoint + '?name=' + data['name']
+        endpoint = endpoint + '&id_outlet=' + str(data['id_outlet'])
+        endpoint = endpoint + '&type=' + data['type']
+        endpoint = endpoint + '&start_time=' + data['start_time']
+        endpoint = endpoint + '&end_time=' + data['end_time']
+        endpoint = endpoint + '&amount_sort=' + data['amount_sort']
+
+        data_1 = {
+            'stock': 1000,
+            'price': 15000
+        }
+
+        data_2 = {
+            'stock': 1200,
+            'price': 13000
+        }
+
+        data_3 = {
+            'stock': 800,
+            'price': 14000
+        }
+
+        # Test the endpoints
+        res = client.put('/inventory/add-stock/1', json = data_1, headers={'Authorization': 'Bearer ' + token})
+        res = client.put('/inventory/add-stock/2', json = data_2, headers={'Authorization': 'Bearer ' + token})
+        res = client.put('/inventory/add-stock/3', json = data_3, headers={'Authorization': 'Bearer ' + token})
+        res = client.get(endpoint, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
+    # Inventory Log (Case 2)
+    def test_inventory_log_report_case_2(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        data = {
+            'name': '',
+            'id_outlet': '',
+            'type': '',
+            'start_time': '01-01-2019',
+            'end_time': '01-01-2099',
+            'amount_sort': 'asc',
+        }
+
+        endpoint = '/report/inventory-log'
+        endpoint = endpoint + '?name=' + data['name']
+        endpoint = endpoint + '&id_outlet=' + str(data['id_outlet'])
+        endpoint = endpoint + '&type=' + data['type']
+        endpoint = endpoint + '&start_time=' + data['start_time']
+        endpoint = endpoint + '&end_time=' + data['end_time']
+        endpoint = endpoint + '&amount_sort=' + data['amount_sort']
+
+        data_1 = {
+            'stock': 1000,
+            'price': 15000
+        }
+
+        data_2 = {
+            'stock': 1200,
+            'price': 13000
+        }
+
+        data_3 = {
+            'stock': 800,
+            'price': 14000
+        }
+
+        cart = {
+            'id_outlet': 1,
+            'id_customers': 1,
+            'item_list': [
+                {'id': 1, 'unit': 2, 'price': 12000},
+                {'id': 2, 'unit': 1, 'price': 16000},
+                {'id': 3, 'unit': 3, 'price': 15000}
+            ],
+            'promo': '',
+            'payment_method': 'Tunai',
+            'paid_price': 100000,
+            'name': 'Lelianto Eko Pradana',
+            'phone': '',
+            'email': ''
+        }
+
+        # Test the endpoints
+        res = client.put('/inventory/add-stock/1', json = data_1, headers={'Authorization': 'Bearer ' + token})
+        res = client.put('/inventory/add-stock/2', json = data_2, headers={'Authorization': 'Bearer ' + token})
+        res = client.put('/inventory/add-stock/3', json = data_3, headers={'Authorization': 'Bearer ' + token})
+        res = client.post('/product/checkout', json = cart, headers={'Authorization': 'Bearer ' + token})
+        res = client.get(endpoint, headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
+    # Inventory Log (Case 3: Default)
+    def test_inventory_log_report_case_3(self, client):
+        # Prepare the DB and token
+        db_reset()
+        token = create_token('hedy@alterra.id')
+
+        data = {
+            'name': '',
+            'id_outlet': '',
+            'type': 'Keluar',
+            'start_time': '',
+            'end_time': '',
+            'amount_sort': 'desc',
+        }
+
+        endpoint = '/report/inventory-log'
+        endpoint = endpoint + '?name=' + data['name']
+        endpoint = endpoint + '&id_outlet=' + str(data['id_outlet'])
+        endpoint = endpoint + '&type=' + data['type']
+        endpoint = endpoint + '&start_time=' + data['start_time']
+        endpoint = endpoint + '&end_time=' + data['end_time']
+        endpoint = endpoint + '&amount_sort=' + data['amount_sort']
+
+        data_1 = {
+            'stock': 1000,
+            'price': 15000
+        }
+
+        data_2 = {
+            'stock': 1200,
+            'price': 13000
+        }
+
+        data_3 = {
+            'stock': 800,
+            'price': 14000
+        }
+
+        cart = {
+            'id_outlet': 1,
+            'id_customers': 1,
+            'item_list': [
+                {'id': 1, 'unit': 2, 'price': 12000},
+                {'id': 2, 'unit': 1, 'price': 16000},
+                {'id': 3, 'unit': 3, 'price': 15000},
+                {'id': 4, 'unit': 1, 'price': 12000},
+                {'id': 5, 'unit': 1, 'price': 22000}
+            ],
+            'promo': '',
+            'payment_method': 'Tunai',
+            'paid_price': 200000,
+            'name': 'Lelianto Eko Pradana',
+            'phone': '',
+            'email': ''
+        }
+
+        # Test the endpoints
+        res = client.put('/inventory/add-stock/1', json = data_1, headers={'Authorization': 'Bearer ' + token})
+        res = client.put('/inventory/add-stock/2', json = data_2, headers={'Authorization': 'Bearer ' + token})
+        res = client.put('/inventory/add-stock/3', json = data_3, headers={'Authorization': 'Bearer ' + token})
+        res = client.post('/product/checkout', json = cart, headers={'Authorization': 'Bearer ' + token})
         res = client.get(endpoint, headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
         assert res.status_code == 200
