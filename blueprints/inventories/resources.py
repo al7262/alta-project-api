@@ -245,7 +245,7 @@ class InventoryPerOutlet(Resource):
             
         # Create new one
         # Add new inventory instance
-        new_inventory = Inventories(id_users = id_user, name = args['name'], total_stock = args['stock'], unit = args['unit'], unit_price = args['unit_price'], times_edited = 1)
+        new_inventory = Inventories(id_users = id_user, name = args['name'], total_stock = args['stock'], unit = args['unit'], unit_price = (int(args['unit_price']) // int(args['unit'])), times_edited = 1)
         db.session.add(new_inventory)
         db.session.commit()
         id_inventory = new_inventory.id
