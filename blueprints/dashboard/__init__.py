@@ -155,7 +155,7 @@ class Dashboard(Resource):
             for datum in range(len(top_category)):
                 count_category = count_category + top_category[datum][1]
             count_category = total[1] - count_category 
-            another = ["another", count_category]
+            another = ["Lainnya", count_category]
             top_category.append(another)
 
             # for stock reminders
@@ -269,7 +269,7 @@ class Dashboard(Resource):
             for datum in range(len(top_category)):
                 count_category = count_category + top_category[datum][1]
             count_category = total[1] - count_category 
-            another = ["another", count_category]
+            another = ["Lainnya", count_category]
             top_category.append(another)
             
             # for stock reminders
