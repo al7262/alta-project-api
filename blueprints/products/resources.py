@@ -151,7 +151,7 @@ class ProductResource(Resource):
         # Loop through recipe list
         for recipe in args['recipe']:
             # Check whether this inventory has already added or not
-            inventory = Inventories.query.filter_by(name = recipe['name']).filter_by(deleted = False).first()
+            inventory = Inventories.query.filter_by(name = recipe['name']).filter_by(deleted = False).filter_by(id_users = id_users).first()
             if inventory is None:
                 # Create new inventory and stock outlet in all outlets
                 new_inventory = Inventories(id_users = id_users, name = recipe['name'], total_stock = 0, unit = recipe['unit'], unit_price = 0, times_edited = 0)
