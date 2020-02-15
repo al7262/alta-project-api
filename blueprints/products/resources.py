@@ -676,13 +676,15 @@ class SendWhatsapp(Resource):
         account_sid = 'AC74c51f7d88218337455c1aba6fb8e45c'
         auth_token = '1612839a4c29ad63b826eb534be2ad0a'
         client = twilio_client(account_sid, auth_token)
-        message = client.messages \
-            .create(
-                media_url = [args['image']],
-                from_ = 'whatsapp:' + outlet_phone,
-                body = "Terima kasih atas kunjungannya. Berikut ini adalah struk transaksimu pada tanggal " + transaction.created_at.strftime("%d-%m-%Y") + " pukul " + transaction.created_at.strftime("%H:%M"),
-                to = 'whatsapp:' + customer_phone
-            )
+        if 'FLASK_ENV' not in os.environ: os.environ['FLASK_ENV'] = 'development'
+        if os.environ['FLASK_ENV'] == 'development':
+            message = client.messages \
+                .create(
+                    media_url = [args['image']],
+                    from_ = 'whatsapp:' + outlet_phone,
+                    body = "Terima kasih atas kunjungannya. Berikut ini adalah struk transaksimu pada tanggal " + transaction.created_at.strftime("%d-%m-%Y") + " pukul " + transaction.created_at.strftime("%H:%M"),
+                    to = 'whatsapp:' + customer_phone
+                )
         
         return {'message': 'Sukses mengirim struk transaksi'}, 200
 

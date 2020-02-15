@@ -121,7 +121,9 @@ class UserResource(Resource):
     def get(self):
         claims = get_jwt_claims()
         qry = Users.query.filter_by(id = claims['id']).first()
-        return marshal(qry, Users.response_fields), 200
+        marshaled_qry = marshal(qry, Users.response_fields)
+        marshaled_qry['password'] = ''
+        return marshaled_qry, 200
 
     @jwt_required
     @user_required
