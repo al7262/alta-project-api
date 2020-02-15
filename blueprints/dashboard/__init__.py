@@ -157,7 +157,6 @@ class Dashboard(Resource):
             count_category = total[1] - count_category 
             another = ["another", count_category]
             top_category.append(another)
-            top_category.append(total)
 
             # for stock reminders
             inventories = Inventories.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
@@ -272,7 +271,6 @@ class Dashboard(Resource):
             count_category = total[1] - count_category 
             another = ["another", count_category]
             top_category.append(another)
-            top_category.append(total)
             
             # for stock reminders
             stock_outlet_list = StockOutlet.query.filter_by(id_outlet = qry_outlet.id)
@@ -297,7 +295,6 @@ class Dashboard(Resource):
                             'unit' : inventory_unit
                         }
                         inventories_data.append(data)
-
 
         # for create chart
         chart = {}
