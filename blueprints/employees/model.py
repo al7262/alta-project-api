@@ -17,7 +17,16 @@ class Employees(db.Model):
     updated_at = db.Column(db.DateTime, nullable = False, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
     deleted = db.Column(db.Boolean, default = False)
 
-    # responsive employee fields
+    # JWT required claims
+    jwt_claim_fields = {
+        'id': fields.Integer,
+        'id_outlet': fields.Integer,
+        'username': fields.String,
+        'position': fields.String,
+        'deleted': fields.Boolean
+    }
+
+    # Responsive employee fields
     response_fields = {
         'id': fields.Integer,
         'id_outlet': fields.Integer,
@@ -37,7 +46,7 @@ class Employees(db.Model):
         self.username = username
         self.password = password
         self.position = position
-    
+
     # for display log this table
     def __repr__(self):
         return '<Employees %r>' %self.username

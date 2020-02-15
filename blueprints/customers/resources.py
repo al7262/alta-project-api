@@ -28,7 +28,7 @@ class CustomerResource(Resource):
         claims = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument('p', type = int, location = 'args', default = 1)
-        parser.add_argument('rp', type = int, location = 'args', default = 25)
+        parser.add_argument('rp', type = int, location = 'args', default = 125)
         parser.add_argument('keyword', location = 'args')
 
         # Pagination
