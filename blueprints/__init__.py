@@ -121,12 +121,6 @@ app.register_blueprint(bp_outlets, url_prefix='')
 from blueprints.products.resources import bp_products
 app.register_blueprint(bp_products, url_prefix='/product')
 
-# from blueprints.promo.resources import bp_promo
-# app.register_blueprint(bp_promo, url_prefix='')
-
-# from blueprints.recipes.resources import bp_recipe
-# app.register_blueprint(bp_recipe, url_prefix='/recipe')
-
 from blueprints.auth import bp_auth
 app.register_blueprint(bp_auth,url_prefix = '')
 

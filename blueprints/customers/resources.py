@@ -15,8 +15,10 @@ from flask_jwt_extended import jwt_required, get_jwt_claims
 bp_customers = Blueprint('customers', __name__)
 api = Api(bp_customers)
 
+# CRUD customer options (CORS), get, put, delete
 class CustomerResource(Resource):
-
+    
+    # Enable CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
 
@@ -43,15 +45,18 @@ class CustomerResource(Resource):
         rows = []
         for row in qry.limit(args['rp']).offset(offset).all():
             rows.append(marshal(row, Customers.response_fields))
-
+        
+        # variable
         min = 0
         new_customer = 0
         total_costumer = 0
+        custumer_id = ''
+
+        # setting time
         time = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d")
         today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
         start = today + relativedelta(days = -(int(time[8::]))+1)
         end = today + relativedelta(days = +1)
-        custumer_id = ''
         for costumer in qry:
             total_costumer = total_costumer + 1
             if costumer.total_transaction > min:
@@ -122,8 +127,10 @@ class CustomerResource(Resource):
         db.session.commit()
         return marshal(qry, Customers.response_fields), 200
 
-#CRUD outlet POST (accessed by owner)
+#CRUD customer POST (accessed by owner)
 class CreateCustomerResource(Resource):
+    
+    # Enable CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
 
@@ -158,8 +165,10 @@ class CreateCustomerResource(Resource):
             return {'message' : "Masukkan pelanggan berhasil", "id" : customer.id}, 200, {'Content-Type': 'application/json'}
         return {'message' : "Masukkan pelanggan gagal"}, 409
 
+# CRUD customer options (CORS), get
 class CustomerGetByOne(Resource):
-    
+        
+    # Enable CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
 
@@ -174,6 +183,7 @@ class CustomerGetByOne(Resource):
             return marshal_qry, 200
         return {'message' : 'Data Tidak Ditemukan'}, 404
 
+# endpoint in Customer
 api.add_resource(CustomerResource,'/customer','/customer/<int:id>')
 api.add_resource(CreateCustomerResource,'/customer/create')
 api.add_resource(CustomerGetByOne,'/customer/get/<int:id>')

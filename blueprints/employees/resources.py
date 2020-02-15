@@ -17,7 +17,9 @@ from flask_jwt_extended import jwt_required, get_jwt_claims
 bp_employees = Blueprint('employees', __name__)
 api = Api(bp_employees)
 
+# CRUD employee options (CORS), post (create employee)
 class CreateEmployeeResource(Resource):
+
     # Enable CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
@@ -64,7 +66,10 @@ class CreateEmployeeResource(Resource):
             return {'message' : "Input Pegawai Berhasil"}, 200, {'Content-Type': 'application/json'}
         return {'message' : "Input Pegawai Gagal"}, 401
 
+# CRUD employee options (CORS), get, put, delete
 class EmployeeResource(Resource):
+    
+    # Enable CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
         
@@ -186,7 +191,10 @@ class EmployeeResource(Resource):
         db.session.commit()
         return {"message": "Data Telah Dihapus"},200
 
+# CRUD employee options (CORS), get, put, delete
 class EmployeeGetByOne(Resource):
+
+    # Enable CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
 
@@ -204,6 +212,7 @@ class EmployeeGetByOne(Resource):
         marshal_qry['outlet_name'] = outlet.name
         return marshal_qry, 200
 
+# CRUD employee options (CORS), get
 class EmployeeGetByClaims(Resource):
     def options(self,id=None):
         return{'status':'ok'} , 200
@@ -222,6 +231,7 @@ class EmployeeGetByClaims(Resource):
                 return marshal_qry, 200
         return {'message' : 'Data Tidak Ditemukan'}, 404
 
+# endpoint in Employee
 api.add_resource(CreateEmployeeResource,'/employee/create')
 api.add_resource(EmployeeResource,'/employee','/employee/<int:id>')
 api.add_resource(EmployeeGetByOne,'/employee/get/<int:id>')

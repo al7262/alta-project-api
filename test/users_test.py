@@ -5,8 +5,8 @@ class TestUsers():
     # Show users profile
     def test_users_profile(self, client):
         # Prepare the DB and token
-        db_reset()
         token = create_token('hedy@alterra.id')
+        db_reset()
 
         # Test the endpoints
         res = client.get('/user/profile', headers={'Authorization': 'Bearer ' + token})

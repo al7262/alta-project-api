@@ -4,7 +4,7 @@ from flask_restful import fields
 from datetime import datetime, timedelta
 from blueprints.outlets.model import Outlets
 
-# Create Model
+# Model fields
 class Employees(db.Model):
     __tablename__ = 'employees'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
@@ -17,6 +17,7 @@ class Employees(db.Model):
     updated_at = db.Column(db.DateTime, nullable = False, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
     deleted = db.Column(db.Boolean, default = False)
 
+    # responsive employee fields
     response_fields = {
         'id': fields.Integer,
         'id_outlet': fields.Integer,
@@ -29,14 +30,7 @@ class Employees(db.Model):
         'deleted': fields.Boolean
     }
 
-    jwt_claim_fields = {
-        'id': fields.Integer,
-        'id_outlet': fields.Integer,
-        'username': fields.String,
-        'position': fields.String,
-        'deleted': fields.Boolean
-    }
-
+    # required fields when create new data
     def __init__(self, id_outlet, full_name, username, password, position):
         self.id_outlet = id_outlet
         self.full_name = full_name
@@ -44,5 +38,6 @@ class Employees(db.Model):
         self.password = password
         self.position = position
     
+    # for display log this table
     def __repr__(self):
         return '<Employees %r>' %self.username
