@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from blueprints.users.model import Users
 from blueprints.stock_outlet.model import StockOutlet
 
-# Create Model
+# Model fields
 class Inventories(db.Model):
     __tablename__ = 'inventories'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
@@ -19,6 +19,7 @@ class Inventories(db.Model):
     updated_at = db.Column(db.DateTime, nullable = False, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
     deleted = db.Column(db.Boolean, default = False)
 
+    # responsive inventory fields
     inventories_fields = {
         'id': fields.Integer,
         'id_users': fields.Integer,
@@ -32,11 +33,7 @@ class Inventories(db.Model):
         'deleted': fields.Boolean
     }
 
-    jwt_claim_fields = {
-        'id': fields.Integer,
-        'deleted': fields.Boolean
-    }
-
+    # required fields when create new data
     def __init__(self, id_users, name, total_stock, unit, unit_price, times_edited):
         self.id_users = id_users
         self.name = name
@@ -48,9 +45,11 @@ class Inventories(db.Model):
         self.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         self.deleted = False
     
+    # for display log this table
     def __repr__(self):
         return '<Inventories %r>' %self.name
 
+# Model fields
 class InventoryLog(db.Model):
     __tablename__ = 'inventory_log'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
@@ -60,6 +59,7 @@ class InventoryLog(db.Model):
     last_stock = db.Column(db.Integer, nullable = False, default = 0)
     created_at = db.Column(db.DateTime, nullable = False, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
 
+    # responsive inventory log fields
     inventory_log_fields = {
         'id': fields.Integer,
         'id_stock_outlet': fields.Integer,
@@ -69,11 +69,7 @@ class InventoryLog(db.Model):
         'created_at': fields.DateTime,
     }
 
-    jwt_claim_fields = {
-        'id': fields.Integer,
-        'id_stock_outlet': fields.Integer,
-    }
-
+    # required fields when create new data
     def __init__(self, id_stock_outlet, status, amount, last_stock):
         self.id_stock_outlet = id_stock_outlet
         self.status = status
@@ -81,5 +77,6 @@ class InventoryLog(db.Model):
         self.last_stock = last_stock
         self.created_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
     
+    # for display log this table
     def __repr__(self):
         return '<InventoryLog %r>' %self.id
