@@ -669,8 +669,7 @@ class SendWhatsapp(Resource):
         # Formatting phone
         customer_phone = customer.phone_number
         customer_phone = '+62' + customer_phone[1:]
-        outlet_phone = outlet.phone_number
-        outlet_phone = '+62' + outlet_phone[1:]
+        sender = '+14155238886'
 
         # Send the receipt
         account_sid = 'AC74c51f7d88218337455c1aba6fb8e45c'
@@ -681,8 +680,8 @@ class SendWhatsapp(Resource):
             message = client.messages \
                 .create(
                     media_url = [args['image']],
-                    from_ = 'whatsapp:' + outlet_phone,
-                    body = "Terima kasih atas kunjungannya. Berikut ini adalah struk transaksimu pada tanggal " + transaction.created_at.strftime("%d-%m-%Y") + " pukul " + transaction.created_at.strftime("%H:%M"),
+                    from_ = 'whatsapp:' + sender,
+                    body = "Terima kasih atas kunjunganmu ke " + owner.business_name + ". Berikut ini adalah struk transaksimu pada tanggal " + transaction.created_at.strftime("%d-%m-%Y") + " pukul " + transaction.created_at.strftime("%H:%M"),
                     to = 'whatsapp:' + customer_phone
                 )
         
