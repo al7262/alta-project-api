@@ -680,7 +680,7 @@ class SendWhatsapp(Resource):
             .create(
                 media_url = [args['image']],
                 from_ = 'whatsapp:' + outlet_phone,
-                body = "Terima kasih atas kunjungannya. Berikut ini adalah struk transaksimu pada tanggal" + transaction.created_at.strftime("%d-%m-%Y") + "pukul" + transaction.created_at.strftime("%H:%M"),
+                body = "Terima kasih atas kunjungannya. Berikut ini adalah struk transaksimu pada tanggal " + transaction.created_at.strftime("%d-%m-%Y") + " pukul " + transaction.created_at.strftime("%H:%M"),
                 to = 'whatsapp:' + customer_phone
             )
         
@@ -725,7 +725,7 @@ class SendEmail(Resource):
         mailjet = Client(auth=(api_key, api_secret), version='v3.1')
 
         # Preparing the body of the email
-        first_greeting = "Terima kasih atas kunjunganmu ke" + required_data["business_name"] + ". Berikut ini adalah struk transaksimu pada tanggal" + transaction.created_at.strftime("%d-%m-%Y") + "pukul" + transaction.created_at.strftime("%H:%M")
+        first_greeting = "Terima kasih atas kunjunganmu ke " + required_data["business_name"] + ". Berikut ini adalah struk transaksimu pada tanggal " + transaction.created_at.strftime("%d-%m-%Y") + " pukul " + transaction.created_at.strftime("%H:%M")
         receipt_image = '<br /><br /><img src="' + args['image'] + '" />'
 
         # Prepare the email to be sent
