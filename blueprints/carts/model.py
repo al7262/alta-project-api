@@ -8,7 +8,7 @@ from blueprints.customers.model import Customers
 from blueprints.products.model import Products
 from blueprints.outlets.model import Outlets
 
-# Create Model
+# Model fields
 class Carts(db.Model):
     __tablename__ = 'carts'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
@@ -27,6 +27,7 @@ class Carts(db.Model):
     created_at = db.Column(db.DateTime, nullable = False, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
     deleted = db.Column(db.Boolean, default = False)
 
+    # responsive carts fields
     carts_fields = {
         'id': fields.Integer,
         'id_users': fields.Integer,
@@ -45,6 +46,7 @@ class Carts(db.Model):
         'deleted': fields.Boolean
     }
 
+    # required fields when create new data
     def __init__(self, id_users, id_outlet, order_code, name, total_item, payment_method, total_payment, total_discount, total_tax, paid_price, id_employee = None, id_customers = None):
         self.id_users = id_users
         self.id_outlet = id_outlet
@@ -61,9 +63,11 @@ class Carts(db.Model):
         self.created_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
         self.deleted = True
     
+    # for display log this table 
     def __repr__(self):
         return '<Carts %r>' %self.id
 
+# Model fields
 class CartDetail(db.Model):
     __tablename__ = 'cart_detail'
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
@@ -73,6 +77,7 @@ class CartDetail(db.Model):
     total_price_product = db.Column(db.Integer, nullable = False, default = 0)
     updated_at = db.Column(db.DateTime, nullable = False, default = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S"))
 
+    # responsive cart detail fields
     cart_detail_fields = {
         'id': fields.Integer,
         'id_cart': fields.Integer,
@@ -82,12 +87,7 @@ class CartDetail(db.Model):
         'updated_at': fields.DateTime
     }
 
-    jwt_claim_fields = {
-        'id': fields.Integer,
-        'id_cart': fields.Integer,
-        'id_product': fields.Integer
-    }
-
+    # required fields when create new data
     def __init__(self, id_cart, id_product, quantity, total_price_product):
         self.id_cart = id_cart
         self.id_product = id_product
@@ -95,5 +95,6 @@ class CartDetail(db.Model):
         self.total_price_product = total_price_product
         self.updated_at = (datetime.now() + timedelta(hours = 7)).strftime("%Y-%m-%d %H:%M:%S")
     
+    # for display log this table
     def __repr__(self):
         return '<CartDetail %r>' %self.id

@@ -20,7 +20,9 @@ from blueprints import dashboard_required, apps_required
 bp_activity = Blueprint('activity', __name__)
 api = Api(bp_activity)
 
+# display data about transactions in the application
 class ActivityResource(Resource):
+
     # Enable CORS
     def options(self, id_outlet=None):
         return {'status': 'ok'}, 200
@@ -28,6 +30,7 @@ class ActivityResource(Resource):
     # Get transactions history in an outlet
     @jwt_required
     def get(self, id_outlet):
+
         # Take input from users
         parser = reqparse.RequestParser()
         parser.add_argument('order_code', location = 'args', required = False)
@@ -92,4 +95,5 @@ class ActivityResource(Resource):
         }
         return result, 200
 
+# endpoint in Activity
 api.add_resource(ActivityResource, '/<id_outlet>')

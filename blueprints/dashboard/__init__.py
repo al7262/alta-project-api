@@ -1,3 +1,4 @@
+# import
 from flask import Blueprint
 from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
@@ -20,7 +21,9 @@ from flask_jwt_extended import jwt_required, get_jwt_claims
 bp_dashboard = Blueprint('dashboard', __name__)
 api = Api(bp_dashboard)
 
+# CRUD dashboard options (CORS), get
 class Dashboard(Resource):
+
     # Enable CORS
     def options(self,id=None):
         return{'status':'ok'} , 200
@@ -63,11 +66,15 @@ class Dashboard(Resource):
         categories = []
         list_category = []
         info_categories = []
-        info_another = []
+        another = []
+        total = []
         tops = []
         top_product = []
         top_category = []
+        count_category = 0
         
+        #-------------------------------- without args name outlet --------------------------------
+
         # Calculate total items and total sales
         if args['name_outlet'] is None or args['name_outlet'] == "":
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).all()
@@ -80,7 +87,7 @@ class Dashboard(Resource):
                             sales_amount = sales_amount + cart.total_payment
                             number_transaction = number_transaction + 1
             
-            # For popular category
+            # For popular products
             qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
             for product in qry_product:
                 if product.category not in categories:
@@ -120,7 +127,7 @@ class Dashboard(Resource):
                             qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
                             if qry_cartdetail is not None:
                                 total_quantity = total_quantity + qry_cartdetail.quantity
-            info_another = ["another",total_quantity]
+            total = ["total",total_quantity]
             for category in categories:
                 qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(category = category).filter_by(deleted = False).all()
                 total_quantity = 0
@@ -145,9 +152,14 @@ class Dashboard(Resource):
                         if info not in top_category:
                             top_category.append(info)
                             break
-            top_category.append(info_another)
+            for datum in range(len(top_category)):
+                count_category = count_category + top_category[datum][1]
+            count_category = total[1] - count_category 
+            another = ["another", count_category]
+            top_category.append(another)
+            top_category.append(total)
 
-            # ini untuk pengingat stock
+            # for stock reminders
             inventories = Inventories.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
             stock_outlet_list = []
             if inventories is not None:
@@ -170,7 +182,6 @@ class Dashboard(Resource):
                         if outlet is not None:
                             outlet_name = outlet.name
                             
-
                             data = {
                             'name': inventory_name,
                             'stock': stock_outlet['stock'],
@@ -179,6 +190,9 @@ class Dashboard(Resource):
                             }
                             inventories_data.append(data)
              
+        
+        #-------------------------------- with args name outlet --------------------------------
+        # Calculate total items and total sales
         elif args['name_outlet'] is not None:
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).first()
             qry_cart = Carts.query.filter_by(id_users = claims['id']).filter_by(id_outlet = qry_outlet.id).all()
@@ -189,7 +203,7 @@ class Dashboard(Resource):
                         sales_amount = sales_amount + cart.total_payment
                         number_transaction = number_transaction + 1
                 
-            # ini untuk produk terlaris
+            # For popular products
             qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(deleted = False).all()
             for product in qry_product:
                 if product.category not in categories:
@@ -218,7 +232,7 @@ class Dashboard(Resource):
                             top_product.append(info)
                             break
             
-            # ini untuk kategori terlaris
+            # For popular categories
             total_quantity = 0
             for product in qry_product:
                 if qry_cart is not None:
@@ -228,7 +242,7 @@ class Dashboard(Resource):
                             qry_cartdetail = CartDetail.query.filter_by(id_cart = cart.id).filter_by(id_product = product.id).first()
                             if qry_cartdetail is not None:
                                 total_quantity = total_quantity + qry_cartdetail.quantity
-            info_another = ["another",total_quantity]
+            total = ["total",total_quantity]
             for category in categories: 
                 qry_product = Products.query.filter_by(id_users = claims['id']).filter_by(category = category).filter_by(deleted = False).all()
                 total_quantity = 0
@@ -253,9 +267,14 @@ class Dashboard(Resource):
                         if info not in top_category:
                             top_category.append(info)
                             break
-            top_category.append(info_another)
+            for datum in range(len(top_category)):
+                count_category = count_category + top_category[datum][1]
+            count_category = total[1] - count_category 
+            another = ["another", count_category]
+            top_category.append(another)
+            top_category.append(total)
             
-            #ini untuk pengingat stock
+            # for stock reminders
             stock_outlet_list = StockOutlet.query.filter_by(id_outlet = qry_outlet.id)
             stock_outlet_filtered = filter(lambda stock_outlet: stock_outlet.stock <= stock_outlet.reminder, stock_outlet_list)
             if stock_outlet_filtered is not None:
@@ -280,7 +299,7 @@ class Dashboard(Resource):
                         inventories_data.append(data)
 
 
-        # Ini untuk grafik
+        # for create chart
         chart = {}
         if args['name_outlet'] is not None and args['name_outlet'] != "":
             qry_outlet = Outlets.query.filter_by(id_user = claims['id']).filter_by(name = args['name_outlet']).filter_by(deleted = False).first()
@@ -354,7 +373,7 @@ class Dashboard(Resource):
                     start = start + relativedelta(days = +1)
                     count+=1
             
-        #ini untuk member loyal
+        # for loyal members
         min = 0
         new_customer = 0
         total_costumer = 0
@@ -383,4 +402,5 @@ class Dashboard(Resource):
         }
         return result, 200
 
+# endpoint in Dashboard
 api.add_resource(Dashboard,'/dashboard')

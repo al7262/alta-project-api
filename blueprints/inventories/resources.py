@@ -19,6 +19,7 @@ from blueprints import dashboard_required, user_required, apps_required
 bp_inventories = Blueprint('inventories', __name__)
 api = Api(bp_inventories)
 
+# CRUD inventory options (CORS), get
 class InventoryResource(Resource):
     # Enable CORS
     def options(self, id=None):
@@ -88,6 +89,7 @@ class InventoryResource(Resource):
             return empty, 200
         return result, 200
 
+# CRUD inventory per outlet options (CORS), get, post
 class InventoryPerOutlet(Resource):
     # Enable CORS
     def options(self, id_outlet=None):
@@ -249,6 +251,7 @@ class InventoryPerOutlet(Resource):
 
         return {'message': 'Sukses menambahkan bahan baku'}, 200
 
+# CRUD inventory detail options (CORS), get, put, delete
 class InventoryDetail(Resource):
     # Enable CORS
     def options(self, id_stock_outlet=None):
@@ -360,6 +363,7 @@ class InventoryDetail(Resource):
         
         return {'message': 'Sukses menghapus bahan baku'}, 200
 
+# CRUD inventory detail options (CORS), put
 class AddStock(Resource):
     # Enable CORS
     def options(self, id_stock_outlet=None):
@@ -406,6 +410,7 @@ class AddStock(Resource):
 
         return {'message': 'Sukses menambahkan stok bahan baku'}, 200
 
+# CRUD inventory log outlet options (CORS), get
 class InventoryLogOutlet(Resource):
     # Enable CORS
     def options(self, id_stock_outlet=None):
@@ -471,6 +476,7 @@ class InventoryLogOutlet(Resource):
         }
         return result, 200
 
+# CRUD inventory log outlets options (CORS), get
 class InventoryLogAll(Resource):
     # Enable CORS
     def options(self, id_inventory=None):
@@ -533,6 +539,7 @@ class InventoryLogAll(Resource):
             result.append(log_data)
         return result, 200
 
+# CRUD inventory reminder options (CORS), get
 class InventoryReminder(Resource):
     # Enable CORS
     def options(self, id_outlet=None):
@@ -573,6 +580,7 @@ class InventoryReminder(Resource):
         }
         return result, 200
 
+# CRUD inventory reminder all options (CORS), get
 class InventoryReminderAll(Resource):
     # Enable CORS
     def options(self, id=None):
@@ -625,6 +633,7 @@ class InventoryReminderAll(Resource):
         }
         return result, 200
 
+# endpoint in Inventory
 api.add_resource(InventoryResource, '')
 api.add_resource(InventoryPerOutlet, '/<id_outlet>')
 api.add_resource(InventoryDetail, '/detail/<id_stock_outlet>')
