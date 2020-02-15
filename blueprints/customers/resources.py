@@ -57,12 +57,13 @@ class CustomerResource(Resource):
         today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
         start = today + relativedelta(days = -(int(time[8::]))+1)
         end = today + relativedelta(days = +1)
-        for costumer in qry:
+        qry_grand_customers = Customers.query.all()
+        for costumer in qry_grand_customers:
             total_costumer = total_costumer + 1
             if costumer.total_transaction > min:
                 min = costumer.total_transaction
                 custumer_id = costumer.id
-        for costumer in qry:
+        for costumer in qry_grand_customers:
             create_at = costumer.created_at
             if start <= create_at and create_at <= end:
                 new_customer = new_customer + 1
