@@ -657,10 +657,11 @@ class SendWhatsapp(Resource):
         claims = get_jwt_claims()
         id_users = claims['id']
 
-        # Search user, transaction and related customer
+        # Search user, outlet, transaction and related customer
         owner = Users.query.filter_by(id = id_users).first()
         transaction = Carts.query.filter_by(deleted = True).filter_by(id = args['id_cart']).first()
         customer = Customers.query.filter_by(id = transaction.id_customers).first()
+        outlet = Outlets.query.filter_by(id = transaction.id_outlet).first()
 
         # Check customer
         if customer is None: return {'message': 'Data pelanggan tidak ditemukan'}, 404
@@ -668,6 +669,8 @@ class SendWhatsapp(Resource):
         # Formatting phone
         customer_phone = customer.phone_number
         customer_phone = '+62' + customer_phone[1:]
+        outlet_phone = outlet.phone_number
+        outlet_phone = '+62' + outlet_phone[1:]
 
         # Send the receipt
         account_sid = 'AC74c51f7d88218337455c1aba6fb8e45c'
@@ -676,8 +679,8 @@ class SendWhatsapp(Resource):
         message = client.messages \
             .create(
                 media_url = [args['image']],
-                from_ = 'whatsapp:+14155238886',
-                body = "Terima kasih atas kunjungannya. Berikut ini kami kirimkan struk transaksimu. Kami tunggu kedatanganmu kembali.",
+                from_ = 'whatsapp:' + outlet_phone,
+                body = "Terima kasih atas kunjungannya. Berikut ini adalah struk transaksimu pada tanggal " + transaction.created_at.strftime("%d-%m-%Y") + " pukul " + transaction.created_at.strftime("%H:%M"),
                 to = 'whatsapp:' + customer_phone
             )
         
@@ -722,7 +725,7 @@ class SendEmail(Resource):
         mailjet = Client(auth=(api_key, api_secret), version='v3.1')
 
         # Preparing the body of the email
-        first_greeting = "<h3>Terima kasih atas kunjungannya. Berikut ini kami kirimkan struk transaksimu. Kami tunggu kedatanganmu kembali di " + required_data["business_name"] + "</h3>"
+        first_greeting = "Terima kasih atas kunjunganmu ke " + required_data["business_name"] + ". Berikut ini adalah struk transaksimu pada tanggal " + transaction.created_at.strftime("%d-%m-%Y") + " pukul " + transaction.created_at.strftime("%H:%M")
         receipt_image = '<br /><br /><img src="' + args['image'] + '" />'
 
         # Prepare the email to be sent
