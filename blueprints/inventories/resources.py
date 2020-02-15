@@ -225,6 +225,17 @@ class InventoryPerOutlet(Resource):
                 inventory.times_edited = inventory.times_edited + 1
                 db.session.commit()
 
+                # Add this inventory to other outlet too
+                outlets = Outlets.query.filter_by(deleted = False).filter_by(id_user = id_user)
+                if outlets.all() != []:
+                    for outlet in outlets:
+                        if outlet.id != id_outlet:
+                            related_stock_outlet = StockOutlet.query.filter_by(id_outlet = outlet.id).filter_by(id_inventory = inventory.id).first()
+                            if related_stock_outlet is None:
+                                new_related_stock_outlet = StockOutlet(id_outlet = outlet.id, id_inventory = inventory.id, reminder = args['reminder'], stock = 0)
+                                db.session.add(new_related_stock_outlet)
+                                db.session.commit()
+
                 # Add inventory log instance
                 new_inventory_log = InventoryLog(id_stock_outlet = new_stock_outlet.id, status = "Masuk", amount = args['stock'], last_stock = new_stock_outlet.stock)
                 db.session.add(new_inventory_log)
@@ -238,6 +249,17 @@ class InventoryPerOutlet(Resource):
         db.session.add(new_inventory)
         db.session.commit()
         id_inventory = new_inventory.id
+
+        # Add this inventory to other outlet too
+        outlets = Outlets.query.filter_by(deleted = False).filter_by(id_user = id_user)
+        if outlets.all() != []:
+            for outlet in outlets:
+                if outlet.id != id_outlet:
+                    related_stock_outlet = StockOutlet.query.filter_by(id_outlet = outlet.id).filter_by(id_inventory = inventory.id).first()
+                    if related_stock_outlet is None:
+                        new_related_stock_outlet = StockOutlet(id_outlet = outlet.id, id_inventory = new_inventory.id, reminder = args['reminder'], stock = 0)
+                        db.session.add(new_related_stock_outlet)
+                        db.session.commit()
 
         # Add new stock outlet instance
         new_stock_outlet = StockOutlet(id_outlet = id_outlet, id_inventory = id_inventory, reminder = args['reminder'], stock = args['stock'])
