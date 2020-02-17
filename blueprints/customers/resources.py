@@ -3,6 +3,7 @@ from flask import Blueprint
 from flask_restful import Api, reqparse, Resource, marshal, inputs
 from sqlalchemy import desc
 from .model import Customers
+from blueprints.carts.model import Carts
 from blueprints import db, app, dashboard_required, apps_required
 from datetime import datetime, timedelta, date
 from dateutil.relativedelta import *
@@ -57,7 +58,7 @@ class CustomerResource(Resource):
         today = datetime(int(time[0:4]),int(time[5:7]),int(time[8::]))
         start = today + relativedelta(days = -(int(time[8::]))+1)
         end = today + relativedelta(days = +1)
-        qry_grand_customers = Customers.query.all()
+        qry_grand_customers = Customers.query.filter_by(id_users = claims['id']).all()
         for costumer in qry_grand_customers:
             total_costumer = total_costumer + 1
             if costumer.total_transaction > min:
@@ -94,9 +95,14 @@ class CustomerResource(Resource):
     def delete(self, id=None):
         # Get customer and delete it
         customer = Customers.query.filter_by(id = id).first()
+
+        # Check all related carts
+        carts = Carts.query.filter_by(deleted = True).filter_by(id_customers = customer.id)
+        for cart in carts:
+            cart.id_customers = None
+            db.session.commit()
         db.session.delete(customer)
         db.session.commit()
-
         return {'message': 'Sukses menghapus pelanggan'}, 200
 
     @jwt_required

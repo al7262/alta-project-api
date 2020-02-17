@@ -15,7 +15,7 @@ class Customers(db.Model):
     total_transaction = db.Column(db.Integer, nullable = False, default = 0)
     created_at = db.Column(db.DateTime, default = datetime.datetime.now() + datetime.timedelta(hours = 7))
 
-    # responsive customer fields
+    # Responsive customer fields
     response_fields = {
         'id' : fields.Integer,
         'id_users' : fields.Integer,
@@ -26,7 +26,7 @@ class Customers(db.Model):
         'created_at' : fields.DateTime
     }
 
-    # required fields when create new data
+    # Required fields when create new data
     def __init__(self, id_users, fullname, phone_number, email):
         self.id_users = id_users
         self.fullname = fullname
@@ -34,6 +34,6 @@ class Customers(db.Model):
         self.email = email
         self.total_transaction = 0
 
-    # for display log this table
+    # For display log this table
     def __repr__(self):
         return '<Customers %r>' %self.fullname

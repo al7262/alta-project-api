@@ -149,7 +149,7 @@ class TestInventories():
         # Test the endpoints
         res = client.post('/inventory/2', json = data, headers={'Authorization': 'Bearer ' + token})
         res_json = json.loads(res.data)
-        assert res.status_code == 200
+        assert res.status_code == 409
 
     # Add new inventory (Case 9 : Add inventory below reminder)
     def test_add_new_inventory_case_9(self, client):

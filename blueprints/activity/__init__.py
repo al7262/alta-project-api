@@ -20,7 +20,7 @@ from blueprints import dashboard_required, apps_required
 bp_activity = Blueprint('activity', __name__)
 api = Api(bp_activity)
 
-# display data about transactions in the application
+# Display data about transactions in the application
 class ActivityResource(Resource):
 
     # Enable CORS
@@ -95,5 +95,5 @@ class ActivityResource(Resource):
         }
         return result, 200
 
-# endpoint in Activity
+# Endpoint in Activity
 api.add_resource(ActivityResource, '/<id_outlet>')
