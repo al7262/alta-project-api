@@ -21,14 +21,49 @@ app.config['JWT_SECRET_KEY'] = 'c2n!$st0pDo1ngt#!s$tuff'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 jwt = JWTManager(app)
 
-def admin_required(fn):
+def user_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt_claims()
-        if not claims['admin']:
-            return {'status': 'FORBIDDEN', 'message': 'Internal Only!'}, 403
-        return fn(*args, **kwargs)
+        if 'email' in claims:
+            return fn(*args, **kwargs)
+        else:
+            return {'status': 'FORBIDDEN', 'message': 'Hanya untuk owner'}, 403
+    return wrapper
+
+def dashboard_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        claims = get_jwt_claims()
+        if 'position' in claims:
+            if claims['position'] == "Admin":
+                return fn(*args, **kwargs)
+            else:
+                return {'status': 'FORBIDDEN', 'message': 'Hanya dapat diakses oleh Admin'}, 403
+        else:
+            if 'email' in claims:
+                return fn(*args, **kwargs)
+            else:
+                return {'status': 'FORBIDDEN', 'message': 'Hanya dapat diakses oleh Admin'}, 403
+    return wrapper
+
+def apps_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        claims = get_jwt_claims()
+        if 'position' in claims:
+            if claims['position'] == "Kasir":
+                return fn(*args, **kwargs)
+            else:
+                return {'status': 'FORBIDDEN', 'message': 'Hanya dapat diakses oleh kasir'}, 403
+        else:
+            if 'email' in claims:
+                return fn(*args, **kwargs)
+            else:
+                return {'status': 'FORBIDDEN', 'message': 'Hanya dapat diakses oleh kasir'}, 403
     return wrapper
 
 ##############################
@@ -45,10 +80,16 @@ db_selected=os.getenv('DB_SELECTED')
 ##############################
 try:
     env = os.environ.get('FLASK_ENV', 'development')
-    if env is not 'testing':
-       app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://alta5:01010010@localhost/project'
+    username_laptop = os.environ['HOME']
+    if username_laptop == '/home/alta8' and env == 'testing':
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@0.0.0.0:3306/final_project_backend_testing'
+    elif username_laptop == '/home/alta10'and env == 'testing':
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend_test'
+    elif username_laptop == '/home/alta10'and env != 'testing':
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@0.0.0.0/Final_Project_Backend'
     else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://alta5:01010010@localhost/project_testing'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:agungajin19@portofolio.ce1fym8eoinv.ap-southeast-1.rds.amazonaws.com:3306/pos_api'
+
 except Exception as e:
     raise e
 #############################
@@ -61,18 +102,39 @@ manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
 ##############################
-# ROUTE
-##############################
-
-@app.route('/')
-def index():
-    return {'message': 'Hello! This is the main route'}, 200, {'Content-Type': 'application/json'}
-
-##############################
 # MIDDLEWARES
 ##############################
 
 # Put blueprints here
+from blueprints.customers.resources import bp_customers
+app.register_blueprint(bp_customers, url_prefix='')
+
+from blueprints.employees.resources import bp_employees
+app.register_blueprint(bp_employees, url_prefix='')
+
+from blueprints.inventories.resources import bp_inventories
+app.register_blueprint(bp_inventories, url_prefix='/inventory')
+
+from blueprints.outlets.resources import bp_outlets
+app.register_blueprint(bp_outlets, url_prefix='')
+
+from blueprints.products.resources import bp_products
+app.register_blueprint(bp_products, url_prefix='/product')
+
+from blueprints.auth import bp_auth
+app.register_blueprint(bp_auth,url_prefix = '')
+
+from blueprints.users.resources import Bp_user
+app.register_blueprint(Bp_user,url_prefix = '')
+
+from blueprints.dashboard import bp_dashboard
+app.register_blueprint(bp_dashboard,url_prefix = '')
+
+from blueprints.activity import bp_activity
+app.register_blueprint(bp_activity,url_prefix = '/activity')
+
+from blueprints.report import bp_report
+app.register_blueprint(bp_report,url_prefix = '/report')
 
 db.create_all()
 
