@@ -1,4 +1,4 @@
-#import
+# Import
 from flask import Blueprint
 from flask_restful import Resource, Api, reqparse, marshal
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, get_jwt_claims
@@ -59,7 +59,7 @@ class LoginApps(Resource):
             
         return{'status' : 'UNATUTHORIZED' , 'message' : 'Username atau Password Tidak Valid'}, 401
     
-    # display the contents
+    # Display the contents
     @jwt_required
     def get(self):
         claims = get_jwt_claims()
@@ -106,12 +106,12 @@ class LoginDashboard(Resource):
             
         return{'status' : 'UNATUTHORIZED' , 'message' : 'Username atau Password Tidak Valid'}, 401
     
-    # display the contents
+    # Display the contents
     @jwt_required
     def get(self):
         claims = get_jwt_claims()
         return {'claims' : claims}, 200
 
-# endpoint in Auth
+# Endpoint in Auth
 api.add_resource(LoginApps,'/login/apps')
 api.add_resource(LoginDashboard,'/login/dashboard')

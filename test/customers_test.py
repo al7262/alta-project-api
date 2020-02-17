@@ -130,3 +130,59 @@ class TestCustomers():
         res = client.options('/customer/create')
         res = client.options('/customer/get/1')
         assert res.status_code == 200
+    
+    # Delete customer
+    def test_delete_customer_by_id(self, client):
+        # Prepare the DB and token
+        token = create_token('budisetiawan')
+
+        cart = {
+            'id_outlet': 1,
+            'id_customers': 1,
+            'item_list': [
+                {'id': 1, 'unit': 2, 'price': 12000},
+                {'id': 2, 'unit': 1, 'price': 16000},
+                {'id': 3, 'unit': 3, 'price': 15000}
+            ],
+            'promo': '',
+            'payment_method': 'Tunai',
+            'paid_price': 100000,
+            'name': 'Lelianto Eko Pradana',
+            'phone': '',
+            'email': ''
+        }
+
+        # Test the endpoints
+        res = client.post('/product/checkout', json = cart, headers={'Authorization': 'Bearer ' + token})
+        res = client.post('/product/checkout', json = cart, headers={'Authorization': 'Bearer ' + token})
+        res = client.delete('/customer/1', headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
+
+    # Get loyal customer
+    def test_loyal_customer(self, client):
+        # Prepare the DB and token
+        token = create_token('budisetiawan')
+
+        cart = {
+            'id_outlet': 1,
+            'id_customers': 1,
+            'item_list': [
+                {'id': 1, 'unit': 2, 'price': 12000},
+                {'id': 2, 'unit': 1, 'price': 16000},
+                {'id': 3, 'unit': 3, 'price': 15000}
+            ],
+            'promo': '',
+            'payment_method': 'Tunai',
+            'paid_price': 100000,
+            'name': 'Lelianto Eko Pradana',
+            'phone': '',
+            'email': ''
+        }
+
+        # Test the endpoints
+        res = client.post('/product/checkout', json = cart, headers={'Authorization': 'Bearer ' + token})
+        res = client.post('/product/checkout', json = cart, headers={'Authorization': 'Bearer ' + token})
+        res = client.get('/customer', headers={'Authorization': 'Bearer ' + token})
+        res_json = json.loads(res.data)
+        assert res.status_code == 200
